@@ -13,3 +13,9 @@ Lo-fi 音乐 (music/lofi/1-8.mp3)
   https://archive.org/details/musopen-chopin
 
 All files were re-encoded to 96 kbps MP3 for mobile.
+
+咖啡馆人声 (ambience/cafe.mp3)
+  udo noll — "Kurhaus Dangast - cafe ambience" (radio aporee field recording)
+  License: CC BY 3.0 https://creativecommons.org/licenses/by/3.0/
+  https://archive.org/details/aporee_31243_35922
+  Changes: trimmed to 165 s, compressed and loudness-normalized, end crossfaded into the start for seamless looping.

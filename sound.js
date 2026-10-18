@@ -1,5 +1,5 @@
 // 慢慢来 · 音乐和环境音
-// 音乐是真实录音（都可以免费使用，见 music/CREDITS.txt）；环境音由 Web Audio 实时合成。
+// 音乐和咖啡馆人声是真实录音（都可以免费使用，见 music/CREDITS.txt）；其他环境音由 Web Audio 实时合成。
 "use strict";
 (function () {
   const SOUNDS = [
@@ -37,6 +37,8 @@
       "夜曲 e小调 Op.72 No.1", "夜曲 升c小调（遗作）", "雨滴前奏曲 Op.28 No.15"
     ].map((t, i) => ({ title: t, artist: "肖邦", src: `music/piano/${i + 1}.mp3` })) }
   };
+  // 真实环境录音：单个文件无缝循环
+  const RECORDINGS = { cafe: "ambience/cafe.mp3" };
   const players = {}; // id -> { el, idx }
   let onChange = () => {};
 
@@ -157,19 +159,6 @@
         [0, 0.16].forEach((d) => burst(out, t + d, 0.09, "lowpass", 380, 0.7));
         [0.62, 0.78].forEach((d) => burst(out, t + d, 0.08, "lowpass", 340, 0.55)); }, 1150, 1250);
     },
-    cafe(out) {
-      // 远处的谈话声：几组共振峰带通噪声，按说话的节奏起伏
-      [[380, 6], [900, 5], [1700, 6], [2600, 8]].forEach(([f, q], i) => {
-        const n = noise(i % 2 ? "white" : "brown"), bp = filt("bandpass", f, q), g = ctx.createGain(); g.gain.value = 0;
-        n.connect(bp); bp.connect(g); g.connect(out);
-        every(() => { const t = ctx.currentTime, v = Math.random() < 0.25 ? 0.02 : 0.08 + Math.random() * 0.22;
-          g.gain.setTargetAtTime(v, t, 0.05); bp.frequency.setTargetAtTime(f * (0.85 + Math.random() * 0.3), t, 0.08); }, 120, 320);
-      });
-      const room = noise("brown"), lp = filt("lowpass", 500), rg = ctx.createGain(); rg.gain.value = 0.18; room.connect(lp); lp.connect(rg); rg.connect(out);
-      every(() => { const t = ctx.currentTime, o = ctx.createOscillator(), g = ctx.createGain(); // 杯子碰撞
-        o.frequency.value = 2400 + Math.random() * 1600; g.gain.setValueAtTime(0.05, t); g.gain.exponentialRampToValueAtTime(0.0001, t + 0.35);
-        o.connect(g); g.connect(out); o.start(t); o.stop(t + 0.4); }, 4000, 11000);
-    },
     musicbox(out) {
       // 八音盒：高音区的铃声，慢慢转
       const inp = ctx.createGain(); inp.connect(out);
@@ -227,9 +216,18 @@
     onChange();
   }
 
+  function loopPlayer(id, out) {
+    const el = new Audio(RECORDINGS[id]); el.loop = true; el.preload = "auto"; el.playsInline = true;
+    const p = { el, idx: 0 };
+    try { ctx.createMediaElementSource(el).connect(out); } catch (e) { p.direct = true; }
+    players[id] = p;
+  }
+
   function startSound(id) {
     if (started[id]) return; started[id] = true;
-    if (PLAYLISTS[id]) trackPlayer(id, gains[id]); else build[id](gains[id]);
+    if (PLAYLISTS[id]) trackPlayer(id, gains[id]);
+    else if (RECORDINGS[id]) loopPlayer(id, gains[id]);
+    else build[id](gains[id]);
   }
   const vol = (v) => Math.pow(v / 100, 2); // 听感更线性
 
@@ -240,7 +238,7 @@
     SOUNDS.forEach((s) => {
       const v = state.levels[s.id] || 0;
       if (playing && v > 0) startSound(s.id);
-      gains[s.id].gain.setTargetAtTime(vol(v) * (PLAYLISTS[s.id] ? 0.75 : 1), t, 0.25);
+      gains[s.id].gain.setTargetAtTime(vol(v) * (PLAYLISTS[s.id] ? 0.75 : RECORDINGS[s.id] ? 1.4 : 1), t, 0.25);
       const p = players[s.id];
       if (p) { if (p.direct) p.el.volume = vol(v) * vol(state.master); if (playing && v > 0) { if (p.el.paused) p.el.play().catch(() => {}); } else if (!p.el.paused) p.el.pause(); }
     });
