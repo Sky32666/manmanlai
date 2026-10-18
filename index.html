@@ -255,9 +255,14 @@ input[type="range"] { width: 100%; accent-color: var(--accent); height: 28px; ma
 </div>
 
 <div class="wrap tabpage" id="tab-stats" hidden>
-  <header><div><p class="eyebrow">慢慢来自习室</p><h1>学习统计</h1><p class="tag">每一点进步，都值得被记录。</p></div></header>
+  <header><div><p class="eyebrow">慢慢来自习室</p><h1>学习统计</h1><p class="tag">每一点进步，都值得被记录。</p></div>
+    <div class="switch" role="group" aria-label="看谁的统计">
+      <button id="st-both" aria-pressed="true">我们俩</button>
+      <button id="st-mine" aria-pressed="false">只看我</button>
+    </div>
+  </header>
   <section class="stats" aria-label="专注统计">
-    <div class="hero"><span class="label">你们一起专注了</span><b id="st-total">0 分钟</b></div>
+    <div class="hero"><span class="label" id="st-hero">你们一起专注了</span><b id="st-total">0 分钟</b></div>
     <table><thead><tr><th></th><th>今天</th><th>本周</th><th>全部</th></tr></thead><tbody id="st-body"></tbody></table>
     <p class="note" id="st-together"></p>
   </section>
@@ -266,7 +271,7 @@ input[type="range"] { width: 100%; accent-color: var(--accent); height: 28px; ma
     <div class="week" id="st-week"></div>
   </section>
   <section class="feed">
-    <div class="feed-head"><h2 class="label" style="margin:0">你们的记录</h2><button class="soft" id="export">导出记录</button></div>
+    <div class="feed-head"><h2 class="label" style="margin:0" id="feed-title">你们的记录</h2><button class="soft" id="export">导出记录</button></div>
     <div id="feed"><div class="empty">这里会出现你们两个人的专注记录。<br>扣下手机完成第一次专注，山就开始长出小路了。</div></div>
   </section>
   <p class="mode" id="mode"></p>
@@ -484,17 +489,26 @@ function render() {
   renderFeed(); renderLive(); renderStats(); renderPlans(); renderTodoPick();
 }
 
+let statsMine = ls.get("mml-stats-mine", false);
+const scopeLogs = () => (statsMine ? state.logs.filter((l) => l.author === me.name) : state.logs);
+function setStatsMine(v) { statsMine = v; ls.set("mml-stats-mine", v); renderStats(); renderFeed(); }
+$("st-both").onclick = () => setStatsMine(false);
+$("st-mine").onclick = () => setStatsMine(true);
+
 function renderStats() {
-  const ok = state.logs.filter((l) => !l.failed);
+  $("st-both").setAttribute("aria-pressed", String(!statsMine)); $("st-mine").setAttribute("aria-pressed", String(statsMine));
+  $("st-hero").textContent = statsMine ? "你专注了" : "你们一起专注了";
+  $("feed-title").textContent = statsMine ? "你的记录" : "你们的记录";
+  const ok = scopeLogs().filter((l) => !l.failed);
   const d0 = new Date(); d0.setHours(0, 0, 0, 0);
   const w0 = new Date(d0); w0.setDate(w0.getDate() - ((w0.getDay() + 6) % 7)); // 本周从周一算
   const sum = (arr, since) => arr.filter((l) => Number(l.at) >= since).reduce((a, l) => a + (Number(l.minutes) || 0), 0);
-  const rows = people().map((n) => { const a = ok.filter((l) => l.author === n); return [nm(n), sum(a, d0), sum(a, w0), sum(a, 0)]; });
-  rows.push(["合计", sum(ok, d0), sum(ok, w0), sum(ok, 0)]);
+  const rows = (statsMine ? [me.name] : people()).map((n) => { const a = ok.filter((l) => l.author === n); return [nm(n), sum(a, d0), sum(a, w0), sum(a, 0)]; });
+  if (!statsMine) rows.push(["合计", sum(ok, d0), sum(ok, w0), sum(ok, 0)]);
   $("st-total").textContent = fmtMin(sum(ok, 0));
   const body = $("st-body"); body.innerHTML = "";
   rows.forEach((r, i) => {
-    const tr = document.createElement("tr"); if (i === rows.length - 1) tr.className = "sum";
+    const tr = document.createElement("tr"); if (!statsMine && i === rows.length - 1) tr.className = "sum";
     r.forEach((c, j) => { const td = document.createElement("td"); td.textContent = j ? fmtMin(c) : c; tr.appendChild(td); });
     body.appendChild(tr);
   });
@@ -508,7 +522,10 @@ function renderStats() {
     const lb = document.createElement("span"); lb.textContent = i === 6 ? "今天" : "日一二三四五六"[d.getDay()];
     c.append(v, bar, lb); wk.appendChild(c); });
   const tg = ok.filter((l) => l.together), sessions = ok.length;
-  $("st-together").textContent = sessions ? `一共 ${sessions} 次专注，其中 ${tg.length} 次是同时在专注（${fmtMin(sum(tg, 0))}）。` : "完成第一次专注后，这里会显示你们的时长。";
+  const fails = scopeLogs().filter((l) => l.failed).length;
+  $("st-together").textContent = !sessions ? (statsMine ? "完成第一次专注后，这里会显示你的时长。" : "完成第一次专注后，这里会显示你们的时长。")
+    : statsMine ? `你一共专注了 ${sessions} 次，其中 ${tg.length} 次是和闺蜜同时在专注${fails ? `，偷玩手机 ${fails} 次` : ""}。`
+    : `一共 ${sessions} 次专注，其中 ${tg.length} 次是同时在专注（${fmtMin(sum(tg, 0))}）。`;
 }
 
 function ago(t) {
@@ -519,7 +536,9 @@ function ago(t) {
 function renderFeed() {
   const f = $("feed"); if (!state.logs.length) return;
   f.innerHTML = "";
-  state.logs.slice(0, 100).forEach((l) => {
+  const list = scopeLogs();
+  if (!list.length) { f.innerHTML = '<div class="empty">你还没有专注记录。</div>'; return; }
+  list.slice(0, 100).forEach((l) => {
     const el = document.createElement("article"); el.className = l.failed ? "item failed" : "item";
     const meta = document.createElement("div"); meta.className = "meta";
     const b = document.createElement("b"); b.textContent = nm(l.author);
