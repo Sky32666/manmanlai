@@ -87,6 +87,39 @@ button:focus-visible, input:focus-visible { outline: 2px solid var(--accent); ou
 .stats th:first-child, .stats td:first-child { text-align: left; }
 .stats td { text-align: right; padding: 6px 0; border-top: 1px solid var(--line); }
 .stats tr.sum td { font-weight: 700; }
+.tabpage { padding-bottom: calc(96px + env(safe-area-inset-bottom, 0px)); }
+.eyebrow { font-size: .72rem; letter-spacing: .22em; color: var(--muted); margin: 0 0 8px; }
+.tabbar { position: fixed; left: 0; right: 0; bottom: 0; z-index: 5; display: grid; grid-template-columns: repeat(4, 1fr);
+  background: color-mix(in srgb, var(--surface) 92%, transparent); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
+  border-top: 1px solid var(--line); padding: 6px max(8px, env(safe-area-inset-right, 0px)) calc(6px + env(safe-area-inset-bottom, 0px)) max(8px, env(safe-area-inset-left, 0px)); }
+.tabbar button { font: inherit; font-size: .75rem; background: none; border: 0; color: var(--muted); display: grid; justify-items: center; gap: 0; padding: 4px 0; }
+.tabbar button span { font-size: 1.15rem; line-height: 1.3; }
+.tabbar button[aria-current="page"] { color: var(--accent); font-weight: 700; }
+.small { padding: 3px 12px; font-size: .8rem; }
+.soundline { display: flex; justify-content: space-between; align-items: center; gap: 10px; font-size: .85rem; color: var(--muted); background: var(--bg); border-radius: 12px; padding: 8px 12px; }
+.player { display: flex; align-items: center; gap: 14px; }
+.player b { font-family: var(--display); font-weight: 400; font-size: 1.4rem; }
+.playbtn { width: 56px; height: 56px; border-radius: 50%; border: 0; background: var(--accent); color: var(--surface); font-size: 1.3rem; flex: none; }
+.mixrow { display: grid; gap: 4px; padding: 6px 0; }
+.mixhead { display: flex; justify-content: space-between; align-items: center; font-size: .9rem; font-variant-numeric: tabular-nums; }
+.mixhead .nm { display: flex; align-items: center; gap: 10px; }
+.mixhead .ic { width: 34px; height: 34px; border-radius: 10px; background: var(--accent); color: var(--surface); display: grid; place-items: center; font-size: 1rem; }
+.mixhead small { display: block; color: var(--muted); font-size: .72rem; line-height: 1.2; }
+input[type="range"] { width: 100%; accent-color: var(--accent); height: 28px; margin: 0; }
+.plangroup { display: grid; gap: 8px; margin-bottom: 14px; }
+.plan { background: var(--surface); border: 1px solid var(--line); border-radius: 14px; padding: 10px 12px; display: grid; grid-template-columns: 30px 1fr auto; gap: 10px; align-items: start; }
+.plan.done { opacity: .55; }
+.plan.done .pt { text-decoration: line-through; }
+.check { width: 26px; height: 26px; border-radius: 50%; border: 2px solid var(--accent); background: none; color: var(--surface); font-size: .8rem; padding: 0; }
+.check[aria-pressed="true"] { background: var(--accent); }
+.plan .pt { margin: 0; overflow-wrap: anywhere; }
+.plan .pn { margin: 2px 0 0; font-size: .8rem; color: var(--muted); overflow-wrap: anywhere; }
+.plan .pa { display: flex; flex-direction: column; gap: 4px; align-items: flex-end; }
+.todo-pick { display: flex; gap: 6px; overflow-x: auto; padding-bottom: 2px; }
+.todo-pick .chip { white-space: nowrap; }
+.week { display: grid; grid-template-columns: repeat(7, 1fr); gap: 6px; align-items: end; height: 120px; }
+.week div { display: grid; gap: 4px; justify-items: center; align-self: end; font-size: .7rem; color: var(--muted); font-variant-numeric: tabular-nums; }
+.week i { display: block; width: 70%; max-width: 28px; background: var(--accent); border-radius: 6px 6px 2px 2px; min-height: 2px; }
 .mode { font-size: .75rem; color: var(--muted); text-align: center; }
 
 /* 专注全屏 */
@@ -126,7 +159,8 @@ button:focus-visible, input:focus-visible { outline: 2px solid var(--accent); ou
 </div>
 
 <!-- 主页 -->
-<div class="wrap" id="main" hidden>
+<div id="main" hidden>
+<div class="wrap tabpage" id="tab-focus">
   <header>
     <div><h1>慢慢来</h1><p class="tag" id="who-tag"></p></div>
     <div class="switch" role="group" aria-label="选择玩法">
@@ -138,28 +172,78 @@ button:focus-visible, input:focus-visible { outline: 2px solid var(--accent); ou
   <section class="scene"><div id="art"></div><div class="scene-info" id="info"></div></section>
   <section class="live" id="live" hidden></section>
 
+  <section class="card">
+    <h2>扣下手机，专注开始</h2>
+    <div class="todo-pick" id="todo-pick" hidden></div>
+    <input class="field" id="label" maxlength="30" placeholder="这次学什么？（可不填）">
+    <div class="label">专注多久</div>
+    <div class="chips" id="durs"></div>
+    <div class="soundline"><span id="sound-now">没有播放声音</span><button class="soft small" id="sound-quick">▶ 播放</button></div>
+    <button class="go" id="start">开始</button>
+    <p class="note">规则：手机屏幕朝下才计时。拿起手机，剩余时间就开始增加，屏幕会红白闪 + 响铃；碰一下也会警告。离开这个页面超过 10 秒，这次就失败并扣 10 分钟进度，对方会看到。</p>
+    <p class="note" id="status"></p>
+  </section>
+</div>
+
+<div class="wrap tabpage" id="tab-sound" hidden>
+  <header><div><p class="eyebrow">慢慢来自习室</p><h1>声音</h1><p class="tag">真实世界里的声音，换成手机现场合成。自由调节。</p></div></header>
+  <section class="card">
+    <div class="player">
+      <button class="playbtn" id="s-play" aria-label="播放或暂停">▶</button>
+      <div><b id="s-scene">夕阳电车</b><p class="note" id="s-state">点播放开始</p></div>
+    </div>
+    <div class="label">场景</div>
+    <div class="chips" id="scenes"></div>
+  </section>
+  <section class="card">
+    <div class="feed-head"><h2>调音台</h2><button class="soft small" id="s-reset">全部归零</button></div>
+    <div class="mixrow"><div class="mixhead"><span>总音量</span><span id="v-master">80%</span></div><input type="range" id="r-master" min="0" max="100"></div>
+    <div id="mixer"></div>
+    <p class="note">专注时声音会继续播放。iPhone 如果开了静音键听不到，把侧边静音键拨开再试试。</p>
+  </section>
+</div>
+
+<div class="wrap tabpage" id="tab-plan" hidden>
+  <header><div><p class="eyebrow">慢慢来自习室</p><h1>学习计划</h1><p class="tag">把想做的事情，一件件安排好。闺蜜也看得到。</p></div></header>
+  <section class="card">
+    <input class="field" id="p-title" maxlength="60" placeholder="要做什么？比如：高数第三章习题">
+    <div class="chips" id="p-day"></div>
+    <input class="field" type="date" id="p-date" hidden>
+    <div class="label">预计要多久（可不选）</div>
+    <div class="chips" id="p-est"></div>
+    <input class="field" id="p-note" maxlength="200" placeholder="备注 / 学习笔记（可不填）">
+    <button class="go" id="p-add" disabled>加入计划</button>
+  </section>
+  <div class="switch" role="group" aria-label="看谁的计划" id="p-who"></div>
+  <section id="plans"></section>
+  <p class="note" id="p-status"></p>
+</div>
+
+<div class="wrap tabpage" id="tab-stats" hidden>
+  <header><div><p class="eyebrow">慢慢来自习室</p><h1>学习统计</h1><p class="tag">每一点进步，都值得被记录。</p></div></header>
   <section class="stats" aria-label="专注统计">
     <div class="hero"><span class="label">你们一起专注了</span><b id="st-total">0 分钟</b></div>
     <table><thead><tr><th></th><th>今天</th><th>本周</th><th>全部</th></tr></thead><tbody id="st-body"></tbody></table>
     <p class="note" id="st-together"></p>
   </section>
-
-  <section class="card">
-    <h2>扣下手机，专注开始</h2>
-    <input class="field" id="label" maxlength="30" placeholder="这次学什么？（可不填）">
-    <div class="label">专注多久</div>
-    <div class="chips" id="durs"></div>
-    <button class="go" id="start">开始</button>
-    <p class="note">规则：手机屏幕朝下才计时。拿起手机，剩余时间就开始增加，屏幕会红白闪 + 响铃；碰一下也会警告。离开这个页面超过 10 秒，这次就失败并扣 10 分钟进度，对方会看到。</p>
-    <p class="note" id="status"></p>
+  <section class="stats" aria-label="最近 7 天">
+    <span class="label">最近 7 天</span>
+    <div class="week" id="st-week"></div>
   </section>
-
   <section class="feed">
     <div class="feed-head"><h2 class="label" style="margin:0">你们的记录</h2><button class="soft" id="export">导出记录</button></div>
     <div id="feed"><div class="empty">这里会出现你们两个人的专注记录。<br>扣下手机完成第一次专注，山就开始长出小路了。</div></div>
   </section>
   <p class="mode" id="mode"></p>
   <button class="soft" id="logout" style="justify-self:center">换名字 / 换房间</button>
+</div>
+
+<nav class="tabbar" aria-label="页面">
+  <button data-tab="focus" aria-current="page"><span>⏳</span>自习室</button>
+  <button data-tab="sound"><span>♪</span>声音</button>
+  <button data-tab="plan"><span>✓</span>计划</button>
+  <button data-tab="stats"><span>▥</span>统计</button>
+</nav>
 </div>
 
 <!-- 专注中 -->
@@ -179,6 +263,7 @@ button:focus-visible, input:focus-visible { outline: 2px solid var(--accent); ou
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
 <script src="config.js"></script>
+<script src="sound.js"></script>
 <script>
 "use strict";
 const DURS = [15, 25, 45, 60, 90];
@@ -196,7 +281,8 @@ const ls = { get(k, d) { try { const v = localStorage.getItem(k); return v == nu
              del(k) { try { localStorage.removeItem(k); } catch (e) {} } };
 
 let me = ls.get("mml-me", null); // {name, room}
-let state = { world: "mountain", catName: "团子", logs: [], focus: {} };
+let state = { world: "mountain", catName: "团子", logs: [], focus: {}, plans: [] };
+let planCloud = true; // plans 表还没建时退回本机保存
 let dur = 25;
 
 /* ---------------- 数据层：Supabase（两人同步）或本机（单机试用） ---------------- */
@@ -215,11 +301,13 @@ const store = {
         if (error || !data) break; logs.push(...data); if (data.length < 1000) break; from += 1000;
       }
       state.logs = logs;
+      const pl = await sb.from("plans").select("*").eq("room", me.room).order("created", { ascending: true });
+      if (pl.error) { planCloud = false; state.plans = ls.get("mml-plans-" + me.room, []); } else state.plans = pl.data || [];
       const f = await sb.from("focus").select("*").eq("room", me.room);
       state.focus = {}; (f.data || []).forEach((x) => (state.focus[x.author] = x));
     } else {
       const d = ls.get("mml-local-" + me.room, { world: "mountain", catName: "团子", logs: [], focus: {} });
-      Object.assign(state, d);
+      Object.assign(state, d); planCloud = false; state.plans = ls.get("mml-plans-" + me.room, []);
     }
   },
   saveLocal() { ls.set("mml-local-" + me.room, { world: state.world, catName: state.catName, logs: state.logs, focus: state.focus }); bc?.postMessage("x"); },
@@ -230,7 +318,7 @@ const store = {
   },
   async addLog(l) {
     const row = { room: me.room, author: me.name, at: Date.now(), hugs: {}, ...l };
-    if (cloud) { const { error } = await sb.from("logs").insert(row); if (error) throw error; }
+    if (cloud) { const { data, error } = await sb.from("logs").insert(row).select().single(); if (error) throw error; state.logs.unshift(data); render(); }
     else { row.id = String(Date.now()) + Math.random(); state.logs.unshift(row); this.saveLocal(); }
   },
   async updateLog(id, patch) {
@@ -250,10 +338,24 @@ const store = {
     if (cloud) await sb.from("focus").delete().eq("room", me.room).eq("author", me.name);
     else { delete state.focus[me.name]; this.saveLocal(); }
   },
+  async addPlan(pl) {
+    const row = { room: me.room, author: me.name, created: Date.now(), done: false, spent: 0, ...pl };
+    if (cloud && planCloud) { const { data, error } = await sb.from("plans").insert(row).select().single(); if (error) throw error; state.plans.push(data); }
+    else { row.id = String(Date.now()) + Math.random(); state.plans.push(row); ls.set("mml-plans-" + me.room, state.plans); }
+  },
+  async updatePlan(id, patch) {
+    const x = state.plans.find((y) => y.id === id); if (x) Object.assign(x, patch);
+    if (cloud && planCloud) await sb.from("plans").update(patch).eq("id", id);
+    else ls.set("mml-plans-" + me.room, state.plans);
+  },
+  async deletePlan(id) {
+    if (cloud && planCloud) await sb.from("plans").delete().eq("id", id);
+    else { state.plans = state.plans.filter((y) => y.id !== id); ls.set("mml-plans-" + me.room, state.plans); }
+  },
   subscribe(onChange) {
     if (cloud) {
       channel = sb.channel("room-" + me.room);
-      ["logs", "focus", "rooms"].forEach((t) => channel.on("postgres_changes", { event: "*", schema: "public", table: t, filter: (t === "rooms" ? "code=eq." : "room=eq.") + me.room }, onChange));
+      ["logs", "focus", "rooms", "plans"].forEach((t) => channel.on("postgres_changes", { event: "*", schema: "public", table: t, filter: (t === "rooms" ? "code=eq." : "room=eq.") + me.room }, onChange));
       channel.subscribe();
     } else if ("BroadcastChannel" in window) {
       bc = new BroadcastChannel("mml-" + me.room); bc.onmessage = onChange;
@@ -344,7 +446,7 @@ function render() {
     inp.onchange = () => { const v = inp.value.trim().slice(0, 10); if (v) store.setRoom({ catName: v }); };
   }
   $("info").appendChild(duo);
-  renderFeed(); renderLive(); renderStats();
+  renderFeed(); renderLive(); renderStats(); renderPlans(); renderTodoPick();
 }
 
 function renderStats() {
@@ -361,6 +463,15 @@ function renderStats() {
     r.forEach((c, j) => { const td = document.createElement("td"); td.textContent = j ? fmtMin(c) : c; tr.appendChild(td); });
     body.appendChild(tr);
   });
+  const wk = $("st-week"); wk.innerHTML = "";
+  const days = [...Array(7)].map((_, i) => { const d = new Date(d0); d.setDate(d.getDate() - 6 + i); return d; });
+  const vals = days.map((d) => sum(ok.filter((l) => Number(l.at) < d.getTime() + 864e5), d.getTime()));
+  const mx = Math.max(60, ...vals);
+  days.forEach((d, i) => { const c = document.createElement("div"); const bar = document.createElement("i");
+    bar.style.height = `${Math.round((vals[i] / mx) * 80)}px`; bar.title = fmtMin(vals[i]);
+    const v = document.createElement("span"); v.textContent = vals[i] ? (vals[i] >= 60 ? (vals[i] / 60).toFixed(1) + "h" : vals[i] + "m") : "";
+    const lb = document.createElement("span"); lb.textContent = i === 6 ? "今天" : "日一二三四五六"[d.getDay()];
+    c.append(v, bar, lb); wk.appendChild(c); });
   const tg = ok.filter((l) => l.together), sessions = ok.length;
   $("st-together").textContent = sessions ? `一共 ${sessions} 次专注，其中 ${tg.length} 次是同时在专注（${fmtMin(sum(tg, 0))}）。` : "完成第一次专注后，这里会显示你们的时长。";
 }
@@ -425,7 +536,7 @@ let lock = null, audio = null;
 
 function beep(freq = 880, ms = 160) {
   try {
-    audio = audio || new (window.AudioContext || window.webkitAudioContext)();
+    audio = audio || (window.Ambient ? Ambient.ctx() : new (window.AudioContext || window.webkitAudioContext)());
     const o = audio.createOscillator(), g = audio.createGain();
     o.type = "square"; o.frequency.value = freq; g.gain.value = 0.18;
     o.connect(g); g.connect(audio.destination); o.start(); o.stop(audio.currentTime + ms / 1000);
@@ -465,7 +576,7 @@ $("start").onclick = async () => {
   beep(660, 60); // 解锁声音
   await askSensors();
   run = { start: Date.now(), remaining: dur * 60000, focused: 0, extra: 0, pickups: 0, label: $("label").value.trim().slice(0, 30),
-          phase: "waiting", awayAt: null, together: others().some((f) => f.phase === "down"), sensor: true };
+          phase: "waiting", awayAt: null, planId: pickedPlan, together: others().some((f) => f.phase === "down"), sensor: true };
   saveRun(); openFocus(); wake(); pushFocus(true);
   // 3 秒内没有传感器数据（比如电脑）：直接开始计时
   setTimeout(() => { if (run && !sensorSeen) { run.sensor = false; run.phase = "down"; saveRun(); pushFocus(true); } }, 3000);
@@ -523,6 +634,7 @@ async function finish(full) {
   const minutes = Math.floor(r.focused / 60000);
   if (minutes < 1) { $("status").textContent = "没关系，下次再来。"; return; }
   try {
+    if (r.planId) { const pl = state.plans.find((x) => x.id === r.planId); if (pl) store.updatePlan(pl.id, { spent: (Number(pl.spent) || 0) + minutes }).catch(() => {}); }
     await store.addLog({ minutes, label: r.label, full, failed: false, together: r.together || others().some((f) => f.phase === "down"), pickups: r.pickups });
     if (full) chime();
     $("status").textContent = (full ? "专注完成！" : `学了 ${fmtMin(minutes)}，也很棒。`) + (state.world === "mountain" ? `又往上爬了 ${minutes * PER} 米。` : `${state.catName}又长大了一点。`);
@@ -536,6 +648,136 @@ async function fail() {
   $("status").textContent = `你离开页面太久了，这次专注失败，扣 ${PENALTY} 分钟进度。对方会看到 👀`;
   refresh();
 }
+
+/* ---------------- 页面切换 ---------------- */
+function showTab(t) {
+  document.querySelectorAll(".tabpage").forEach((el) => (el.hidden = el.id !== "tab-" + t));
+  document.querySelectorAll(".tabbar button").forEach((b) => (b.dataset.tab === t ? b.setAttribute("aria-current", "page") : b.removeAttribute("aria-current")));
+  window.scrollTo(0, 0); ls.set("mml-tab", t);
+}
+document.querySelectorAll(".tabbar button").forEach((b) => (b.onclick = () => showTab(b.dataset.tab)));
+
+/* ---------------- 声音 ---------------- */
+function renderSound() {
+  const A = window.Ambient; if (!A) return;
+  const sc = A.SCENES.find((x) => x.id === A.state.scene);
+  $("s-scene").textContent = sc ? sc.name : "自定义混音";
+  $("s-play").textContent = A.playing ? "❚❚" : "▶";
+  const on = A.SOUNDS.filter((x) => (A.state.levels[x.id] || 0) > 0);
+  $("s-state").textContent = A.playing ? (on.length ? "正在播放：" + on.map((x) => x.name).join("、") : "所有声音都是 0，拖动下面的滑块") : "点播放开始";
+  $("sound-now").textContent = A.playing ? `正在播放：${sc ? sc.name : "自定义混音"}` : "没有播放声音";
+  $("sound-quick").textContent = A.playing ? "❚❚ 暂停" : "▶ 播放";
+  const ch = $("scenes"); ch.innerHTML = "";
+  A.SCENES.forEach((x) => { const b = document.createElement("button"); b.className = "chip"; b.textContent = x.name;
+    b.setAttribute("aria-pressed", String(A.state.scene === x.id)); b.onclick = () => { A.scene(x.id); if (!A.playing) A.play(); renderSound(); }; ch.appendChild(b); });
+  $("r-master").value = A.state.master; $("v-master").textContent = A.state.master + "%";
+  const mx = $("mixer");
+  if (!mx.childElementCount) A.SOUNDS.forEach((x) => {
+    const row = document.createElement("div"); row.className = "mixrow";
+    row.innerHTML = `<div class="mixhead"><span class="nm"><span class="ic"></span><span><span class="t"></span><small></small></span></span><span class="v"></span></div><input type="range" min="0" max="100" step="1">`;
+    row.querySelector(".ic").textContent = x.icon; row.querySelector(".t").textContent = x.name;
+    const r = row.querySelector("input"); r.id = "r-" + x.id; r.setAttribute("aria-label", x.name);
+    r.oninput = () => { A.set(x.id, Number(r.value)); if (!A.playing && Number(r.value) > 0) A.play(); renderSound(); };
+    mx.appendChild(row);
+  });
+  A.SOUNDS.forEach((x) => { const v = A.state.levels[x.id] || 0, r = $("r-" + x.id), row = r.parentElement;
+    if (document.activeElement !== r) r.value = v; row.querySelector(".v").textContent = v + "%";
+    row.querySelector("small").textContent = A.playing && v > 0 ? "正在播放" : v > 0 ? "已暂停" : "关闭"; });
+}
+$("s-play").onclick = () => { window.Ambient?.toggle(); renderSound(); };
+$("sound-quick").onclick = () => { window.Ambient?.toggle(); renderSound(); };
+$("s-reset").onclick = () => { window.Ambient?.reset(); renderSound(); };
+$("r-master").oninput = (e) => { window.Ambient?.setMaster(Number(e.target.value)); renderSound(); };
+
+/* ---------------- 学习计划 ---------------- */
+const ymd = (d) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+const today = () => ymd(new Date());
+const tomorrow = () => { const d = new Date(); d.setDate(d.getDate() + 1); return ymd(d); };
+let pDay = "today", pEst = 0, planWho = null, pickedPlan = null;
+function dayLabel(day) {
+  if (!day) return "不定日期"; if (day === today()) return "今天"; if (day === tomorrow()) return "明天";
+  const [y, m, d] = day.split("-").map(Number); return `${m}月${d}日`;
+}
+function planChips() {
+  const dd = $("p-day"); dd.innerHTML = "";
+  [["today", "今天"], ["tomorrow", "明天"], ["date", "选日期"], ["none", "不定日期"]].forEach(([k, t]) => {
+    const b = document.createElement("button"); b.className = "chip"; b.textContent = t; b.setAttribute("aria-pressed", String(pDay === k));
+    b.onclick = () => { pDay = k; $("p-date").hidden = k !== "date"; planChips(); }; dd.appendChild(b); });
+  const ee = $("p-est"); ee.innerHTML = "";
+  [0, 25, 45, 60, 90, 120].forEach((m) => { const b = document.createElement("button"); b.className = "chip"; b.textContent = m ? fmtMin(m) : "不估计";
+    b.setAttribute("aria-pressed", String(pEst === m)); b.onclick = () => { pEst = m; planChips(); }; ee.appendChild(b); });
+}
+$("p-title").oninput = () => ($("p-add").disabled = !$("p-title").value.trim());
+$("p-add").onclick = async () => {
+  const title = $("p-title").value.trim(); if (!title) return;
+  const day = pDay === "today" ? today() : pDay === "tomorrow" ? tomorrow() : pDay === "date" ? ($("p-date").value || today()) : null;
+  $("p-add").disabled = true;
+  try { await store.addPlan({ title: title.slice(0, 60), note: $("p-note").value.trim().slice(0, 200), day, est: pEst || null });
+    $("p-title").value = ""; $("p-note").value = ""; $("p-status").textContent = "加好了。"; render();
+  } catch (e) { $("p-status").textContent = "没存上，检查一下网络再试试。"; $("p-add").disabled = false; }
+  refresh();
+};
+function renderPlans() {
+  const ppl = people(); if (!planWho || !ppl.includes(planWho)) planWho = me.name;
+  const sw = $("p-who"); sw.innerHTML = "";
+  ppl.forEach((n) => { const b = document.createElement("button"); b.textContent = n === me.name ? "我的计划" : `${n}的计划`;
+    b.setAttribute("aria-pressed", String(planWho === n)); b.onclick = () => { planWho = n; renderPlans(); }; sw.appendChild(b); });
+  sw.hidden = ppl.length < 2;
+  const box = $("plans"); box.innerHTML = "";
+  const mine = state.plans.filter((x) => x.author === planWho), t = today();
+  const groups = [
+    ["之前没做完", mine.filter((x) => !x.done && x.day && x.day < t)],
+    ["今天", mine.filter((x) => !x.done && x.day === t)],
+    ["之后", mine.filter((x) => !x.done && x.day && x.day > t).sort((a, b) => a.day.localeCompare(b.day))],
+    ["不定日期", mine.filter((x) => !x.done && !x.day)],
+    ["已完成", mine.filter((x) => x.done).sort((a, b) => (b.done_at || 0) - (a.done_at || 0)).slice(0, 20)]
+  ];
+  let any = false;
+  groups.forEach(([name, list]) => {
+    if (!list.length) return; any = true;
+    const g = document.createElement("div"); g.className = "plangroup";
+    const h = document.createElement("div"); h.className = "label"; h.textContent = `${name} · ${list.length}`; g.appendChild(h);
+    list.forEach((x) => g.appendChild(planRow(x)));
+    box.appendChild(g);
+  });
+  if (!any) box.innerHTML = `<div class="empty">${planWho === me.name ? "还没有学习计划<br>在上面写下第一件想做的事。" : "TA 还没有写计划。"}</div>`;
+  if (!planCloud && cloud) $("p-status").textContent = "计划现在只存在这台手机上。在 Supabase 运行 plans.sql 后就能和闺蜜同步。";
+}
+function planRow(x) {
+  const el = document.createElement("article"); el.className = "plan" + (x.done ? " done" : "");
+  const mineP = x.author === me.name;
+  const ck = document.createElement("button"); ck.className = "check"; ck.setAttribute("aria-pressed", String(!!x.done)); ck.textContent = x.done ? "✓" : "";
+  ck.setAttribute("aria-label", x.done ? "标记为没完成" : "标记为完成"); ck.disabled = !mineP;
+  ck.onclick = () => { const p = store.updatePlan(x.id, { done: !x.done, done_at: x.done ? null : Date.now() }); render(); p.then(refresh); };
+  const mid = document.createElement("div");
+  const t = document.createElement("p"); t.className = "pt"; t.textContent = x.title;
+  const n = document.createElement("p"); n.className = "pn";
+  n.textContent = [dayLabel(x.day), x.est ? `预计 ${fmtMin(x.est)}` : "", x.spent ? `已专注 ${fmtMin(x.spent)}` : "", x.note || ""].filter(Boolean).join(" · ");
+  mid.append(t, n);
+  const act = document.createElement("div"); act.className = "pa";
+  if (mineP && !x.done) { const go = document.createElement("button"); go.className = "soft small"; go.textContent = "去专注";
+    go.onclick = () => { pickPlan(x); showTab("focus"); }; act.appendChild(go); }
+  if (mineP) { const del = document.createElement("button"); del.className = "soft small"; del.textContent = "删除";
+    del.onclick = () => { if (del.dataset.sure) store.deletePlan(x.id).then(refresh);
+      else { del.dataset.sure = "1"; del.textContent = "确定？"; setTimeout(() => { del.textContent = "删除"; delete del.dataset.sure; }, 3000); } };
+    act.appendChild(del); }
+  el.append(ck, mid, act); return el;
+}
+function pickPlan(x) {
+  pickedPlan = pickedPlan === x.id ? null : x.id;
+  $("label").value = pickedPlan ? x.title.slice(0, 30) : "";
+  if (pickedPlan && x.est && DURS.includes(x.est)) { dur = x.est; chips(); }
+  renderTodoPick();
+}
+function renderTodoPick() {
+  const t = today(), list = state.plans.filter((x) => x.author === me.name && !x.done && (!x.day || x.day <= t));
+  const box = $("todo-pick"); box.hidden = !list.length; box.innerHTML = "";
+  if (pickedPlan && !list.some((x) => x.id === pickedPlan)) pickedPlan = null;
+  if (list.length) { const l = document.createElement("span"); l.className = "label"; l.style.alignSelf = "center"; l.style.whiteSpace = "nowrap"; l.textContent = "今天的计划"; box.appendChild(l); }
+  list.forEach((x) => { const b = document.createElement("button"); b.className = "chip"; b.textContent = x.title;
+    b.setAttribute("aria-pressed", String(pickedPlan === x.id)); b.onclick = () => pickPlan(x); box.appendChild(b); });
+}
+$("label").oninput = () => { if (pickedPlan) { pickedPlan = null; renderTodoPick(); } };
 
 /* ---------------- 其他按钮 ---------------- */
 function chips() {
@@ -564,7 +806,7 @@ async function boot() {
   $("setup").hidden = true; $("main").hidden = false;
   if (cloud) sb = window.supabase.createClient(CFG.supabaseUrl, CFG.supabaseKey);
   $("mode").textContent = cloud ? "已连接云端，和闺蜜同步中" : "单机试用模式：数据只存在这台手机上（配置 Supabase 后才能两人同步）";
-  chips();
+  chips(); planChips(); renderSound(); showTab(ls.get("mml-tab", "focus"));
   try { await store.load(); } catch (e) { $("status").textContent = "连不上云端，检查一下网络。"; }
   render();
   store.subscribe(refresh);
