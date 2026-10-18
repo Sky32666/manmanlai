@@ -61,6 +61,13 @@ Deno.serve(async (req) => {
   const body = await req.json().catch(() => ({}));
   if (body.kind === "hourly") return json({ sent: await hourly() });
 
+  // 测试：只发给自己这一台手机
+  if (body.endpoint) {
+    const { data: me } = await sb.from("push_subs").select("*").eq("endpoint", body.endpoint).maybeSingle();
+    if (!me) return json({ sent: 0 });
+    return json({ sent: (await send(me as Sub, { title: String(body.title ?? "🔔 测试通知").slice(0, 80), body: String(body.text ?? "").slice(0, 160), tab: body.tab, tag: "test" })) ? 1 : 0 });
+  }
+
   const { room, from, title, text, tab, tag } = body;
   if (!room || !from || !title) return json({ error: "room, from and title are required" }, 400);
   const { data: subs } = await sb.from("push_subs").select("*").eq("room", room).neq("author", from);

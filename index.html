@@ -357,6 +357,7 @@ input[type="range"] { width: 100%; accent-color: var(--accent); height: 28px; ma
       <button class="soft" id="m-play">▶ 播放今天</button>
     </div>
     <input type="file" id="m-file" accept="image/*,video/*" capture="environment" hidden>
+    <input type="file" id="m-photo-native" accept="image/*" capture="environment" hidden>
     <p class="note" id="m-status"></p>
   </section>
   <section class="card">
@@ -424,6 +425,7 @@ input[type="range"] { width: 100%; accent-color: var(--accent); height: 28px; ma
     <p class="note">开了之后：闺蜜给你留言、开始专注、拍了一刻、发起挑战时会通知你；整点还没拍这一刻会提醒你（7:00–23:00，专注时不打扰）。</p>
     <label class="toggle"><input type="checkbox" id="push-hourly" checked> 整点提醒我拍这一刻</label>
     <button class="go" id="push-on">开启通知</button>
+    <button class="soft" id="push-test" hidden>发一条测试通知给自己</button>
     <p class="note" id="push-status"></p>
   </section>
   <p class="mode" id="mode"></p>
@@ -1160,13 +1162,13 @@ function renderDiary() {
   renderCalendar();
 }
 $("d-text").oninput = () => (dDirty = true);
-async function shrink(file) { // 照片压到 1000px 以内，省流量
+async function shrink(file, max = 1000, q = 0.78) { // 照片压到 max 像素以内，省流量
   const url = URL.createObjectURL(file);
   const img = await new Promise((ok, no) => { const i = new Image(); i.onload = () => ok(i); i.onerror = no; i.src = url; });
-  const k = Math.min(1, 1000 / Math.max(img.width, img.height)), c = document.createElement("canvas");
+  const k = Math.min(1, max / Math.max(img.width, img.height)), c = document.createElement("canvas");
   c.width = Math.round(img.width * k); c.height = Math.round(img.height * k); c.getContext("2d").drawImage(img, 0, 0, c.width, c.height);
   URL.revokeObjectURL(url);
-  return await new Promise((ok) => c.toBlob(ok, "image/jpeg", 0.78));
+  return await new Promise((ok) => c.toBlob(ok, "image/jpeg", q));
 }
 let photoBlob = null;
 $("d-photo").onchange = async (e) => {
@@ -1409,7 +1411,7 @@ async function openCam() {
 async function startStream() {
   stopStream();
   try {
-    camStream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: camFacing, width: { ideal: 720 }, height: { ideal: 720 } }, audio: true })
+    camStream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: camFacing, width: { ideal: 1920 }, height: { ideal: 1080 }, frameRate: { ideal: 30 } }, audio: true })
       .catch(() => navigator.mediaDevices.getUserMedia({ video: { facingMode: camFacing }, audio: false }));
     const v = $("cam-video"); v.srcObject = camStream; v.style.transform = camFacing === "user" ? "scaleX(-1)" : ""; await v.play().catch(() => {});
   } catch (e) { closeCam(); $("m-status").textContent = "打不开相机：请在 iPhone 设置里允许 Safari 使用相机，或者改用系统相机。"; $("m-file").click(); }
@@ -1422,18 +1424,19 @@ function renderCamDurs() {
 }
 $("cam-close").onclick = closeCam;
 $("cam-flip").onclick = () => { camFacing = camFacing === "user" ? "environment" : "user"; startStream(); };
-$("cam-photo").onclick = async () => {
-  const v = $("cam-video"); if (!v.videoWidth) return;
-  const k = Math.min(1, 1000 / Math.max(v.videoWidth, v.videoHeight)), c = document.createElement("canvas");
-  c.width = Math.round(v.videoWidth * k); c.height = Math.round(v.videoHeight * k);
-  const g = c.getContext("2d"); if (camFacing === "user") { g.translate(c.width, 0); g.scale(-1, 1); } g.drawImage(v, 0, 0, c.width, c.height);
-  const blob = await new Promise((ok) => c.toBlob(ok, "image/jpeg", 0.8));
-  const cap = $("cam-caption").value.trim(); closeCam(); saveMoment(blob, "jpg", "image/jpeg", cap);
+$("cam-photo").onclick = () => { // 照片用 iPhone 自己的相机拍，画质最好
+  pendingCaption = $("cam-caption").value.trim(); closeCam(); $("m-photo-native").click();
+};
+let pendingCaption = "";
+$("m-photo-native").onchange = async (e) => {
+  const f = e.target.files[0]; e.target.value = ""; if (!f) return;
+  try { saveMoment(await shrink(f, 1600, 0.86), "jpg", "image/jpeg", pendingCaption); } catch (err) { $("m-status").textContent = "这张照片读不出来，换一张试试。"; }
+  pendingCaption = "";
 };
 $("cam-clip").onclick = () => {
   if (!camStream || !window.MediaRecorder) { closeCam(); $("m-file").click(); return; }
   const type = ["video/mp4;codecs=avc1", "video/mp4", "video/webm;codecs=vp9", "video/webm"].find((t) => MediaRecorder.isTypeSupported?.(t)) || "";
-  const chunks = []; recorder = new MediaRecorder(camStream, { mimeType: type || undefined, videoBitsPerSecond: 900000, audioBitsPerSecond: 64000 });
+  const chunks = []; recorder = new MediaRecorder(camStream, { mimeType: type || undefined, videoBitsPerSecond: 2500000, audioBitsPerSecond: 96000 });
   recorder.ondataavailable = (e) => e.data.size && chunks.push(e.data);
   recorder.onstop = () => {
     const mime = (recorder.mimeType || type || "video/mp4").split(";")[0], ext = mime.includes("webm") ? "webm" : "mp4";
@@ -1449,7 +1452,7 @@ $("m-file").onchange = async (e) => { // 系统相机拍的照片或视频
   if (f.type.startsWith("video/")) {
     if (f.size > 25e6) { $("m-status").textContent = "视频太长了，拍几秒就好。"; return; }
     saveMoment(f, f.type.includes("quicktime") ? "mov" : f.type.includes("webm") ? "webm" : "mp4", f.type || "video/mp4", "");
-  } else { try { saveMoment(await shrink(f), "jpg", "image/jpeg", ""); } catch (err) { $("m-status").textContent = "这张照片读不出来，换一张试试。"; } }
+  } else { try { saveMoment(await shrink(f, 1600, 0.86), "jpg", "image/jpeg", ""); } catch (err) { $("m-status").textContent = "这张照片读不出来，换一张试试。"; } }
 };
 async function saveMoment(blob, ext, mime, caption) {
   if (!(cloud && postCloud) && mime.startsWith("video")) { $("m-status").textContent = "视频需要连上云端才能保存，先拍张照片吧。"; return; }
@@ -1521,7 +1524,7 @@ async function pushState() {
 async function renderPush() {
   const st = await pushState().catch(() => "unsupported"), btn = $("push-on");
   $("push-hourly").checked = ls.get("mml-push-hourly", true);
-  btn.hidden = st !== "off";
+  btn.hidden = st !== "off"; $("push-test").hidden = st !== "on" || !cloud;
   $("push-status").textContent = {
     on: "✅ 通知已开启。", off: "", denied: "通知被拒绝了：到 iPhone 设置 → 通知 → 慢慢来，打开允许通知。",
     home: "iPhone 要先把慢慢来添加到主屏幕：点 Safari 下面的分享 → 添加到主屏幕，再从主屏幕打开，就能开启通知了。",
@@ -1545,6 +1548,18 @@ $("push-on").onclick = async () => {
 $("push-hourly").onchange = async (e) => {
   ls.set("mml-push-hourly", e.target.checked);
   try { const reg = await navigator.serviceWorker.ready, sub = await reg.pushManager.getSubscription(); if (sub && cloud) await savePushSub(sub); } catch (err) {}
+};
+$("push-test").onclick = async () => {
+  $("push-status").textContent = "发送中…（锁屏或切到别的 App 更容易看到）";
+  try {
+    const reg = await navigator.serviceWorker.ready, sub = await reg.pushManager.getSubscription();
+    if (!sub) { renderPush(); return; }
+    const r = await fetch(fnUrl(), { method: "POST", headers: { "Content-Type": "application/json", apikey: CFG.supabaseKey, Authorization: `Bearer ${CFG.supabaseKey}` },
+      body: JSON.stringify({ endpoint: sub.endpoint, title: "🔔 测试通知", text: "看到这条就说明通知可以用了！", tab: "stats", tag: "test" }) }).then((x) => x.json());
+    if (r.error) { $("push-status").textContent = "通知程序是旧版本：到 Supabase → Edge Functions → notify，把新的代码贴进去重新部署一次。"; return; }
+    $("push-status").textContent = r.sent ? "✅ 已发出。几秒内手机上会弹出通知。" : "没发出去：这台手机的通知地址可能失效了，点「开启通知」重新开一次。";
+    if (r.sent === 0) { await sub.unsubscribe().catch(() => {}); renderPush(); }
+  } catch (e) { $("push-status").textContent = "测试失败：" + (e?.message || "检查网络"); }
 };
 function openFromNotification(tab, action) {
   if (tab) showTab(tab);
