@@ -387,6 +387,12 @@ button:active:not(:disabled) { transform: scale(.96); }
 .emoji-rain span { position: absolute; bottom: -40px; animation: emojiup 2.4s ease-out forwards; }
 @keyframes emojiup { 0% { transform: translateY(0) scale(.6); opacity: 0; } 15% { opacity: 1; } 100% { transform: translateY(-75vh) scale(1.1); opacity: 0; } }
 .visit-art { border-radius: 16px; overflow: hidden; }
+.sheet-card { max-height: 88vh; overflow-y: auto; }
+.prof { display: grid; grid-template-columns: auto 1fr auto; gap: 12px; align-items: center; }
+.prof .avatar { width: 54px; height: 54px; font-size: 1.3rem; background: color-mix(in srgb, var(--cat) 30%, var(--surface)); color: var(--cat-dark); }
+.prof b { font-size: 1.1rem; display: block; } .prof small { color: var(--muted); font-size: .82rem; }
+.camx.light { background: var(--bg); color: var(--ink); }
+#visit-slot { display: grid; gap: 8px; }
 .visit-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
 .sync { background: var(--accent-soft); border-radius: 12px; padding: 10px 12px; }
 .f-friends { display: grid; gap: 6px; width: min(300px, 80vw); }
@@ -2011,6 +2017,6 @@ if ("serviceWorker" in navigator) navigator.serviceWorker.register("sw.js").catc
 </script>
 <script src="mountains.js?v=2"></script>
 <script src="cat.js?v=5"></script>
-<script src="social.js?v=2"></script>
+<script src="social.js?v=3"></script>
 </body>
 </html>

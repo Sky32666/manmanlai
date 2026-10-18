@@ -37,14 +37,22 @@ function floatEmoji(e, n = 12, from) {
 
 /* ---------- 戳一戳 / 加油表情 ---------- */
 let pokeTo = null, lastPoke = 0;
-function openPoke(name, anchor) {
+function openPoke(name, anchor) { // 点闺蜜头像：TA 的小主页（状态、打招呼、TA 的猫）
   pokeTo = name; let sh = $("poke-sheet");
   if (!sh) { sh = document.createElement("div"); sh.id = "poke-sheet"; sh.className = "sheet"; document.body.appendChild(sh); }
-  sh.innerHTML = `<div class="sheet-card"><b>给 ${name} 打个招呼</b><div class="cheers">${CHEERS.map(([e, t]) => `<button data-e="${e}"><span>${e}</span><small>${t}</small></button>`).join("")}</div><button class="soft" id="poke-x">关闭</button></div>`;
+  const st = statusOf(name);
+  sh.innerHTML = `<div class="sheet-card">
+      <div class="prof"><div class="avatar">${[...name][0].toUpperCase()}</div><div><b></b><small>${st.label} · 今天 ${fmtMin(st.todayMin)}${st.mood ? " · 心情 " + st.mood : ""}</small></div><button class="camx light" id="poke-x" aria-label="关闭">✕</button></div>
+      <div class="label">打个招呼</div>
+      <div class="cheers">${CHEERS.map(([e, t]) => `<button data-e="${e}"><span>${e}</span><small>${t}</small></button>`).join("")}</div>
+      <div id="visit-slot"></div>
+    </div>`;
+  sh.querySelector(".prof b").textContent = name;
   sh.hidden = false;
   sh.querySelectorAll(".cheers button").forEach((b) => (b.onclick = () => sendCheer(b.dataset.e, anchor)));
   $("poke-x").onclick = () => (sh.hidden = true);
   sh.onclick = (e) => { if (e.target === sh) sh.hidden = true; };
+  renderVisit(name);
 }
 async function sendCheer(e, anchor) {
   if (Date.now() - lastPoke < 2500) { toast("慢一点点～"); return; }
@@ -63,22 +71,17 @@ function friendCat(n) {
   const mins = Math.max(0, state.logs.filter((l) => l.author === n).reduce((a, l) => a + (Number(l.minutes) || 0), 0));
   return { c: { breed: "orange", name: "团子", outfits: { head: "bow" }, ...d }, mins };
 }
-function renderVisit() {
-  const fr = friends(); let card = $("visit-card");
-  if (!fr.length || typeof catSVG !== "function") { if (card) card.hidden = true; return; }
-  if (!card) { card = document.createElement("section"); card.id = "visit-card"; card.className = "card visit"; $("focus-card").after(card); }
-  card.hidden = false;
-  const n = card.dataset.who && fr.includes(card.dataset.who) ? card.dataset.who : fr[0]; card.dataset.who = n;
+function renderVisit(n) {
+  const slot = $("visit-slot"); if (!slot || !n || typeof catSVG !== "function") return;
   const { c, mins } = friendCat(n), st = stageAt(mins), myFish = fishOwned(catState()), key = [n, c.breed, JSON.stringify(c.outfits), st.i].join("|");
-  if (card.dataset.key !== key) {
-    card.dataset.key = key;
-    card.innerHTML = `<div class="feed-head"><h2>🐾 去${n}家看看</h2>${fr.length > 1 ? `<select id="visit-who" class="field" style="width:auto">${fr.map((f) => `<option ${f === n ? "selected" : ""}>${f}</option>`).join("")}</select>` : ""}</div>
+  if (slot.dataset.key !== key) {
+    slot.dataset.key = key;
+    slot.innerHTML = `<div class="label">🐾 ${n}的猫</div>
       <div class="visit-art" id="visit-art">${catSVG(c, st.i).replace(/catheadclip/g, "vcatheadclip").replace(/catclip/g, "vcatclip")}</div>
       <p class="note"><b>${c.name}</b> · ${BREEDS[c.breed]?.name || "猫猫"} · ${st.s.n}</p>
       <div class="visit-actions"><button class="cat-btn" id="visit-pet"><b>🤚</b>摸摸它</button><button class="cat-btn" id="visit-gift"><b>🐟</b>送一条小鱼干<small id="visit-fish"></small></button></div>`;
-    if ($("visit-who")) $("visit-who").onchange = (e) => { card.dataset.who = e.target.value; card.dataset.key = ""; renderVisit(); };
     $("visit-pet").onclick = async () => {
-      const svg = card.querySelector(".catsvg"); svg?.classList.add("m-happy"); setTimeout(() => svg?.classList.remove("m-happy"), 1500);
+      const svg = slot.querySelector(".catsvg"); svg?.classList.add("m-happy"); setTimeout(() => svg?.classList.remove("m-happy"), 1500);
       const r = $("visit-art").getBoundingClientRect(); floatEmoji("💕", 5, { x: r.left + r.width / 2, y: r.top + r.height * 0.4 });
       if (Date.now() - lastPet < 8000) return; lastPet = Date.now();
       try { await store.addPost({ kind: "catpet", goal: n, text: "pet" }); } catch (e) {}
@@ -86,9 +89,10 @@ function renderVisit() {
     };
     $("visit-gift").onclick = async () => {
       if (fishOwned(catState()) < 1) { toast("你的小鱼干不够了，专注 10 分钟换一条吧"); return; }
-      const svg = card.querySelector(".catsvg"); svg?.classList.add("m-happy", "m-eat", "feeding"); setTimeout(() => svg?.classList.remove("m-happy", "m-eat", "feeding"), 1800);
+      const svg = slot.querySelector(".catsvg"); svg?.classList.add("m-happy", "m-eat", "feeding"); setTimeout(() => svg?.classList.remove("m-happy", "m-eat", "feeding"), 1800);
       try { await store.addPost({ kind: "gift", goal: n, target: 1, text: "fish" }); } catch (e) { return; }
-      notify(`🐟 ${me.name}送了你的猫 1 条小鱼干`, "去「我的」喂它吧", "me", "gift"); toast(`送给${n}的猫啦 🐟`); render();
+      notify(`🐟 ${me.name}送了你的猫 1 条小鱼干`, "去「我的」喂它吧", "me", "gift"); toast(`送给${n}的猫啦 🐟`);
+      $("visit-fish").textContent = `你有 ×${fishOwned(catState())}`;
     };
   }
   $("visit-fish").textContent = `你有 ×${myFish}`;
@@ -205,7 +209,9 @@ render = function () {
   _render();
   try {
     document.querySelectorAll("#seats .seat.friend:not(.empty)").forEach((el) => el.classList.add("tap"));
-    renderVisit(); renderSyncRow(); decorateNotes(); decoratePlayer();
+    $("visit-card")?.remove(); // 旧版本放在自习室里的卡片
+    if (!$("poke-sheet")?.hidden && pokeTo) renderVisit(pokeTo);
+    renderSyncRow(); decorateNotes(); decoratePlayer();
   } catch (e) { console.error(e); }
 };
 // 定期清掉自己发过的旧戳一戳和摸猫记录（鱼干要留着算账）
