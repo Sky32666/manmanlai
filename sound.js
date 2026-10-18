@@ -1,5 +1,5 @@
 // 慢慢来 · 音乐和环境音
-// 音乐和咖啡馆人声是真实录音（都可以免费使用，见 music/CREDITS.txt）；其他环境音由 Web Audio 实时合成。
+// 音乐和人声是真实录音（都可以免费使用，见 music/CREDITS.txt）；其他环境音由 Web Audio 实时合成。
 "use strict";
 (function () {
   const SOUNDS = [
@@ -13,16 +13,17 @@
     { id: "birds", name: "鸟鸣", icon: "♫" },
     { id: "fire", name: "篝火", icon: "✺" },
     { id: "train", name: "列车行进", icon: "▤" },
-    { id: "cafe", name: "人声 · 咖啡馆", icon: "☕" }
+    { id: "chat", name: "人声 · 聊天", icon: "💬" },
+    { id: "cafe", name: "人声 · 热闹咖啡馆", icon: "☕" }
   ];
   const SCENES = [
-    { id: "tram", name: "夕阳电车", mix: { music: 55, train: 35, wind: 15, cafe: 10 } },
+    { id: "tram", name: "夕阳电车", mix: { music: 55, train: 35, wind: 15, chat: 15 } },
     { id: "rainy", name: "雨天书房", mix: { piano: 55, rain: 50, fire: 15 } },
     { id: "night", name: "钢琴夜读", mix: { piano: 65, wind: 10 } },
     { id: "dream", name: "安静的梦", mix: { pad: 50, musicbox: 35, waves: 15 } },
     { id: "sea", name: "海边自习", mix: { music: 40, waves: 50, wind: 15, birds: 8 } },
     { id: "forest", name: "森林早晨", mix: { birds: 45, wind: 25, piano: 30 } },
-    { id: "cafe", name: "街角咖啡馆", mix: { music: 45, cafe: 40, rain: 15 } },
+    { id: "cafe", name: "街角咖啡馆", mix: { music: 45, cafe: 45, chat: 25, rain: 10 } },
     { id: "quiet", name: "只要白噪音", mix: { rain: 40, wind: 20 } }
   ];
 
@@ -38,14 +39,14 @@
     ].map((t, i) => ({ title: t, artist: "肖邦", src: `music/piano/${i + 1}.mp3` })) }
   };
   // 真实环境录音：单个文件无缝循环
-  const RECORDINGS = { cafe: "ambience/cafe.mp3" };
+  const RECORDINGS = { chat: "ambience/chat.mp3", cafe: "ambience/cafe.mp3" };
   const players = {}; // id -> { el, idx }
   let onChange = () => {};
 
   let ctx = null, master = null, playing = false;
   const gains = {}, started = {}, timers = [];
   const saved = (() => { try { return JSON.parse(localStorage.getItem("mml-sound") || "null"); } catch (e) { return null; } })();
-  const state = saved || { master: 80, levels: { music: 55, train: 35, wind: 15, cafe: 10 }, scene: "tram" };
+  const state = saved || { master: 80, levels: { music: 55, train: 35, wind: 15, chat: 15 }, scene: "tram" };
   state.track = state.track || { music: 0, piano: 0 };
 
   function save() { try { localStorage.setItem("mml-sound", JSON.stringify(state)); } catch (e) {} }

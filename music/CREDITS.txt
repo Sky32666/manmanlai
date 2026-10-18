@@ -14,8 +14,15 @@ Lo-fi 音乐 (music/lofi/1-8.mp3)
 
 All files were re-encoded to 96 kbps MP3 for mobile.
 
-咖啡馆人声 (ambience/cafe.mp3)
-  udo noll — "Kurhaus Dangast - cafe ambience" (radio aporee field recording)
-  License: CC BY 3.0 https://creativecommons.org/licenses/by/3.0/
-  https://archive.org/details/aporee_31243_35922
-  Changes: trimmed to 165 s, compressed and loudness-normalized, end crossfaded into the start for seamless looping.
+人声 · 聊天 (ambience/chat.mp3)
+  OR poiesis — "1 chome shinjuku, tokyo - coffe bar, ladies, chat" (radio aporee field recording)
+  License: CC BY-SA 3.0 https://creativecommons.org/licenses/by-sa/3.0/
+  https://archive.org/details/aporee_21734_25268
+  Changes: trimmed, high-passed at 120 Hz, compressed and loudness-normalized, end crossfaded into the start
+  for seamless looping. This edited file is shared under the same CC BY-SA 3.0 license.
+
+人声 · 热闹咖啡馆 (ambience/cafe.mp3)
+  david.j.pitt — "Busy Cafe, Ledbury, Herefordshire, UK" (radio aporee field recording)
+  License: Public Domain Mark 1.0
+  https://archive.org/details/aporee_54683_62538
+  Changes: 3-minute excerpt from 5:40, high-passed, compressed, loudness-normalized, looped.
