@@ -40,7 +40,7 @@ h1 { font-family: var(--display); font-weight: 400; font-size: 2.3rem; line-heig
 .tag { color: var(--muted); font-size: .9rem; margin: 6px 0 0; }
 .switch { display: inline-flex; background: var(--surface); border: 1px solid var(--line); border-radius: 999px; padding: 3px; }
 .switch button { border: 0; background: none; color: var(--muted); font: inherit; font-size: .9rem; padding: 6px 14px; border-radius: 999px; }
-.switch button[aria-pressed="true"] { background: var(--accent); color: var(--surface); }
+.switch button[aria-pressed="true"] { background: var(--accent); color: var(--on-accent, var(--surface)); }
 button { cursor: pointer; }
 button:focus-visible, input:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
 .scene { background: var(--surface); border: 1px solid var(--line); border-radius: 20px; overflow: hidden; }
@@ -336,6 +336,41 @@ input[type="range"] { width: 100%; accent-color: var(--accent); height: 28px; ma
 .pk { border: 1px dashed var(--line); border-radius: 12px; padding: 6px 2px; display: grid; justify-items: center; text-align: center; gap: 1px; opacity: .55; }
 .pk.got { border-style: solid; border-color: var(--accent); background: var(--accent-soft); opacity: 1; }
 .pk b { font-size: 1.1rem; font-weight: 400; } .pk span { font-size: .7rem; line-height: 1.2; overflow-wrap: anywhere; } .pk small { font-size: .62rem; color: var(--muted); }
+/* ---------- 主题与好看一点 ---------- */
+body { background: radial-gradient(900px 340px at 50% -120px, var(--accent-soft), transparent 72%) no-repeat, var(--bg); min-height: 100vh; }
+.card, .scene, .stats, .item, .plan, .chal { box-shadow: 0 10px 28px -18px color-mix(in srgb, var(--accent) 55%, transparent); }
+.card, .scene, .stats { border-color: color-mix(in srgb, var(--line) 70%, transparent); }
+.go { background: linear-gradient(135deg, var(--accent), color-mix(in srgb, var(--accent) 72%, #ffffff)); color: var(--on-accent, #fff);
+  box-shadow: 0 10px 22px -12px color-mix(in srgb, var(--accent) 80%, transparent); }
+.go:disabled { box-shadow: none; }
+button { transition: transform .12s ease, background-color .2s ease; }
+button:active:not(:disabled) { transform: scale(.96); }
+.seg button[aria-pressed="true"], .switch button[aria-pressed="true"], .subtabs button[aria-selected="true"] { color: var(--on-accent, #fff); }
+.tabbar button span { display: grid; place-items: center; width: 44px; height: 28px; border-radius: 99px; transition: background-color .2s ease; }
+.tabbar button[aria-current="page"] span { background: var(--accent-soft); }
+.pagehead h1 { background: linear-gradient(90deg, var(--ink), color-mix(in srgb, var(--accent) 80%, var(--ink))); -webkit-background-clip: text; background-clip: text; color: transparent; }
+.tabpage:not([hidden]) > * { animation: rise .38s ease both; }
+.tabpage:not([hidden]) > *:nth-child(2) { animation-delay: .04s; } .tabpage:not([hidden]) > *:nth-child(3) { animation-delay: .08s; } .tabpage:not([hidden]) > *:nth-child(4) { animation-delay: .12s; }
+@keyframes rise { from { transform: translateY(8px); } to { transform: none; } }
+.swatches { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+.sw { font: inherit; border: 1px solid var(--line); background: var(--surface); color: var(--ink); border-radius: 16px; padding: 10px 6px; display: grid; justify-items: center; gap: 6px; }
+.sw i { width: 34px; height: 34px; border-radius: 50%; box-shadow: inset 0 0 0 3px rgba(255,255,255,.6); }
+.sw span { font-size: .82rem; }
+.sw[aria-pressed="true"] { border: 2px solid var(--accent); }
+.seg3 { display: grid; grid-template-columns: repeat(3, 1fr); background: var(--bg); border-radius: 14px; padding: 4px; gap: 4px; }
+.seg3 button { font: inherit; font-size: .88rem; border: 0; background: none; color: var(--muted); border-radius: 10px; padding: 8px 0; }
+.seg3 button[aria-pressed="true"] { background: var(--surface); color: var(--ink); box-shadow: 0 2px 8px rgba(0,0,0,.08); }
+.confetti { position: fixed; inset: 0; pointer-events: none; z-index: 50; overflow: hidden; }
+.confetti i { position: absolute; top: -12px; width: 8px; height: 12px; border-radius: 2px; animation: fall linear forwards; }
+@keyframes fall { to { top: 105vh; transform: translateX(var(--dx)) rotate(720deg); } }
+.peakpick { display: grid; gap: 6px; max-height: 300px; overflow-y: auto; }
+.pp { font: inherit; text-align: left; border: 1px solid var(--line); background: var(--surface); color: var(--ink); border-radius: 12px; padding: 8px 12px; display: grid; gap: 1px; }
+.pp.on { border-color: var(--accent); background: var(--accent-soft); }
+.pp:disabled { opacity: .5; }
+.pp small { color: var(--muted); font-size: .76rem; }
+.big small { display: inline-block; margin-left: 8px; }
+.small-print { font-size: .72rem; }
+@media (prefers-reduced-motion: reduce) { .tabpage:not([hidden]) > * { animation: none; } button { transition: none; } }
 /* ---------- 手机上更好用 ---------- */
 .tabpage h1 { font-size: 1.9rem; }
 #tab-focus h1 { font-size: 2.1rem; }
@@ -583,6 +618,11 @@ input[type="range"] { width: 100%; accent-color: var(--accent); height: 28px; ma
   <section class="feed">
     <div class="feed-head"><h2 class="label" style="margin:0">我的记录</h2><button class="soft" id="export">导出记录</button></div>
     <div id="feed"><div class="empty">这里会出现你的专注记录。<br>扣下手机完成第一次专注，山就开始长出小路了。</div></div>
+  </section>
+  <section class="card" aria-label="主题">
+    <h2>🎨 主题</h2>
+    <div class="swatches" id="th-colors"></div>
+    <div class="seg3" id="th-mode" role="group" aria-label="深浅"></div>
   </section>
   <section class="card" aria-label="通知">
     <h2>🔔 通知</h2>
@@ -1112,6 +1152,7 @@ async function finish(full) {
     const before = mountainAt(total() - minutes), after = mountainAt(total());
     const summits = (after.round * MOUNTAINS.length + after.i) - (before.round * MOUNTAINS.length + before.i);
     const reached = summits > 0 ? MOUNTAINS[(after.i - 1 + MOUNTAINS.length) % MOUNTAINS.length] : null;
+    if (full) confetti();
     $("status").textContent = (full ? `专注完成！一共 ${fmtMin(minutes)}${overMin ? `（加时 ${fmtMin(overMin)}）` : ""}。` : `学了 ${fmtMin(minutes)}，也很棒。`)
       + (state.world === "mountain" ? (typeof peakFinishMsg === "function" ? peakFinishMsg(minutes) : "") : (typeof catGrowMsg === "function" ? catGrowMsg(minutes) : "猫猫又长大了一点。"));
   } catch (e) { $("status").textContent = "没存上，检查一下网络再试试。"; }
@@ -1674,7 +1715,7 @@ function goFocus(task) { // 从计划里的任务去自习室专注
 }
 function offerDone(pl) {
   const b = $("done-task"); b.hidden = false; b.textContent = `✓ 把「${pl.title}」标记完成`;
-  b.onclick = async () => { b.hidden = true; await store.updatePlan(pl.id, { done: true, done_at: Date.now() }).catch(() => {}); $("status").textContent = `「${pl.title}」完成啦 🎉`; render(); };
+  b.onclick = async () => { b.hidden = true; await store.updatePlan(pl.id, { done: true, done_at: Date.now() }).catch(() => {}); $("status").textContent = `「${pl.title}」完成啦 🎉`; confetti(40); render(); };
 }
 function renderTodaySum() {
   const t = today(), mins = myLogs().filter((l) => !l.failed && dayOf(l.at) === t).reduce((a, l) => a + (Number(l.minutes) || 0), 0);
@@ -1810,6 +1851,51 @@ function openFromNotification(tab, action) {
 }
 navigator.serviceWorker?.addEventListener("message", (e) => openFromNotification(e.data?.tab, e.data?.action));
 
+/* ---------------- 主题：颜色和深浅可以自己调 ---------------- */
+const THEMES = {
+  forest:   { name: "森林绿", a: "#2f6b5a", s: "#d9e8e1", bg: "#eef2ee", da: "#7cc4a8", ds: "#24392f" },
+  sakura:   { name: "樱花粉", a: "#c4577d", s: "#f7dde7", bg: "#fbf1f4", da: "#f08fb2", ds: "#3d2532" },
+  milktea:  { name: "奶茶",   a: "#94654a", s: "#efe2d4", bg: "#f8f2eb", da: "#d9a77f", ds: "#3a2c22" },
+  sea:      { name: "海盐蓝", a: "#3a70a6", s: "#dbe7f4", bg: "#eef3f9", da: "#8bb8e8", ds: "#1f3247" },
+  lavender: { name: "薰衣草", a: "#7260b0", s: "#e7e1f6", bg: "#f4f1fb", da: "#b3a4ea", ds: "#2f2847" },
+  lemon:    { name: "柠檬黄", a: "#94700a", s: "#f6ecc5", bg: "#fcf9ec", da: "#e8c35a", ds: "#3b3218" }
+};
+let theme = ls.get("mml-theme", { c: "forest", m: "auto" });
+const darkMQ = window.matchMedia ? matchMedia("(prefers-color-scheme: dark)") : null;
+function applyTheme() {
+  const t = THEMES[theme.c] || THEMES.forest, dark = theme.m === "dark" || (theme.m === "auto" && darkMQ && darkMQ.matches);
+  const v = dark ? {
+    "--bg": `color-mix(in srgb, ${t.da} 6%, #121416)`, "--surface": `color-mix(in srgb, ${t.da} 9%, #1b1e21)`, "--ink": "#eceff1", "--muted": "#a2a9ae",
+    "--line": `color-mix(in srgb, ${t.da} 20%, #2c3034)`, "--accent": t.da, "--accent-soft": t.ds, "--on-accent": "#14171a" }
+  : { "--bg": t.bg, "--surface": "#ffffff", "--ink": "#22272b", "--muted": "#6b7276", "--line": `color-mix(in srgb, ${t.a} 16%, #e4e6e8)`,
+    "--accent": t.a, "--accent-soft": t.s, "--on-accent": "#ffffff" };
+  const r = document.documentElement; Object.entries(v).forEach(([k, x]) => r.style.setProperty(k, x));
+  r.style.colorScheme = dark ? "dark" : "light"; r.dataset.theme = dark ? "dark" : "light";
+  document.querySelector('meta[name="theme-color"]')?.setAttribute("content", dark ? "#15181b" : t.bg);
+  renderThemePicker();
+}
+function renderThemePicker() {
+  const box = $("th-colors"); if (!box) return; box.innerHTML = "";
+  Object.entries(THEMES).forEach(([k, t]) => { const b = document.createElement("button"); b.className = "sw"; b.setAttribute("aria-pressed", String(theme.c === k));
+    b.innerHTML = `<i style="background:linear-gradient(135deg, ${t.a}, ${t.s})"></i><span>${t.name}</span>`;
+    b.onclick = () => { theme.c = k; ls.set("mml-theme", theme); applyTheme(); }; box.appendChild(b); });
+  const m = $("th-mode"); m.innerHTML = "";
+  [["auto", "跟随系统"], ["light", "浅色"], ["dark", "深色"]].forEach(([k, n]) => { const b = document.createElement("button"); b.textContent = n; b.setAttribute("aria-pressed", String(theme.m === k));
+    b.onclick = () => { theme.m = k; ls.set("mml-theme", theme); applyTheme(); }; m.appendChild(b); });
+}
+darkMQ?.addEventListener?.("change", () => theme.m === "auto" && applyTheme());
+applyTheme();
+
+/* ---------------- 撒花 ---------------- */
+function confetti(n = 60) {
+  if (matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+  const cols = ["#f07c9c", "#f2c14e", "#7cc4a8", "#8bb8e8", "#b3a4ea", "#ff9f6e"], box = document.createElement("div"); box.className = "confetti";
+  for (let i = 0; i < n; i++) { const p = document.createElement("i"); p.style.left = Math.random() * 100 + "vw"; p.style.background = cols[i % cols.length];
+    p.style.animationDelay = Math.random() * 0.4 + "s"; p.style.animationDuration = 1.4 + Math.random() * 1.2 + "s"; p.style.transform = `rotate(${Math.random() * 360}deg)`;
+    p.style.setProperty("--dx", (Math.random() * 120 - 60) + "px"); box.appendChild(p); }
+  document.body.appendChild(box); setTimeout(() => box.remove(), 3000);
+}
+
 /* ---------------- 其他按钮 ---------------- */
 function chips() {
   $("dur-big").textContent = `${String(dur).padStart(2, "0")}:00`; $("dur-note").textContent = `${dur} 分钟`;
@@ -1887,7 +1973,7 @@ async function boot() {
 boot();
 if ("serviceWorker" in navigator) navigator.serviceWorker.register("sw.js").catch(() => {});
 </script>
-<script src="mountains.js?v=1"></script>
-<script src="cat.js?v=3"></script>
+<script src="mountains.js?v=2"></script>
+<script src="cat.js?v=4"></script>
 </body>
 </html>

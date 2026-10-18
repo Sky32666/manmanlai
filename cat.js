@@ -75,7 +75,7 @@ async function claimWish() {
   const c = todayCaps(catState()); if (c.wishDone === today()) return;
   await saveCat({ ...c, wishDone: today(), affection: c.affection + 5, bonusFish: (c.bonusFish || 0) + 1 });
   setCatMood("happy", 2200); const r = $("art").getBoundingClientRect(); hearts(r.width / 2, r.height * 0.35, 6);
-  say("心愿实现啦！最喜欢你了 💕", 3000); render();
+  say("心愿实现啦！最喜欢你了 💕", 3000); if (typeof confetti === "function") confetti(50); render();
 }
 const fullness = (c) => (c.lastFed ? Math.max(0, Math.round(100 - ((Date.now() - c.lastFed) / 36e5) * 8)) : 40); // 大约 12 小时饿
 const affLevel = (a) => Math.floor(a / 20) + 1;
