@@ -254,6 +254,60 @@ input[type="range"] { width: 100%; accent-color: var(--accent); height: 28px; ma
 .r-th img, .r-th video { width: 100%; height: 100%; object-fit: cover; }
 .r-th span { position: absolute; left: 0; right: 0; bottom: 0; font-size: .68rem; color: #fff; background: linear-gradient(transparent, rgba(0,0,0,.6)); padding: 10px 4px 3px; text-align: left; }
 .roomcode { font-family: var(--display); font-size: 1.2rem; color: var(--accent); }
+/* ---------- 猫猫 ---------- */
+#art { position: relative; touch-action: pan-y; }
+.catsvg .eyes-happy, .catsvg .eyes-sleep, .catsvg .mouth-o, .catsvg .brows-sad, .catsvg .zzz, .catsvg .yarn { display: none; }
+.catsvg.m-happy .eyes-open, .catsvg.m-sleep .eyes-open { display: none; }
+.catsvg.m-happy .eyes-happy { display: inline; }
+.catsvg.m-sleep .eyes-sleep, .catsvg.m-sleep .zzz { display: inline; }
+.catsvg.m-hungry .brows-sad { display: inline; }
+.catsvg.m-eat .mouth-o { display: inline; } .catsvg.m-eat .mouth-w { display: none; }
+.catsvg .bowl-fish { display: none; } .catsvg.feeding .bowl-fish { display: inline; animation: fishgone 1.6s ease-in forwards; }
+@keyframes fishgone { 0%, 50% { opacity: 1; } 100% { opacity: 0; transform: translateY(-4px); } }
+.catsvg .tail { transform-origin: 246px 220px; animation: tailsway 2.6s ease-in-out infinite; }
+@keyframes tailsway { 50% { transform: rotate(-12deg); } }
+.catsvg .body { transform-origin: 200px 240px; animation: breathe 3.2s ease-in-out infinite; }
+@keyframes breathe { 50% { transform: scale(1.025, 1.035); } }
+.catsvg .head { transform-origin: 200px 160px; animation: headtilt 7s ease-in-out infinite; }
+@keyframes headtilt { 0%, 70%, 100% { transform: rotate(0); } 80% { transform: rotate(-5deg); } 90% { transform: rotate(3deg); } }
+.catsvg .eyes-open { transform-origin: 200px 120px; animation: blink 4.5s infinite; }
+@keyframes blink { 0%, 92%, 100% { transform: scaleY(1); } 95% { transform: scaleY(.1); } }
+.catsvg.m-sleep .head { animation: none; transform: rotate(-6deg) translateY(6px); }
+.catsvg.m-sleep .body { animation-duration: 5s; }
+.catsvg .zzz text { animation: zfloat 3s ease-in-out infinite; } .catsvg .zzz text + text { animation-delay: 1s; }
+@keyframes zfloat { 0% { opacity: 0; transform: translateY(6px); } 40% { opacity: 1; } 100% { opacity: 0; transform: translateY(-12px); } }
+.catsvg.bounce .head { animation: boing .5s ease; }
+@keyframes boing { 30% { transform: translateY(-10px) rotate(-4deg); } 60% { transform: translateY(2px); } }
+.catsvg.playing .yarn { display: inline; animation: roll 2.1s ease-in-out forwards; }
+@keyframes roll { 0% { transform: translate(40px, 230px) rotate(0); } 55% { transform: translate(250px, 232px) rotate(540deg); } 75% { transform: translate(232px, 228px) rotate(600deg); } 100% { transform: translate(300px, 234px) rotate(800deg); } }
+.catsvg.playing .paw-r { transform-box: fill-box; transform-origin: center; animation: swipe .35s ease-in-out 4 1s; }
+@keyframes swipe { 50% { transform: translate(14px, -18px) rotate(-20deg); } }
+.catsvg.playing .head { animation: watch 2.1s ease-in-out; }
+@keyframes watch { 0% { transform: rotate(-8deg); } 55% { transform: rotate(8deg); } 100% { transform: rotate(0); } }
+.cat-hit { position: absolute; left: 25%; right: 25%; top: 18%; bottom: 6%; border-radius: 40%; cursor: grab; }
+.cat-bubble { position: absolute; left: 8px; top: 10px; max-width: 58%; background: #fff; color: #3a3036; border-radius: 16px 16px 16px 4px; padding: 8px 12px; font-size: .9rem; line-height: 1.35; box-shadow: 0 4px 14px rgba(0,0,0,.12); }
+.cat-bubble.pop { animation: pop .3s ease; }
+@keyframes pop { 0% { transform: scale(.7); opacity: 0; } 100% { transform: scale(1); opacity: 1; } }
+.heart { position: absolute; pointer-events: none; font-size: 1.2rem; animation: floatup 1.4s ease-out forwards; }
+@keyframes floatup { 0% { opacity: 0; transform: translateY(0) scale(.6); } 20% { opacity: 1; } 100% { opacity: 0; transform: translateY(-70px) scale(1.2); } }
+.cat-top { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+.cat-meters { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; font-size: .8rem; color: var(--muted); }
+.cat-meters > div { display: grid; gap: 4px; }
+.bar.pink i { background: #f07c9c; } .bar.warn i { background: var(--alarm); }
+.cat-actions { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; }
+.cat-btn { font: inherit; font-size: .82rem; border: 1px solid var(--line); background: var(--surface); color: var(--ink); border-radius: 16px; padding: 8px 0; display: grid; justify-items: center; gap: 2px; min-height: 64px; position: relative; }
+.cat-btn b { font-size: 1.45rem; line-height: 1.1; font-weight: 400; }
+.cat-btn small { position: absolute; top: 4px; right: 6px; font-size: .7rem; color: var(--accent); font-weight: 700; }
+.cat-btn[aria-disabled="true"] { opacity: .55; }
+.cat-btn:active { transform: scale(.95); }
+.cat-drawer { display: grid; gap: 10px; border-top: 1px solid var(--line); padding-top: 12px; }
+.swatch i { display: inline-block; width: 14px; height: 14px; border-radius: 50%; border: 2px solid; margin-right: 6px; vertical-align: -2px; }
+.outfits { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; }
+.outfit { font: inherit; border: 1px solid var(--line); background: var(--surface); color: var(--ink); border-radius: 14px; padding: 8px 2px; display: grid; justify-items: center; gap: 1px; min-height: 76px; }
+.outfit b { font-size: 1.5rem; font-weight: 400; } .outfit span { font-size: .78rem; } .outfit small { font-size: .62rem; color: var(--muted); text-align: center; line-height: 1.2; }
+.outfit.on { border-color: #f07c9c; background: color-mix(in srgb, #f07c9c 14%, var(--surface)); }
+.outfit:disabled { opacity: .45; }
+@media (prefers-reduced-motion: reduce) { .catsvg * { animation: none !important; } .heart { animation-duration: .01s; } }
 /* ---------- 手机上更好用 ---------- */
 .tabpage h1 { font-size: 1.9rem; }
 #tab-focus h1 { font-size: 2.1rem; }
@@ -773,6 +827,7 @@ function render() {
   $("who-tag").textContent = `${me.name} · 房间「${me.room}」`;
   if (w === "mountain") {
     const m = mountainAt(p);
+    if (typeof catKey !== "undefined") catKey = "";
     $("art").innerHTML = drawMountain(m.cur);
     const d = $("done"), len = d.getTotalLength(), pt = d.getPointAtLength(len * m.frac);
     d.style.strokeDasharray = `${len}`; d.style.strokeDashoffset = `${len * (1 - m.frac)}`;
@@ -786,13 +841,7 @@ function render() {
       <div class="row"><span>你一共爬升了 ${Math.round(m.climbed).toLocaleString()} 米${m.round ? `，已经登顶珠峰 ${m.round} 次` : ""}</span></div>
       ${peaks ? `<div class="peaks"><span class="label">已登顶</span>${peaks}</div>` : ""}`;
   } else {
-    const st = stageAt(p);
-    $("art").innerHTML = drawCat(p);
-    $("info").innerHTML = `<div class="big"><input class="catname" id="catname" aria-label="猫猫的名字" maxlength="10"><small>${st.s.n} · 陪了它 ${fmtMin(p)}</small></div>
-      <div class="bar"><i style="width:${(st.frac * 100).toFixed(1)}%"></i></div>
-      <div class="row"><span>你专注的时候，它就在长大</span><span>${st.next ? `再 ${fmtMin(st.next.at - p)} 长成「${st.next.n}」` : "已经是猫猫大王了"}</span></div>`;
-    const inp = $("catname"); inp.value = state.catName;
-    inp.onchange = () => { const v = inp.value.trim().slice(0, 10); if (v) store.setRoom({ catName: v }); };
+    if (typeof renderCatScene === "function") renderCatScene(p);
   }
   renderFeed(); renderLive(); renderStats(); renderPlans(); renderTodoPick();
   renderDiary(); renderMoments(); renderNotes(); renderNoteBanner(); renderChallenges(); renderWeekly(); renderRoom(); renderSubCounts();
@@ -1040,7 +1089,7 @@ async function finish(full) {
     const summits = (after.round * MOUNTAINS.length + after.i) - (before.round * MOUNTAINS.length + before.i);
     const reached = summits > 0 ? MOUNTAINS[(after.i - 1 + MOUNTAINS.length) % MOUNTAINS.length] : null;
     $("status").textContent = (full ? `专注完成！一共 ${fmtMin(minutes)}${overMin ? `（加时 ${fmtMin(overMin)}）` : ""}。` : `学了 ${fmtMin(minutes)}，也很棒。`)
-      + (state.world === "mountain" ? `又往上爬了 ${minutes * PER} 米。` : `${state.catName}又长大了一点。`)
+      + (state.world === "mountain" ? `又往上爬了 ${minutes * PER} 米。` : (typeof catGrowMsg === "function" ? catGrowMsg(minutes) : "猫猫又长大了一点。"))
       + (reached ? ` 🎉 你登顶了${reached.name}（${reached.h.toLocaleString()} 米）！` : "");
   } catch (e) { $("status").textContent = "没存上，检查一下网络再试试。"; }
   refresh();
@@ -1780,5 +1829,6 @@ async function boot() {
 boot();
 if ("serviceWorker" in navigator) navigator.serviceWorker.register("sw.js").catch(() => {});
 </script>
+<script src="cat.js?v=2"></script>
 </body>
 </html>
