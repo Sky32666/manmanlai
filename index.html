@@ -522,7 +522,9 @@ const store = {
   },
   async uploadPhoto(blob) {
     if (cloud && postCloud) {
-      const path = `${encodeURIComponent(me.room)}/${Date.now()}-${Math.random().toString(36).slice(2, 8)}.jpg`;
+      // 存储路径只能用英文和数字：把房间码转成一串字母数字
+      const tag = [...me.room].reduce((h, c) => (Math.imul(h, 31) + c.codePointAt(0)) >>> 0, 7).toString(36);
+      const path = `${tag}/${Date.now()}-${Math.random().toString(36).slice(2, 8)}.jpg`;
       const { error } = await sb.storage.from("diary").upload(path, blob, { contentType: "image/jpeg" });
       if (error) throw error;
       return sb.storage.from("diary").getPublicUrl(path).data.publicUrl;
