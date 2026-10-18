@@ -100,6 +100,15 @@ button:focus-visible, input:focus-visible { outline: 2px solid var(--accent); ou
 .player { display: flex; align-items: center; gap: 14px; }
 .player b { font-family: var(--display); font-weight: 400; font-size: 1.4rem; }
 .playbtn { width: 56px; height: 56px; border-radius: 50%; border: 0; background: var(--accent); color: var(--surface); font-size: 1.3rem; flex: none; }
+.nowplaying { justify-items: center; text-align: center; gap: 6px; }
+.np-title { font-family: var(--display); font-size: 1.5rem; line-height: 1.2; overflow-wrap: anywhere; }
+.controls { display: flex; align-items: center; gap: 22px; margin: 6px 0; }
+.ctl { width: 44px; height: 44px; border-radius: 50%; border: 1px solid var(--line); background: none; color: var(--ink); font-size: 1rem; }
+#np-lists { width: 100%; display: grid; gap: 10px; justify-items: center; text-align: left; }
+.tracks { list-style: none; margin: 0; padding: 0; width: 100%; display: grid; gap: 2px; }
+.tracks button { width: 100%; text-align: left; font: inherit; background: none; border: 0; border-radius: 10px; padding: 8px 10px; color: var(--ink); display: flex; justify-content: space-between; gap: 8px; }
+.tracks button[aria-current="true"] { background: var(--accent-soft); font-weight: 700; }
+.tracks small { color: var(--muted); font-variant-numeric: tabular-nums; }
 .mixrow { display: grid; gap: 4px; padding: 6px 0; }
 .mixhead { display: flex; justify-content: space-between; align-items: center; font-size: .9rem; font-variant-numeric: tabular-nums; }
 .mixhead .nm { display: flex; align-items: center; gap: 10px; }
@@ -187,11 +196,25 @@ input[type="range"] { width: 100%; accent-color: var(--accent); height: 28px; ma
 
 <div class="wrap tabpage" id="tab-sound" hidden>
   <header><div><p class="eyebrow">慢慢来自习室</p><h1>声音</h1><p class="tag">轻音乐、Lo-fi 和大自然的声音，自由调节。</p></div></header>
-  <section class="card">
-    <div class="player">
+  <section class="card nowplaying">
+    <span class="label" id="np-list">Lo-fi 音乐</span>
+    <div class="np-title" id="np-title">Drowning in your smile</div>
+    <div class="note" id="np-artist">Loyalty Freak Music</div>
+    <div class="controls">
+      <button class="ctl" id="np-prev" aria-label="上一首">⏮</button>
       <button class="playbtn" id="s-play" aria-label="播放或暂停">▶</button>
-      <div><b id="s-scene">夕阳电车</b><p class="note" id="s-state">点播放开始</p></div>
+      <button class="ctl" id="np-next" aria-label="下一首">⏭</button>
     </div>
+    <button class="soft small" id="np-toggle" style="justify-self:center">查看歌单</button>
+    <div id="np-lists" hidden>
+      <div class="switch" role="group" aria-label="歌单" id="np-tabs"></div>
+      <ol class="tracks" id="np-tracks"></ol>
+      <p class="note" id="np-credit"></p>
+    </div>
+  </section>
+  <section class="card">
+    <div class="feed-head"><h2 id="s-scene">夕阳电车</h2></div>
+    <p class="note" id="s-state">点播放开始</p>
     <div class="label">场景</div>
     <div class="chips" id="scenes"></div>
   </section>
@@ -200,7 +223,7 @@ input[type="range"] { width: 100%; accent-color: var(--accent); height: 28px; ma
     <div class="mixrow"><div class="mixhead"><span>总音量</span><span id="v-master">80%</span></div><input type="range" id="r-master" min="0" max="100"></div>
     <div id="mixer"></div>
     <p class="note">专注时声音会继续播放。iPhone 如果开了静音键听不到，把侧边静音键拨开再试试。</p>
-    <p class="note">钢琴音源：Salamander Grand Piano，Alexander Holm，<a href="https://creativecommons.org/licenses/by/3.0/" target="_blank" rel="noopener" style="color:inherit">CC BY 3.0</a>。其他声音由手机现场合成。</p>
+    <p class="note">Lo-fi：Loyalty Freak Music（CC0）。钢琴：肖邦，Musopen 录音（CC0）。环境音、八音盒和氛围长音由手机现场合成。</p>
   </section>
 </div>
 
@@ -659,8 +682,32 @@ function showTab(t) {
 document.querySelectorAll(".tabbar button").forEach((b) => (b.onclick = () => showTab(b.dataset.tab)));
 
 /* ---------------- 声音 ---------------- */
+let npView = null;
+function renderPlayer() {
+  const A = window.Ambient; if (!A) return;
+  const id = A.active(), tr = A.track(id), pl = A.PLAYLISTS[id];
+  $("np-list").textContent = pl.name + ((A.state.levels[id] || 0) > 0 ? "" : " · 音量为 0");
+  $("np-title").textContent = tr.title; $("np-artist").textContent = tr.artist;
+  const view = npView || id;
+  const tabs = $("np-tabs"); tabs.innerHTML = "";
+  Object.keys(A.PLAYLISTS).forEach((k) => { const b = document.createElement("button"); b.textContent = A.PLAYLISTS[k].name;
+    b.setAttribute("aria-pressed", String(view === k)); b.onclick = () => { npView = k; renderPlayer(); }; tabs.appendChild(b); });
+  const ol = $("np-tracks"); ol.innerHTML = "";
+  A.PLAYLISTS[view].tracks.forEach((t, i) => { const li = document.createElement("li"), b = document.createElement("button");
+    const cur = (A.state.track[view] || 0) === i;
+    b.setAttribute("aria-current", String(cur && (A.state.levels[view] || 0) > 0));
+    const a = document.createElement("span"); a.textContent = `${i + 1}. ${t.title}`; const sm = document.createElement("small"); sm.textContent = cur && A.playing && (A.state.levels[view] || 0) > 0 ? "播放中" : "";
+    b.append(a, sm); b.onclick = () => { A.choose(view, i); renderSound(); }; li.appendChild(b); ol.appendChild(li); });
+  $("np-credit").textContent = A.PLAYLISTS[view].credit;
+}
+$("np-prev").onclick = () => { window.Ambient?.prev(window.Ambient.active()); renderSound(); };
+$("np-next").onclick = () => { window.Ambient?.next(window.Ambient.active()); renderSound(); };
+$("np-toggle").onclick = () => { const h = $("np-lists").hidden; $("np-lists").hidden = !h; $("np-toggle").textContent = h ? "收起歌单" : "查看歌单"; };
+window.Ambient?.onChange(() => renderSound());
+
 function renderSound() {
   const A = window.Ambient; if (!A) return;
+  renderPlayer();
   const sc = A.SCENES.find((x) => x.id === A.state.scene);
   $("s-scene").textContent = sc ? sc.name : "自定义混音";
   $("s-play").textContent = A.playing ? "❚❚" : "▶";

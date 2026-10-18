@@ -1,0 +1,15 @@
+音乐来源（都可以免费使用和再分发）
+
+Lo-fi 音乐 (music/lofi/1-8.mp3)
+  Loyalty Freak Music — "LOFI AMBIENT SONGS !"
+  License: CC0 1.0 (public domain dedication)
+  https://archive.org/details/loyalty-freak-music-lofi-ambient-songs
+
+钢琴曲 (music/piano/1-7.mp3)
+  Frédéric Chopin — Nocturnes Op.9 No.2, Op.9 No.1, Op.32 No.1, Op.55 No.2, Op.72 No.1,
+  Nocturne in C# minor (B.49), Prelude Op.28 No.15 "Raindrop"
+  Recordings: Musopen — The Complete Chopin Collection
+  License: CC0 1.0 (public domain dedication)
+  https://archive.org/details/musopen-chopin
+
+All files were re-encoded to 96 kbps MP3 for mobile.

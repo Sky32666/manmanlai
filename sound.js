@@ -1,10 +1,10 @@
-// 慢慢来 · 环境音和 Lo-fi 音乐
-// 全部由 Web Audio 实时合成：不需要下载音频文件，也没有版权问题。
+// 慢慢来 · 音乐和环境音
+// 音乐是真实录音（都可以免费使用，见 music/CREDITS.txt）；环境音由 Web Audio 实时合成。
 "use strict";
 (function () {
   const SOUNDS = [
-    { id: "piano", name: "轻音乐 · 钢琴", icon: "♩" },
-    { id: "music", name: "Lo-fi 节拍", icon: "♪" },
+    { id: "music", name: "Lo-fi 音乐", icon: "♪" },
+    { id: "piano", name: "钢琴曲 · 肖邦", icon: "♩" },
     { id: "musicbox", name: "八音盒", icon: "✧" },
     { id: "pad", name: "氛围长音", icon: "◌" },
     { id: "rain", name: "雨声", icon: "☂" },
@@ -20,16 +20,31 @@
     { id: "rainy", name: "雨天书房", mix: { piano: 55, rain: 50, fire: 15 } },
     { id: "night", name: "钢琴夜读", mix: { piano: 65, wind: 10 } },
     { id: "dream", name: "安静的梦", mix: { pad: 50, musicbox: 35, waves: 15 } },
-    { id: "sea", name: "海边自习", mix: { pad: 35, waves: 55, wind: 20, birds: 10 } },
+    { id: "sea", name: "海边自习", mix: { music: 40, waves: 50, wind: 15, birds: 8 } },
     { id: "forest", name: "森林早晨", mix: { birds: 45, wind: 25, piano: 30 } },
     { id: "cafe", name: "街角咖啡馆", mix: { music: 45, cafe: 40, rain: 15 } },
     { id: "quiet", name: "只要白噪音", mix: { rain: 40, wind: 20 } }
   ];
 
+  // 真实音乐：同一个歌单按顺序循环播放
+  const PLAYLISTS = {
+    music: { name: "Lo-fi 音乐", credit: "Loyalty Freak Music · CC0", tracks: [
+      "Drowning in your smile", "Dancing in the street", "Aeroplane", "I'm glad you are here with me",
+      "Crying those tears I've kept so long", "This pain is soft but here", "I hope you're happy", "Sugar and coffee"
+    ].map((t, i) => ({ title: t, artist: "Loyalty Freak Music", src: `music/lofi/${i + 1}.mp3` })) },
+    piano: { name: "钢琴曲 · 肖邦", credit: "Frédéric Chopin · Musopen 录音 · CC0", tracks: [
+      "夜曲 降E大调 Op.9 No.2", "夜曲 降b小调 Op.9 No.1", "夜曲 B大调 Op.32 No.1", "夜曲 降E大调 Op.55 No.2",
+      "夜曲 e小调 Op.72 No.1", "夜曲 升c小调（遗作）", "雨滴前奏曲 Op.28 No.15"
+    ].map((t, i) => ({ title: t, artist: "肖邦", src: `music/piano/${i + 1}.mp3` })) }
+  };
+  const players = {}; // id -> { el, idx }
+  let onChange = () => {};
+
   let ctx = null, master = null, playing = false;
   const gains = {}, started = {}, timers = [];
   const saved = (() => { try { return JSON.parse(localStorage.getItem("mml-sound") || "null"); } catch (e) { return null; } })();
   const state = saved || { master: 80, levels: { music: 55, train: 35, wind: 15, cafe: 10 }, scene: "tram" };
+  state.track = state.track || { music: 0, piano: 0 };
 
   function save() { try { localStorage.setItem("mml-sound", JSON.stringify(state)); } catch (e) {} }
 
@@ -84,29 +99,7 @@
     return reverbIn;
   }
 
-  /* ---------- 真钢琴采样（Salamander Grand Piano, CC BY 3.0） ---------- */
-  const SAMPLE_NOTES = []; [2, 3, 4, 5, 6].forEach((o) => [["C", 0], ["Ds", 3], ["Fs", 6], ["A", 9]].forEach(([n, k]) => SAMPLE_NOTES.push({ file: `piano/${n}${o}.mp3`, midi: 12 * (o + 1) + k })));
-  const samples = {}; let samplesLoading = null;
-  function loadPiano() {
-    if (samplesLoading) return samplesLoading;
-    samplesLoading = Promise.all(SAMPLE_NOTES.map((s) => fetch(s.file).then((r) => r.arrayBuffer())
-      .then((b) => new Promise((ok, no) => ctx.decodeAudioData(b, ok, no))).then((buf) => (samples[s.midi] = buf)).catch(() => {})));
-    return samplesLoading;
-  }
   const mtof = (m) => 440 * Math.pow(2, (m - 69) / 12);
-  function pianoNote(out, m, t, vel, dur) {
-    const keys = Object.keys(samples).map(Number);
-    if (!keys.length) { // 采样还没下载好：先用柔和的合成音顶上
-      const o = ctx.createOscillator(), g = ctx.createGain(); o.type = "triangle"; o.frequency.value = mtof(m);
-      g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(vel * 0.5, t + 0.01); g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
-      o.connect(g); g.connect(out); o.start(t); o.stop(t + dur + 0.05); return;
-    }
-    const near = keys.reduce((a, b) => (Math.abs(b - m) < Math.abs(a - m) ? b : a));
-    const src = ctx.createBufferSource(), g = ctx.createGain();
-    src.buffer = samples[near]; src.playbackRate.value = Math.pow(2, (m - near) / 12);
-    g.gain.setValueAtTime(vel, t); g.gain.setTargetAtTime(0, t + dur, 0.6);
-    src.connect(g); g.connect(out); src.start(t); src.stop(t + dur + 4);
-  }
   function sequencer(bpm, stepFn) { // 每 100ms 往前排 0.5 秒的音符
     const step = 60 / bpm / 2; let next = ctx.currentTime + 0.2, i = 0;
     timers.push(setInterval(() => {
@@ -177,30 +170,6 @@
         o.frequency.value = 2400 + Math.random() * 1600; g.gain.setValueAtTime(0.05, t); g.gain.exponentialRampToValueAtTime(0.0001, t + 0.35);
         o.connect(g); g.connect(out); o.start(t); o.stop(t + 0.4); }, 4000, 11000);
     },
-    piano(out) {
-      // 轻音乐：慢速分解和弦 + 稀疏的旋律，像深夜一个人弹琴
-      loadPiano();
-      const lp = filt("lowpass", 5200); lp.connect(out);
-      const inp = ctx.createGain(); inp.connect(lp);
-      const wet = ctx.createGain(); wet.gain.value = 0; inp.connect(wet); wet.connect(reverb()); // 混响音量跟着这一轨的音量
-      timers.push(setInterval(() => wet.gain.setTargetAtTime(0.32 * (gains.piano?.gain.value || 0), ctx.currentTime, 0.2), 300));
-      const PROGS = [
-        [[48, 55, 64, 67], [45, 52, 60, 64], [41, 48, 57, 64], [43, 50, 59, 62]],   // C  Am  F  G
-        [[41, 48, 57, 60], [43, 50, 59, 62], [40, 47, 55, 59], [45, 52, 60, 64]],   // F  G  Em Am
-        [[45, 52, 60, 64], [41, 48, 57, 60], [48, 55, 64, 67], [43, 50, 59, 67]]    // Am F  C  G
-      ];
-      const MEL = [72, 74, 76, 79, 81, 84, 86, 88];
-      let prog = PROGS[0], motif = null;
-      sequencer(64, (i, t) => {
-        const bar = Math.floor(i / 8), s8 = i % 8, chord = prog[bar % 4];
-        if (i % 64 === 0) prog = pick(PROGS);
-        const v = 0.16 + Math.random() * 0.06;
-        if (s8 === 0) pianoNote(inp, chord[0] - 12, t, 0.2, 4.5);
-        if ([0, 2, 4, 6].includes(s8)) pianoNote(inp, chord[[1, 2, 3, 2][s8 / 2]], t + Math.random() * 0.02, v, 2.4);
-        if (s8 === 0 && bar % 2 === 0) motif = [0, 1, 2].map(() => pick(MEL));
-        if (motif && (s8 === 1 || s8 === 4 || s8 === 5) && Math.random() < 0.55) pianoNote(inp, motif[[1, 4, 5].indexOf(s8)], t + 0.02, 0.13 + Math.random() * 0.05, 2.8);
-      });
-    },
     musicbox(out) {
       // 八音盒：高音区的铃声，慢慢转
       const inp = ctx.createGain(); inp.connect(out);
@@ -236,47 +205,32 @@
           o.connect(g); g.connect(lp); o.start(t); o.stop(t + 11.2); }));
       };
       every(play, 7800, 8200);
-    },
-    music(out) {
-      // 生成式 Lo-fi：七和弦电钢琴 + 慢鼓点 + 黑胶底噪，72 BPM，带一点摇摆
-      const lp = filt("lowpass", 1600); lp.connect(out);
-      const keys = ctx.createGain(); keys.gain.value = 0.22; keys.connect(lp);
-      const drums = ctx.createGain(); drums.gain.value = 0.5; drums.connect(out);
-      const vin = noise("white"), vhp = filt("highpass", 3000), vg = ctx.createGain(); vg.gain.value = 0.012; vin.connect(vhp); vhp.connect(vg); vg.connect(out);
-      every(() => burst(out, ctx.currentTime, 0.005, "highpass", 4000, 0.06 * Math.random()), 120, 900);
-      const mtof = (m) => 440 * Math.pow(2, (m - 69) / 12);
-      const PROGS = [
-        [[53, 57, 60, 64], [52, 55, 59, 62], [50, 53, 57, 60], [48, 52, 55, 59]], // Fmaj7 Em7 Dm7 Cmaj7
-        [[50, 53, 57, 60], [55, 59, 62, 65], [48, 52, 55, 59], [45, 48, 52, 55]]  // Dm7 G7 Cmaj7 Am7
-      ];
-      const SCALE = [72, 74, 76, 79, 81, 84];
-      const beat = 60 / 72; let next = ctx.currentTime + 0.1, step = 0, prog = PROGS[0];
-      function note(m, t, dur, vol) {
-        [1, 2.01].forEach((h, i) => { const o = ctx.createOscillator(), g = ctx.createGain();
-          o.type = i ? "sine" : "triangle"; o.frequency.value = mtof(m) * h; o.detune.value = Math.random() * 8 - 4;
-          g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(vol / (i ? 4 : 1), t + 0.02); g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
-          o.connect(g); g.connect(keys); o.start(t); o.stop(t + dur + 0.05); });
-      }
-      function kick(t) { const o = ctx.createOscillator(), g = ctx.createGain(); o.frequency.setValueAtTime(120, t); o.frequency.exponentialRampToValueAtTime(42, t + 0.18);
-        g.gain.setValueAtTime(0.9, t); g.gain.exponentialRampToValueAtTime(0.0001, t + 0.3); o.connect(g); g.connect(drums); o.start(t); o.stop(t + 0.35); }
-      function sched() {
-        if (!playing) { next = ctx.currentTime + 0.1; return; }
-        while (next < ctx.currentTime + 0.4) {
-          const bar = Math.floor(step / 8), s8 = step % 8, swing = s8 % 2 ? beat * 0.08 : 0, t = next + swing;
-          if (step % 64 === 0) prog = PROGS[Math.floor(Math.random() * PROGS.length)];
-          if (s8 === 0) prog[bar % 4].forEach((m, i) => note(m, t + i * 0.015, beat * 3.6, 0.16));
-          if (s8 === 0 || s8 === 5) kick(t);
-          if (s8 === 2 || s8 === 6) burst(drums, t, 0.14, "bandpass", 1800, 0.35, 0.8);
-          if (step % 1 === 0) burst(drums, t, 0.04, "highpass", 7000, s8 % 2 ? 0.08 : 0.14);
-          if (Math.random() < 0.18) note(SCALE[Math.floor(Math.random() * SCALE.length)], t, beat * 1.4, 0.07);
-          next += beat / 2; step++;
-        }
-      }
-      timers.push(setInterval(sched, 100));
     }
   };
 
-  function startSound(id) { if (started[id]) return; started[id] = true; build[id](gains[id]); }
+  /* ---------- 真实音乐播放器 ---------- */
+  function trackPlayer(id, out) {
+    const list = PLAYLISTS[id].tracks, el = new Audio();
+    el.preload = "auto"; el.playsInline = true;
+    const p = { el, idx: Math.min(state.track[id] || 0, list.length - 1) };
+    el.src = list[p.idx].src;
+    try { ctx.createMediaElementSource(el).connect(out); } catch (e) { p.direct = true; } // 不支持时直接播放
+    el.addEventListener("ended", () => go(id, p.idx + 1));
+    el.addEventListener("play", () => onChange()); el.addEventListener("pause", () => onChange());
+    players[id] = p;
+  }
+  function go(id, idx, autoplay = true) {
+    const list = PLAYLISTS[id].tracks, n = list.length; idx = ((idx % n) + n) % n;
+    state.track[id] = idx; save();
+    const p = players[id];
+    if (p) { p.idx = idx; p.el.src = list[idx].src; if (autoplay && playing && (state.levels[id] || 0) > 0) p.el.play().catch(() => {}); }
+    onChange();
+  }
+
+  function startSound(id) {
+    if (started[id]) return; started[id] = true;
+    if (PLAYLISTS[id]) trackPlayer(id, gains[id]); else build[id](gains[id]);
+  }
   const vol = (v) => Math.pow(v / 100, 2); // 听感更线性
 
   function apply() {
@@ -286,12 +240,21 @@
     SOUNDS.forEach((s) => {
       const v = state.levels[s.id] || 0;
       if (playing && v > 0) startSound(s.id);
-      gains[s.id].gain.setTargetAtTime(vol(v) * (s.id === "music" ? 0.9 : 1), t, 0.25);
+      gains[s.id].gain.setTargetAtTime(vol(v) * (PLAYLISTS[s.id] ? 0.75 : 1), t, 0.25);
+      const p = players[s.id];
+      if (p) { if (p.direct) p.el.volume = vol(v) * vol(state.master); if (playing && v > 0) { if (p.el.paused) p.el.play().catch(() => {}); } else if (!p.el.paused) p.el.pause(); }
     });
   }
 
   window.Ambient = {
-    SOUNDS, SCENES, state,
+    SOUNDS, SCENES, PLAYLISTS, state,
+    onChange(fn) { onChange = fn; },
+    // 当前歌单：音量最大的那个音乐；都没开就用 Lo-fi
+    active() { const ids = Object.keys(PLAYLISTS); return ids.reduce((a, b) => ((state.levels[b] || 0) > (state.levels[a] || 0) ? b : a), ids[0]); },
+    track(id) { return PLAYLISTS[id].tracks[state.track[id] || 0]; },
+    next(id) { go(id, (state.track[id] || 0) + 1); },
+    prev(id) { go(id, (state.track[id] || 0) - 1); },
+    choose(id, idx) { if (!(state.levels[id] > 0)) { state.levels[id] = 55; state.scene = null; } go(id, idx); if (!playing) this.play(); else apply(); },
     get playing() { return playing; },
     async play() { ensure(); playing = true; apply(); try { await ctx.resume(); } catch (e) {} },
     pause() { playing = false; apply(); },
