@@ -1,0 +1,549 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no">
+<title>慢慢来</title>
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="慢慢来">
+<meta name="theme-color" content="#eef2ee">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="icon-180.png">
+<link rel="icon" href="icon-192.png">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=ZCOOL+KuaiLe&family=Noto+Sans+SC:wght@400;500;700&display=swap">
+<style>
+:root {
+  --bg: #eef2ee; --surface: #ffffff; --ink: #1f2a27; --muted: #64716c; --line: #d6dfda;
+  --accent: #2f6b5a; --accent-soft: #d9e8e1; --sky: #cfe3ea; --hill: #8fb19f; --hill2: #6f957f; --snow: #ffffff;
+  --cat: #e9a25f; --cat-dark: #b8733a; --cat-belly: #f7dcc0; --blush: #f2a7b4; --alarm: #e5484d;
+  --display: "ZCOOL KuaiLe", "PingFang SC", "Hiragino Sans GB", sans-serif;
+  --body: "Noto Sans SC", "PingFang SC", "Microsoft YaHei", system-ui, sans-serif;
+}
+:root[data-world="cat"] { --bg: #f4eef3; --accent: #b4527a; --accent-soft: #f1dbe6; --line: #e3d6df; --muted: #766a72; }
+@media (prefers-color-scheme: dark) {
+  :root { --bg: #141b19; --surface: #1d2724; --ink: #e6eeea; --muted: #97a6a0; --line: #2d3a36;
+    --accent: #7cc4a8; --accent-soft: #24392f; --sky: #1d3038; --hill: #3f5e50; --hill2: #2f4a3e; --snow: #cfdcd6;
+    --cat: #d99357; --cat-dark: #9c5f2e; --cat-belly: #ecc9a6; --blush: #d98896; color-scheme: dark; }
+  :root[data-world="cat"] { --bg: #1b1519; --surface: #261d23; --line: #3a2d35; --accent: #e88db1; --accent-soft: #3c2531; --muted: #a8979f; }
+}
+* { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+html { padding-top: env(safe-area-inset-top, 0px); padding-bottom: env(safe-area-inset-bottom, 0px); }
+body { margin: 0; background: var(--bg); color: var(--ink); font-family: var(--body); font-size: 15px; line-height: 1.6; }
+[hidden] { display: none !important; }
+.wrap { max-width: 560px; margin: 0 auto; padding-block: 20px 60px; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); display: grid; gap: 20px; }
+header { display: flex; align-items: flex-end; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
+h1 { font-family: var(--display); font-weight: 400; font-size: 2.3rem; line-height: 1; margin: 0; letter-spacing: .04em; }
+.tag { color: var(--muted); font-size: .85rem; margin: 6px 0 0; }
+.switch { display: inline-flex; background: var(--surface); border: 1px solid var(--line); border-radius: 999px; padding: 3px; }
+.switch button { border: 0; background: none; color: var(--muted); font: inherit; font-size: .9rem; padding: 6px 14px; border-radius: 999px; }
+.switch button[aria-pressed="true"] { background: var(--accent); color: var(--surface); }
+button { cursor: pointer; }
+button:focus-visible, input:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.scene { background: var(--surface); border: 1px solid var(--line); border-radius: 20px; overflow: hidden; }
+.scene svg { display: block; width: 100%; height: auto; }
+.scene-info { padding: 14px 18px 18px; display: grid; gap: 10px; }
+.big { font-family: var(--display); font-size: 1.6rem; line-height: 1.15; }
+.big small { font-family: var(--body); font-size: .82rem; color: var(--muted); margin-left: 6px; }
+.bar { height: 8px; background: var(--accent-soft); border-radius: 99px; overflow: hidden; }
+.bar i { display: block; height: 100%; background: var(--accent); border-radius: 99px; transition: width .8s ease; }
+.row { display: flex; justify-content: space-between; gap: 10px; flex-wrap: wrap; color: var(--muted); font-size: .85rem; }
+.duo { display: flex; gap: 8px 14px; flex-wrap: wrap; font-size: .85rem; color: var(--muted); }
+.duo b { color: var(--ink); font-weight: 500; }
+.catname { font: inherit; font-family: var(--display); font-size: 1.6rem; background: none; border: 0; border-bottom: 1px dashed var(--line); color: var(--ink); width: 6em; padding: 0; }
+.card { background: var(--surface); border: 1px solid var(--line); border-radius: 20px; padding: 18px; display: grid; gap: 12px; }
+.card h2 { font-family: var(--display); font-weight: 400; font-size: 1.25rem; margin: 0; }
+.field { font: inherit; color: var(--ink); background: var(--bg); border: 1px solid var(--line); border-radius: 12px; padding: 10px 12px; width: 100%; }
+.chips { display: flex; flex-wrap: wrap; gap: 6px; }
+.chip { font: inherit; font-size: .85rem; border: 1px solid var(--line); background: none; color: var(--muted); padding: 5px 13px; border-radius: 999px; }
+.chip[aria-pressed="true"] { border-color: var(--accent); background: var(--accent-soft); color: var(--ink); }
+.label { font-size: .75rem; color: var(--muted); letter-spacing: .08em; }
+.go { font: inherit; font-weight: 700; background: var(--accent); color: var(--surface); border: 0; padding: 11px 22px; border-radius: 999px; }
+.go:disabled { opacity: .45; }
+.soft { font: inherit; background: none; border: 1px solid var(--line); color: var(--muted); padding: 7px 18px; border-radius: 999px; }
+.note { font-size: .82rem; color: var(--muted); margin: 0; }
+.live { background: var(--accent-soft); border-radius: 16px; padding: 12px 16px; display: grid; gap: 6px; font-size: .9rem; }
+.live .dot { display: inline-block; width: 8px; height: 8px; border-radius: 50%; background: var(--accent); margin-right: 8px; animation: pulse 1.6s ease-in-out infinite; }
+.live .warn { font-weight: 700; }
+@keyframes pulse { 50% { opacity: .3; } }
+.feed { display: grid; gap: 10px; }
+.feed-head { display: flex; justify-content: space-between; align-items: center; }
+.item { background: var(--surface); border: 1px solid var(--line); border-radius: 16px; padding: 12px 14px; display: grid; gap: 2px; }
+.item.failed { border-color: var(--blush); }
+.item p { margin: 0 0 4px; overflow-wrap: anywhere; }
+.meta { font-size: .78rem; color: var(--muted); display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+.meta b { color: var(--ink); }
+.pill { background: var(--accent-soft); color: var(--ink); padding: 0 8px; border-radius: 99px; }
+.acts { display: flex; gap: 8px; }
+.acts button { font: inherit; font-size: .8rem; background: none; border: 1px solid var(--line); color: var(--muted); border-radius: 99px; padding: 1px 10px; }
+.acts button.on { border-color: var(--blush); color: var(--ink); }
+.empty { text-align: center; color: var(--muted); padding: 26px 12px; border: 1px dashed var(--line); border-radius: 16px; }
+.mode { font-size: .75rem; color: var(--muted); text-align: center; }
+
+/* 专注全屏 */
+.focus { position: fixed; inset: 0; z-index: 10; background: #0d1110; color: #e8efe9; display: grid; place-items: center; text-align: center;
+  padding: max(24px, env(safe-area-inset-top, 0px)) max(16px, env(safe-area-inset-right, 0px)) max(24px, env(safe-area-inset-bottom, 0px)) max(16px, env(safe-area-inset-left, 0px)); }
+.focus .inner { display: grid; gap: 18px; justify-items: center; max-width: 360px; }
+.focus h3 { font-family: var(--display); font-weight: 400; font-size: 1.9rem; margin: 0; }
+.focus p { margin: 0; color: #a9b8b1; }
+.clock { font-family: var(--display); font-size: 4.4rem; line-height: 1; font-variant-numeric: tabular-nums; }
+.plus { font-family: var(--display); color: #ffb4b8; font-size: 1.2rem; min-height: 1.6em; }
+.flip { width: 150px; height: 110px; }
+.flip .ph { transform-origin: 75px 92px; animation: flip 2.4s ease-in-out infinite; }
+@keyframes flip { 0%, 20% { transform: rotate(-8deg); } 55%, 100% { transform: rotate(-172deg); } }
+.focus .soft { color: #a9b8b1; border-color: #34403b; }
+.focus.dark .clock, .focus.dark h3, .focus.dark p { opacity: .18; }
+.focus.alarm { animation: alarm .5s steps(1) infinite; }
+.focus.alarm .clock, .focus.alarm h3, .focus.alarm p { opacity: 1; color: #fff; }
+@keyframes alarm { 0% { background: var(--alarm); } 50% { background: #ffffff; } }
+.focus.alarm.white-phase { color: #000; }
+@media (prefers-reduced-motion: reduce) { .focus.alarm { animation: none; background: var(--alarm); } .flip .ph { animation: none; transform: rotate(-90deg); } .live .dot { animation: none; } }
+</style>
+</head>
+<body>
+
+<!-- 第一次进入：名字和房间码 -->
+<div class="wrap" id="setup" hidden>
+  <header><div><h1>慢慢来</h1><p class="tag">扣下手机，一起专注，一起长大。</p></div></header>
+  <section class="card">
+    <h2>先认识一下</h2>
+    <div class="label">你的名字</div>
+    <input class="field" id="s-name" maxlength="12" placeholder="比如：kai">
+    <div class="label">你们的房间码（两个人填一样的）</div>
+    <input class="field" id="s-room" maxlength="24" placeholder="比如：山猫1018">
+    <p class="note">房间码就像你们俩的暗号。闺蜜在她手机上填同一个房间码，就能看到同一座山、同一只猫。</p>
+    <button class="go" id="s-go">进入</button>
+  </section>
+</div>
+
+<!-- 主页 -->
+<div class="wrap" id="main" hidden>
+  <header>
+    <div><h1>慢慢来</h1><p class="tag" id="who-tag"></p></div>
+    <div class="switch" role="group" aria-label="选择玩法">
+      <button id="w-mountain" aria-pressed="true">⛰ 爬山</button>
+      <button id="w-cat" aria-pressed="false">🐾 养猫</button>
+    </div>
+  </header>
+
+  <section class="scene"><div id="art"></div><div class="scene-info" id="info"></div></section>
+  <section class="live" id="live" hidden></section>
+
+  <section class="card">
+    <h2>扣下手机，专注开始</h2>
+    <input class="field" id="label" maxlength="30" placeholder="这次学什么？（可不填）">
+    <div class="label">专注多久</div>
+    <div class="chips" id="durs"></div>
+    <button class="go" id="start">开始</button>
+    <p class="note">规则：手机屏幕朝下才计时。拿起手机，剩余时间就开始增加，屏幕会红白闪 + 响铃；碰一下也会警告。离开这个页面超过 10 秒，这次就失败并扣 10 分钟进度，对方会看到。</p>
+    <p class="note" id="status"></p>
+  </section>
+
+  <section class="feed">
+    <div class="feed-head"><h2 class="label" style="margin:0">你们的记录</h2><button class="soft" id="export">导出记录</button></div>
+    <div id="feed"><div class="empty">这里会出现你们两个人的专注记录。<br>扣下手机完成第一次专注，山就开始长出小路了。</div></div>
+  </section>
+  <p class="mode" id="mode"></p>
+  <button class="soft" id="logout" style="justify-self:center">换名字 / 换房间</button>
+</div>
+
+<!-- 专注中 -->
+<div class="focus" id="focus" hidden>
+  <div class="inner">
+    <svg class="flip" id="flipart" viewBox="0 0 150 110" aria-hidden="true">
+      <rect x="20" y="92" width="110" height="8" rx="4" fill="#34403b"/>
+      <g class="ph"><rect x="70" y="20" width="12" height="74" rx="4" fill="#e8efe9"/></g>
+    </svg>
+    <h3 id="f-title">把手机屏幕朝下扣在桌上</h3>
+    <div class="clock" id="f-clock">25:00</div>
+    <div class="plus" id="f-plus"></div>
+    <p id="f-msg">扣下就开始计时</p>
+    <button class="soft" id="f-stop">先到这里</button>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
+<script src="config.js"></script>
+<script>
+"use strict";
+const DURS = [15, 25, 45, 60, 90];
+const MOUNTAINS = [{ name: "后山小丘", h: 800 }, { name: "半日岭", h: 1500 }, { name: "云雾山", h: 2400 }, { name: "雪线峰", h: 3600 }, { name: "星空顶", h: 5000 }];
+const PER = 10;          // 专注 1 分钟 = 上升 10 米
+const STAGES = [{ at: 0, n: "小奶猫" }, { at: 60, n: "小猫崽" }, { at: 180, n: "少年猫" }, { at: 400, n: "大猫猫" }, { at: 800, n: "圆滚滚" }, { at: 1500, n: "猫猫大王" }];
+const GRACE = 10000;     // 离开页面超过 10 秒算失败
+const PENALTY = 10;      // 失败扣 10 分钟进度
+const PICKUP_MS = 1200;  // 抬起超过 1.2 秒算拿起手机
+const BUMP = 1.6;        // 扣着时加速度超过这个值算被碰了 (m/s²)
+
+const $ = (id) => document.getElementById(id);
+const ls = { get(k, d) { try { const v = localStorage.getItem(k); return v == null ? d : JSON.parse(v); } catch (e) { return d; } },
+             set(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) {} },
+             del(k) { try { localStorage.removeItem(k); } catch (e) {} } };
+
+let me = ls.get("mml-me", null); // {name, room}
+let state = { world: "mountain", catName: "团子", logs: [], focus: {} };
+let dur = 25;
+
+/* ---------------- 数据层：Supabase（两人同步）或本机（单机试用） ---------------- */
+const CFG = window.MANMANLAI || {};
+const cloud = !!(CFG.supabaseUrl && CFG.supabaseKey && window.supabase && !/YOUR_/.test(CFG.supabaseUrl));
+let sb = null, channel = null, bc = null;
+
+const store = {
+  async load() {
+    if (cloud) {
+      const r = await sb.from("rooms").select("*").eq("code", me.room).maybeSingle();
+      if (r.data) { state.world = r.data.world; state.catName = r.data.cat_name; }
+      const logs = []; let from = 0;
+      for (;;) {
+        const { data, error } = await sb.from("logs").select("*").eq("room", me.room).order("at", { ascending: false }).range(from, from + 999);
+        if (error || !data) break; logs.push(...data); if (data.length < 1000) break; from += 1000;
+      }
+      state.logs = logs;
+      const f = await sb.from("focus").select("*").eq("room", me.room);
+      state.focus = {}; (f.data || []).forEach((x) => (state.focus[x.author] = x));
+    } else {
+      const d = ls.get("mml-local-" + me.room, { world: "mountain", catName: "团子", logs: [], focus: {} });
+      Object.assign(state, d);
+    }
+  },
+  saveLocal() { ls.set("mml-local-" + me.room, { world: state.world, catName: state.catName, logs: state.logs, focus: state.focus }); bc?.postMessage("x"); },
+  async setRoom(patch) {
+    Object.assign(state, patch);
+    if (cloud) await sb.from("rooms").upsert({ code: me.room, world: state.world, cat_name: state.catName });
+    else this.saveLocal();
+  },
+  async addLog(l) {
+    const row = { room: me.room, author: me.name, at: Date.now(), hugs: {}, ...l };
+    if (cloud) { const { error } = await sb.from("logs").insert(row); if (error) throw error; }
+    else { row.id = String(Date.now()) + Math.random(); state.logs.unshift(row); this.saveLocal(); }
+  },
+  async updateLog(id, patch) {
+    if (cloud) await sb.from("logs").update(patch).eq("id", id);
+    else { const l = state.logs.find((x) => x.id === id); if (l) Object.assign(l, patch); this.saveLocal(); }
+  },
+  async deleteLog(id) {
+    if (cloud) await sb.from("logs").delete().eq("id", id);
+    else { state.logs = state.logs.filter((x) => x.id !== id); this.saveLocal(); }
+  },
+  async setFocus(f) {
+    const row = { room: me.room, author: me.name, ...f };
+    if (cloud) await sb.from("focus").upsert(row);
+    else { state.focus[me.name] = row; this.saveLocal(); }
+  },
+  async clearFocus() {
+    if (cloud) await sb.from("focus").delete().eq("room", me.room).eq("author", me.name);
+    else { delete state.focus[me.name]; this.saveLocal(); }
+  },
+  subscribe(onChange) {
+    if (cloud) {
+      channel = sb.channel("room-" + me.room);
+      ["logs", "focus", "rooms"].forEach((t) => channel.on("postgres_changes", { event: "*", schema: "public", table: t, filter: (t === "rooms" ? "code=eq." : "room=eq.") + me.room }, onChange));
+      channel.subscribe();
+    } else if ("BroadcastChannel" in window) {
+      bc = new BroadcastChannel("mml-" + me.room); bc.onmessage = onChange;
+    }
+  }
+};
+
+let reloadTimer = null;
+function refresh() { clearTimeout(reloadTimer); reloadTimer = setTimeout(async () => { await store.load(); render(); }, 250); }
+
+/* ---------------- 场景 ---------------- */
+const total = () => Math.max(0, state.logs.reduce((s, l) => s + (Number(l.minutes) || 0), 0));
+function mountainAt(p) {
+  let m = p * PER, i = 0;
+  while (i < MOUNTAINS.length - 1 && m >= MOUNTAINS[i].h) { m -= MOUNTAINS[i].h; i++; }
+  const cur = MOUNTAINS[i]; return { i, cur, alt: Math.min(m, cur.h), frac: Math.min(m / cur.h, 1) };
+}
+function stageAt(p) {
+  let i = 0; while (i < STAGES.length - 1 && p >= STAGES[i + 1].at) i++;
+  const next = STAGES[i + 1]; return { i, s: STAGES[i], next, frac: next ? (p - STAGES[i].at) / (next.at - STAGES[i].at) : 1 };
+}
+const TRAIL = "M70 228 C140 222 170 206 130 192 C96 180 150 166 190 160 C236 153 236 136 196 126 C162 117 200 100 214 88 C224 78 204 64 210 44";
+function drawMountain() {
+  return `<svg viewBox="0 0 400 240" role="img" aria-label="爬山进度">
+    <rect width="400" height="240" fill="var(--sky)"/><circle cx="340" cy="46" r="18" fill="var(--snow)" opacity=".7"/>
+    <path d="M-10 240 L90 120 L150 170 L210 40 L290 150 L330 110 L410 240Z" fill="var(--hill)"/>
+    <path d="M210 40 L188 86 L200 80 L212 92 L224 78 L236 86Z" fill="var(--snow)"/>
+    <path d="M-10 240 L60 190 L130 215 L200 185 L280 210 L410 180 L410 240Z" fill="var(--hill2)"/>
+    <path d="${TRAIL}" fill="none" stroke="var(--snow)" stroke-width="2.5" stroke-dasharray="3 5" stroke-linecap="round" opacity=".8"/>
+    <path id="done" d="${TRAIL}" fill="none" stroke="var(--accent)" stroke-width="4" stroke-linecap="round"/>
+    <g transform="translate(210 44)"><line x1="0" y1="0" x2="0" y2="-20" stroke="var(--ink)" stroke-width="1.5"/><path d="M0 -20 L14 -15 L0 -10Z" fill="var(--accent)"/></g>
+    <circle id="climber" r="7" fill="var(--accent)" stroke="var(--surface)" stroke-width="2"/></svg>`;
+}
+function drawCat(p) {
+  const st = stageAt(p), s = 0.55 + st.i * 0.09, fat = 30 + st.i * 5;
+  const sulky = state.logs[0]?.failed && Date.now() - state.logs[0].at < 3600e3;
+  return `<svg viewBox="0 0 400 240" role="img" aria-label="猫猫现在是${st.s.n}">
+    <rect width="400" height="240" fill="var(--accent-soft)"/><rect x="0" y="196" width="400" height="44" fill="var(--line)"/>
+    <g transform="translate(200 198) scale(${s}) translate(-100 -160)">
+      <path d="M140 118 C 180 110 186 70 166 60" fill="none" stroke="var(--cat)" stroke-width="12" stroke-linecap="round"/>
+      <ellipse cx="100" cy="122" rx="${fat + 14}" ry="38" fill="var(--cat)"/><ellipse cx="100" cy="132" rx="${fat - 6}" ry="24" fill="var(--cat-belly)"/>
+      <ellipse cx="78" cy="156" rx="11" ry="6" fill="var(--cat)"/><ellipse cx="122" cy="156" rx="11" ry="6" fill="var(--cat)"/>
+      <path d="M62 62 L66 22 L90 44Z M138 62 L134 22 L110 44Z" fill="var(--cat)"/><path d="M68 52 L70 32 L84 45Z M132 52 L130 32 L116 45Z" fill="var(--blush)"/>
+      <circle cx="100" cy="70" r="40" fill="var(--cat)"/>
+      <path d="M86 34 L90 46 M100 31 L100 45 M114 34 L110 46" stroke="var(--cat-dark)" stroke-width="3" stroke-linecap="round"/>
+      ${sulky ? '<path d="M78 66 L92 72 M122 66 L108 72" stroke="var(--ink)" stroke-width="3" stroke-linecap="round"/>'
+              : `<ellipse cx="85" cy="70" rx="5" ry="${st.i > 3 ? 3 : 6}" fill="var(--ink)"/><ellipse cx="115" cy="70" rx="5" ry="${st.i > 3 ? 3 : 6}" fill="var(--ink)"/>`}
+      <circle cx="75" cy="84" r="6" fill="var(--blush)" opacity=".7"/><circle cx="125" cy="84" r="6" fill="var(--blush)" opacity=".7"/>
+      <path d="M96 80 L104 80 L100 85Z" fill="var(--blush)"/>
+      <path d="${sulky ? "M90 92 Q100 86 110 92" : "M100 85 Q94 92 89 88 M100 85 Q106 92 111 88"}" fill="none" stroke="var(--ink)" stroke-width="2" stroke-linecap="round"/>
+      ${st.i >= 5 ? '<path d="M78 34 L84 18 L92 30 L100 14 L108 30 L116 18 L122 34Z" fill="#e8c14a"/>' : ""}
+    </g></svg>`;
+}
+const people = () => [...new Set([me.name, ...state.logs.map((l) => l.author)])];
+const fmtMin = (m) => { m = Math.round(m); return m >= 60 ? `${Math.floor(m / 60)} 小时${m % 60 ? ` ${m % 60} 分` : ""}` : `${m} 分钟`; };
+const nm = (n) => (n === me.name ? "你" : n);
+
+function render() {
+  const p = total(), w = state.world;
+  document.documentElement.dataset.world = w;
+  $("w-mountain").setAttribute("aria-pressed", String(w === "mountain"));
+  $("w-cat").setAttribute("aria-pressed", String(w === "cat"));
+  $("who-tag").textContent = `${me.name} · 房间「${me.room}」`;
+  const duo = document.createElement("div"); duo.className = "duo";
+  people().forEach((n) => {
+    const mine = state.logs.filter((l) => l.author === n);
+    const s = document.createElement("span"); const b = document.createElement("b"); b.textContent = nm(n);
+    const f = mine.filter((l) => l.failed).length;
+    s.append(b, ` 专注 ${fmtMin(mine.filter((l) => !l.failed).reduce((a, l) => a + (Number(l.minutes) || 0), 0))}${f ? ` · 偷玩 ${f} 次` : ""}`);
+    duo.appendChild(s);
+  });
+  if (w === "mountain") {
+    const m = mountainAt(p);
+    $("art").innerHTML = drawMountain();
+    const d = $("done"), len = d.getTotalLength(), pt = d.getPointAtLength(len * m.frac);
+    d.style.strokeDasharray = `${len}`; d.style.strokeDashoffset = `${len * (1 - m.frac)}`;
+    $("climber").setAttribute("cx", pt.x); $("climber").setAttribute("cy", pt.y - 6);
+    $("info").innerHTML = `<div class="big">海拔 ${m.alt.toLocaleString()} 米<small>${m.cur.name} · 山顶 ${m.cur.h.toLocaleString()} 米</small></div>
+      <div class="bar"><i style="width:${(m.frac * 100).toFixed(1)}%"></i></div>
+      <div class="row"><span>${m.i ? `已一起登顶 ${m.i} 座山` : "第一座山，慢慢爬"}</span><span>离山顶还有 ${(m.cur.h - m.alt).toLocaleString()} 米</span></div>`;
+  } else {
+    const st = stageAt(p);
+    $("art").innerHTML = drawCat(p);
+    $("info").innerHTML = `<div class="big"><input class="catname" id="catname" aria-label="猫猫的名字" maxlength="10"><small>${st.s.n} · 陪了它 ${fmtMin(p)}</small></div>
+      <div class="bar"><i style="width:${(st.frac * 100).toFixed(1)}%"></i></div>
+      <div class="row"><span>你们专注的时候，它就在长大</span><span>${st.next ? `再 ${fmtMin(st.next.at - p)} 长成「${st.next.n}」` : "已经是猫猫大王了"}</span></div>`;
+    const inp = $("catname"); inp.value = state.catName;
+    inp.onchange = () => { const v = inp.value.trim().slice(0, 10); if (v) store.setRoom({ catName: v }); };
+  }
+  $("info").appendChild(duo);
+  renderFeed(); renderLive();
+}
+
+function ago(t) {
+  const d = (Date.now() - t) / 1000;
+  if (d < 60) return "刚刚"; if (d < 3600) return Math.floor(d / 60) + " 分钟前"; if (d < 86400) return Math.floor(d / 3600) + " 小时前";
+  if (d < 604800) return Math.floor(d / 86400) + " 天前"; const x = new Date(t); return `${x.getMonth() + 1}月${x.getDate()}日`;
+}
+function renderFeed() {
+  const f = $("feed"); if (!state.logs.length) return;
+  f.innerHTML = "";
+  state.logs.slice(0, 100).forEach((l) => {
+    const el = document.createElement("article"); el.className = l.failed ? "item failed" : "item";
+    const meta = document.createElement("div"); meta.className = "meta";
+    const b = document.createElement("b"); b.textContent = nm(l.author);
+    const t = document.createElement("span"); t.textContent = ago(Number(l.at));
+    meta.append(b, t);
+    if (l.together) { const p = document.createElement("span"); p.className = "pill"; p.textContent = "一起专注"; meta.append(p); }
+    const p = document.createElement("p");
+    p.textContent = l.failed
+      ? `专注到一半跑去玩手机了 😤${l.label ? " · " + l.label : ""} · ${state.world === "mountain" ? `滑下 ${PENALTY * PER} 米` : `扣 ${PENALTY} 分钟`}`
+      : `专注了 ${fmtMin(l.minutes)}${l.label ? " · " + l.label : ""}${l.full === false ? "（提前结束）" : ""}${l.pickups ? ` · 拿起手机 ${l.pickups} 次` : ""}`;
+    const acts = document.createElement("div"); acts.className = "acts";
+    const hugs = Object.keys(l.hugs || {});
+    if (l.author !== me.name) {
+      const h = document.createElement("button"); const on = hugs.includes(me.name);
+      h.className = on ? "on" : ""; h.textContent = on ? "已抱抱 🤍" : "抱抱 🤍";
+      h.onclick = () => { const x = { ...(l.hugs || {}) }; if (x[me.name]) delete x[me.name]; else x[me.name] = true; store.updateLog(l.id, { hugs: x }).then(refresh); };
+      acts.append(h);
+    } else {
+      if (hugs.length) { const s = document.createElement("span"); s.className = "meta"; s.textContent = "收到抱抱 🤍"; acts.append(s); }
+      const del = document.createElement("button"); del.textContent = "删除";
+      del.onclick = () => {
+        if (del.dataset.sure) store.deleteLog(l.id).then(refresh);
+        else { del.dataset.sure = "1"; del.textContent = "确定删除？"; setTimeout(() => { del.textContent = "删除"; delete del.dataset.sure; }, 3000); }
+      };
+      acts.append(del);
+    }
+    el.append(meta, p, acts); f.appendChild(el);
+  });
+}
+
+const mmss = (ms) => { const t = Math.max(0, Math.ceil(ms / 1000)); return `${String(Math.floor(t / 60)).padStart(2, "0")}:${String(t % 60).padStart(2, "0")}`; };
+const others = () => Object.values(state.focus).filter((f) => f.author !== me.name && Number(f.updated) > Date.now() - 3 * 60e3);
+function renderLive() {
+  const live = $("live"), os = others();
+  live.hidden = !os.length; live.innerHTML = "";
+  os.forEach((f) => {
+    const d = document.createElement("div"); const dot = document.createElement("span"); dot.className = "dot";
+    const msg = { waiting: `${f.author}准备开始专注了`, down: `${f.author}正在专注${f.label ? "「" + f.label + "」" : ""}`,
+                  up: `👀 ${f.author}拿起手机了！`, away: `👀 ${f.author}离开页面了！10 秒内不回来就失败` }[f.phase] || `${f.author}正在专注`;
+    const s = document.createElement("span"); if (f.phase === "up" || f.phase === "away") s.className = "warn"; s.textContent = msg;
+    d.append(dot, s); live.appendChild(d);
+  });
+}
+
+/* ---------------- 专注：扣下计时，拿起加时 ---------------- */
+let run = ls.get("mml-run", null); // {start, remaining, focused, extra, pickups, label, phase, awayAt, together, sensor}
+let lastTick = 0, upSince = 0, lastAlarmBeep = 0, sensorSeen = false, faceDown = false, bumpUntil = 0;
+let lock = null, audio = null;
+
+function beep(freq = 880, ms = 160) {
+  try {
+    audio = audio || new (window.AudioContext || window.webkitAudioContext)();
+    const o = audio.createOscillator(), g = audio.createGain();
+    o.type = "square"; o.frequency.value = freq; g.gain.value = 0.18;
+    o.connect(g); g.connect(audio.destination); o.start(); o.stop(audio.currentTime + ms / 1000);
+  } catch (e) {}
+}
+function chime() { [660, 880, 1320].forEach((f, i) => setTimeout(() => beep(f, 220), i * 230)); }
+async function wake() { try { lock = await navigator.wakeLock?.request("screen"); } catch (e) {} }
+function unwake() { try { lock?.release(); } catch (e) {} lock = null; }
+
+function onOrient(e) {
+  if (e.beta == null) return;
+  sensorSeen = true;
+  faceDown = Math.abs(e.beta) > 150 && Math.abs(e.gamma ?? 0) < 35;
+}
+function onMotion(e) {
+  const a = e.acceleration; if (!a || a.x == null) return;
+  sensorSeen = true;
+  if (run && run.phase === "down" && Math.hypot(a.x, a.y, a.z) > BUMP) bumpUntil = Date.now() + 1500;
+}
+async function askSensors() {
+  try { if (typeof DeviceOrientationEvent !== "undefined" && DeviceOrientationEvent.requestPermission) await DeviceOrientationEvent.requestPermission(); } catch (e) {}
+  try { if (typeof DeviceMotionEvent !== "undefined" && DeviceMotionEvent.requestPermission) await DeviceMotionEvent.requestPermission(); } catch (e) {}
+  window.addEventListener("deviceorientation", onOrient);
+  window.addEventListener("devicemotion", onMotion);
+}
+
+function saveRun() { if (run) ls.set("mml-run", run); else ls.del("mml-run"); }
+let lastPush = 0, lastPhase = "";
+function pushFocus(force) {
+  if (!run) return;
+  if (!force && run.phase === lastPhase && Date.now() - lastPush < 30000) return;
+  lastPush = Date.now(); lastPhase = run.phase;
+  store.setFocus({ phase: run.phase, label: run.label || "", updated: Date.now() }).catch(() => {});
+}
+
+$("start").onclick = async () => {
+  beep(660, 60); // 解锁声音
+  await askSensors();
+  run = { start: Date.now(), remaining: dur * 60000, focused: 0, extra: 0, pickups: 0, label: $("label").value.trim().slice(0, 30),
+          phase: "waiting", awayAt: null, together: others().some((f) => f.phase === "down"), sensor: true };
+  saveRun(); openFocus(); wake(); pushFocus(true);
+  // 3 秒内没有传感器数据（比如电脑）：直接开始计时
+  setTimeout(() => { if (run && !sensorSeen) { run.sensor = false; run.phase = "down"; saveRun(); pushFocus(true); } }, 3000);
+};
+
+function openFocus() { $("focus").hidden = false; lastTick = Date.now(); }
+function closeFocus() { $("focus").hidden = true; $("focus").className = "focus"; document.title = "慢慢来"; }
+
+function tick() {
+  if (!run) return;
+  const now = Date.now(), dt = Math.min(now - (lastTick || now), 2000); lastTick = now;
+  if (run.awayAt) return; // 离开页面时不计时，回来再判
+  const el = $("focus");
+  if (run.sensor) {
+    if (faceDown) { upSince = 0; if (run.phase !== "down") { if (run.phase === "up") beep(520, 80); run.phase = "down"; } }
+    else if (run.phase === "down") { upSince = upSince || now; if (now - upSince > PICKUP_MS) { run.phase = "up"; run.pickups++; } }
+  }
+  if (run.phase === "down") { run.remaining -= dt; run.focused += dt; }
+  else if (run.phase === "up") { run.remaining += dt; run.extra += dt; }
+
+  const alarm = run.phase === "up" || now < bumpUntil;
+  el.classList.toggle("alarm", alarm);
+  el.classList.toggle("dark", run.phase === "down" && !alarm);
+  if (alarm && now - lastAlarmBeep > 500) { lastAlarmBeep = now; beep(run.phase === "up" ? 988 : 784, 180); }
+  $("flipart").style.display = run.phase === "waiting" ? "" : "none";
+  $("f-title").textContent = { waiting: "把手机屏幕朝下扣在桌上", down: "专注中", up: "放下手机！" }[run.phase];
+  $("f-msg").textContent = run.phase === "waiting" ? "扣下就开始计时" : run.phase === "up" ? "拿起手机，时间就在增加" : now < bumpUntil ? "别碰我！" : (run.label || "慢慢来");
+  $("f-clock").textContent = mmss(run.remaining);
+  $("f-plus").textContent = run.extra >= 1000 ? `+${Math.round(run.extra / 1000)}s` : "";
+  document.title = `${mmss(run.remaining)} · 慢慢来`;
+  saveRun(); pushFocus(false);
+  if (run.remaining <= 0) finish(true);
+}
+setInterval(tick, 250);
+
+document.addEventListener("visibilitychange", () => {
+  if (!run) return;
+  if (document.hidden) {
+    if (!run.awayAt) { run.awayAt = Date.now(); saveRun(); store.setFocus({ phase: "away", label: run.label || "", updated: Date.now() }).catch(() => {}); }
+  } else if (run.awayAt) {
+    if (Date.now() - run.awayAt > GRACE) fail();
+    else { run.awayAt = null; lastTick = Date.now(); saveRun(); wake(); pushFocus(true); }
+  } else wake();
+});
+
+$("f-stop").onclick = () => {
+  const b = $("f-stop");
+  if (b.dataset.sure) finish(false);
+  else { b.dataset.sure = "1"; b.textContent = "确定先停下？学了的时间会记下"; setTimeout(() => { b.textContent = "先到这里"; delete b.dataset.sure; }, 3000); }
+};
+
+async function finish(full) {
+  if (!run) return; const r = run; run = null; saveRun(); unwake(); closeFocus();
+  store.clearFocus().catch(() => {});
+  const minutes = Math.floor(r.focused / 60000);
+  if (minutes < 1) { $("status").textContent = "没关系，下次再来。"; return; }
+  try {
+    await store.addLog({ minutes, label: r.label, full, failed: false, together: r.together || others().some((f) => f.phase === "down"), pickups: r.pickups });
+    if (full) chime();
+    $("status").textContent = (full ? "专注完成！" : `学了 ${fmtMin(minutes)}，也很棒。`) + (state.world === "mountain" ? `又往上爬了 ${minutes * PER} 米。` : `${state.catName}又长大了一点。`);
+  } catch (e) { $("status").textContent = "没存上，检查一下网络再试试。"; }
+  refresh();
+}
+async function fail() {
+  if (!run) return; const r = run; run = null; saveRun(); unwake(); closeFocus();
+  store.clearFocus().catch(() => {});
+  try { await store.addLog({ minutes: -PENALTY, label: r.label || "", failed: true, full: false, together: false, pickups: r.pickups }); } catch (e) {}
+  $("status").textContent = `你离开页面太久了，这次专注失败，扣 ${PENALTY} 分钟进度。对方会看到 👀`;
+  refresh();
+}
+
+/* ---------------- 其他按钮 ---------------- */
+function chips() {
+  const el = $("durs"); el.innerHTML = "";
+  DURS.forEach((m) => { const b = document.createElement("button"); b.className = "chip"; b.textContent = m + " 分钟";
+    b.setAttribute("aria-pressed", String(dur === m)); b.onclick = () => { dur = m; chips(); }; el.appendChild(b); });
+}
+$("w-mountain").onclick = () => { store.setRoom({ world: "mountain" }); render(); };
+$("w-cat").onclick = () => { store.setRoom({ world: "cat" }); render(); };
+$("logout").onclick = () => { ls.del("mml-me"); location.reload(); };
+$("export").onclick = () => {
+  const rows = [["时间", "谁", "分钟", "学什么", "完成", "失败", "拿起次数", "一起专注"]].concat(
+    state.logs.map((l) => [new Date(Number(l.at)).toLocaleString(), l.author, l.minutes, l.label || "", l.full ? "是" : "否", l.failed ? "是" : "否", l.pickups || 0, l.together ? "是" : "否"]));
+  const csv = "﻿" + rows.map((r) => r.map((c) => `"${String(c).replace(/"/g, '""')}"`).join(",")).join("\n");
+  const a = document.createElement("a"); a.href = URL.createObjectURL(new Blob([csv], { type: "text/csv" }));
+  a.download = `慢慢来-${me.room}.csv`; a.click();
+};
+$("s-go").onclick = () => {
+  const name = $("s-name").value.trim().slice(0, 12), room = $("s-room").value.trim().slice(0, 24);
+  if (!name || !room) { $("s-name").focus(); return; }
+  me = { name, room }; ls.set("mml-me", me); boot();
+};
+
+async function boot() {
+  if (!me) { $("setup").hidden = false; return; }
+  $("setup").hidden = true; $("main").hidden = false;
+  if (cloud) sb = window.supabase.createClient(CFG.supabaseUrl, CFG.supabaseKey);
+  $("mode").textContent = cloud ? "已连接云端，和闺蜜同步中" : "单机试用模式：数据只存在这台手机上（配置 Supabase 后才能两人同步）";
+  chips();
+  try { await store.load(); } catch (e) { $("status").textContent = "连不上云端，检查一下网络。"; }
+  render();
+  store.subscribe(refresh);
+  setInterval(() => { if (cloud) refresh(); else renderLive(); }, 30000);
+  if (run) {
+    if (run.awayAt && Date.now() - run.awayAt > GRACE) fail();
+    else { run.awayAt = null; openFocus(); await askSensors(); wake(); pushFocus(true); }
+  }
+}
+boot();
+if ("serviceWorker" in navigator) navigator.serviceWorker.register("sw.js").catch(() => {});
+</script>
+</body>
+</html>
