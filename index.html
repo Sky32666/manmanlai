@@ -409,7 +409,7 @@ function drawCat(p) {
       ${st.i >= 5 ? '<path d="M78 34 L84 18 L92 30 L100 14 L108 30 L116 18 L122 34Z" fill="#e8c14a"/>' : ""}
     </g></svg>`;
 }
-const people = () => [...new Set([me.name, ...state.logs.map((l) => l.author)])];
+const people = () => [...new Set([me.name, ...state.logs.map((l) => l.author), ...state.plans.map((x) => x.author)])].filter(Boolean);
 const fmtMin = (m) => { m = Math.round(m); return m >= 60 ? `${Math.floor(m / 60)} 小时${m % 60 ? ` ${m % 60} 分` : ""}` : `${m} 分钟`; };
 const nm = (n) => (n === me.name ? "你" : n);
 
