@@ -51,8 +51,32 @@ async function saveCat(patch) {
   } catch (e) { catSaving = null; }
   return cur;
 }
-function todayCaps(c) { return c.day === today() ? c : { ...c, day: today(), pets: 0, plays: 0 }; }
-const fishOwned = (c) => Math.max(0, Math.floor(total() / FISH_PER_MIN) - c.fishEaten);
+function todayCaps(c) { return c.day === today() ? { feeds: 0, ...c } : { ...c, day: today(), pets: 0, plays: 0, feeds: 0 }; }
+const fishOwned = (c) => Math.max(0, Math.floor(total() / FISH_PER_MIN) + (c.bonusFish || 0) - c.fishEaten);
+
+/* ---------- 今日心愿：每天不一样，完成了领奖励 ---------- */
+const WISHES = [
+  { k: "focus", n: 30, t: "今天想看你专注 30 分钟" }, { k: "feed", n: 2, t: "今天想吃 2 条小鱼干" },
+  { k: "note", n: 1, t: "想看你写今天的笔记" }, { k: "pet", n: 5, t: "想被你摸摸 5 次" },
+  { k: "focus", n: 60, t: "今天想看你专注 1 小时" }, { k: "moment", n: 2, t: "想看你拍 2 个瞬间" },
+  { k: "play", n: 3, t: "想玩 3 次毛线球" }, { k: "together", n: 1, t: "想看你和闺蜜一起专注一次" },
+  { k: "focus", n: 90, t: "今天想看你专注 1 个半小时" }, { k: "feed", n: 3, t: "今天想吃 3 条小鱼干" }
+];
+function wishOfDay(day) { const d = Math.floor(new Date(day + "T12:00:00").getTime() / 864e5); return WISHES[(d * 7 + 3) % WISHES.length]; }
+function wishProgress(w, c) {
+  const t = today();
+  const v = { focus: () => myMinutesOnDay(t), feed: () => c.feeds || 0, pet: () => c.pets || 0, play: () => c.plays || 0,
+    note: () => (diaryOf(me.name, t) ? 1 : 0), moment: () => momentsOf(t).filter((x) => x.author === me.name).length,
+    together: () => myLogs().filter((l) => !l.failed && l.together && dayOf(l.at) === t).length }[w.k]();
+  return Math.min(w.n, v);
+}
+const myMinutesOnDay = (d) => myLogs().filter((l) => !l.failed && dayOf(l.at) === d).reduce((a, l) => a + (Number(l.minutes) || 0), 0);
+async function claimWish() {
+  const c = todayCaps(catState()); if (c.wishDone === today()) return;
+  await saveCat({ ...c, wishDone: today(), affection: c.affection + 5, bonusFish: (c.bonusFish || 0) + 1 });
+  setCatMood("happy", 2200); const r = $("art").getBoundingClientRect(); hearts(r.width / 2, r.height * 0.35, 6);
+  say("心愿实现啦！最喜欢你了 💕", 3000); render();
+}
 const fullness = (c) => (c.lastFed ? Math.max(0, Math.round(100 - ((Date.now() - c.lastFed) / 36e5) * 8)) : 40); // 大约 12 小时饿
 const affLevel = (a) => Math.floor(a / 20) + 1;
 const unlocked = (o, c) => (o.min ? total() >= o.min : c.affection >= o.need);
@@ -181,6 +205,10 @@ function renderCatScene(p) {
       <div><span>❤ 亲密度 Lv.${lvl}</span><div class="bar pink"><i style="width:${(into / 20) * 100}%"></i></div></div>
       <div><span>🍚 饱腹 ${full}%</span><div class="bar ${full < 30 ? "warn" : ""}"><i style="width:${full}%"></i></div></div>
     </div>
+    ${(() => { const w = wishOfDay(today()), got = wishProgress(w, c), done = c.wishDone === today(), ok = got >= w.n;
+      return `<div class="wish ${done ? "done" : ""}"><div class="wish-top"><span>💭 今日心愿</span><small>${done ? "已实现 ✓" : `${w.k === "focus" ? fmtMin(got) : got} / ${w.k === "focus" ? fmtMin(w.n) : w.n}`}</small></div>
+        <b>${w.t}</b><div class="bar pink"><i style="width:${(got / w.n) * 100}%"></i></div>
+        ${!done && ok ? '<button class="go" id="wish-claim">领取奖励：亲密度 +5 · 小鱼干 +1 🐟</button>' : done ? "" : '<small class="note">完成后可以领取：亲密度 +5 · 小鱼干 +1</small>'}</div>`; })()}
     <div class="cat-actions">
       <button class="cat-btn" id="cat-pet"><b>🤚</b>摸摸</button>
       <button class="cat-btn" id="cat-feed" ${fish ? "" : 'aria-disabled="true"'}><b>🐟</b>喂鱼干<small>×${fish}</small></button>
@@ -193,6 +221,7 @@ function renderCatScene(p) {
   inp.onchange = () => { const v = inp.value.trim().slice(0, 10); if (v) saveCat({ name: v }); };
   $("cat-pet").onclick = () => petOnce();
   $("cat-feed").onclick = feedCat;
+  if ($("wish-claim")) $("wish-claim").onclick = claimWish;
   $("cat-play").onclick = playCat;
   $("cat-dress").onclick = () => { catDrawerOpen = !catDrawerOpen; $("cat-drawer").hidden = !catDrawerOpen; if (catDrawerOpen) renderDrawer(); };
   if (catDrawerOpen) { $("cat-drawer").hidden = false; renderDrawer(); }
@@ -238,7 +267,7 @@ async function feedCat() {
   const svg = document.querySelector("#art .catsvg"); svg?.classList.add("feeding"); setTimeout(() => svg?.classList.remove("feeding"), 1800);
   setCatMood("eat", 1800); say(pickOne(CAT_LINES.fed), 2600);
   const r = $("art").getBoundingClientRect(); setTimeout(() => hearts(r.width / 2, r.height * 0.35, 3), 900);
-  await saveCat({ ...c, fishEaten: c.fishEaten + 1, lastFed: Date.now(), affection: c.affection + 2 });
+  await saveCat({ ...c, fishEaten: c.fishEaten + 1, lastFed: Date.now(), affection: c.affection + 2, feeds: (c.feeds || 0) + 1 });
   setTimeout(render, 1900);
 }
 async function playCat() {

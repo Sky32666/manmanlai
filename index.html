@@ -320,6 +320,22 @@ input[type="range"] { width: 100%; accent-color: var(--accent); height: 28px; ma
 .nf.mine { border-radius: 16px 4px 16px 16px; background: var(--accent-soft); }
 .nf p { margin: 0; overflow-wrap: anywhere; white-space: pre-wrap; }
 .nf img { max-width: 100%; width: 240px; border-radius: 12px; }
+.wish { display: grid; gap: 6px; border-radius: 16px; padding: 10px 12px; background: color-mix(in srgb, #f07c9c 12%, var(--surface)); border: 1px solid color-mix(in srgb, #f07c9c 35%, var(--line)); }
+.wish.done { opacity: .7; }
+.wish-top { display: flex; justify-content: space-between; font-size: .8rem; color: var(--muted); }
+.wish b { font-size: 1rem; }
+#wish-claim { background: #e66b8f; }
+/* ---------- 每日一山 ---------- */
+.mt-name span { display: flex; align-items: center; gap: 8px; }
+.lvl { font-style: normal; color: #fff; font-size: .72rem; padding: 1px 8px; border-radius: 99px; }
+.fact { margin: 0; font-size: .875rem; color: var(--ink); background: var(--bg); border-radius: 12px; padding: 8px 12px; }
+.fact::before { content: "💡 "; }
+.peaklog summary { cursor: pointer; font-size: .9rem; color: var(--accent); list-style: none; padding: 6px 0; }
+.peaklog summary::-webkit-details-marker { display: none; }
+.peakgrid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; margin-top: 6px; }
+.pk { border: 1px dashed var(--line); border-radius: 12px; padding: 6px 2px; display: grid; justify-items: center; text-align: center; gap: 1px; opacity: .55; }
+.pk.got { border-style: solid; border-color: var(--accent); background: var(--accent-soft); opacity: 1; }
+.pk b { font-size: 1.1rem; font-weight: 400; } .pk span { font-size: .7rem; line-height: 1.2; overflow-wrap: anywhere; } .pk small { font-size: .62rem; color: var(--muted); }
 /* ---------- 手机上更好用 ---------- */
 .tabpage h1 { font-size: 1.9rem; }
 #tab-focus h1 { font-size: 2.1rem; }
@@ -506,8 +522,9 @@ input[type="range"] { width: 100%; accent-color: var(--accent); height: 28px; ma
     <div class="r-strip" id="r-strip"></div>
     <button class="soft" id="r-play">▶ 播放我们的今天</button>
   </section>
-  <section class="card">
-    <h2 id="d-title">今天过得怎么样？</h2>
+  <section class="card" aria-label="我们的笔记" id="notes-card">
+    <div class="feed-head"><h2>我们的笔记</h2><span class="note" id="nf-count"></span></div>
+    <p class="label" id="d-title">写今天的笔记</p>
     <div class="moods" id="d-moods" role="group" aria-label="心情"></div>
     <textarea class="field" id="d-text" maxlength="300" rows="3" placeholder="写一句话就好：今天学了什么、发生了什么、想对自己说什么"></textarea>
     <div class="photo-row">
@@ -518,9 +535,7 @@ input[type="range"] { width: 100%; accent-color: var(--accent); height: 28px; ma
     </div>
     <button class="go" id="d-save">保存今天的日记</button>
     <p class="note" id="d-status"></p>
-  </section>
-  <section class="card" aria-label="我们的笔记">
-    <div class="feed-head"><h2>我们的笔记</h2><span class="note" id="nf-count"></span></div>
+    <div class="label" style="margin-top:6px">你们俩最近写的</div>
     <div id="nf-list" class="nf-list"></div>
   </section>
   <section class="card" aria-label="一起的小挑战">
@@ -846,20 +861,8 @@ function render() {
   $("w-cat").setAttribute("aria-pressed", String(w === "cat"));
   $("who-tag").textContent = `${me.name} · 房间「${me.room}」`;
   if (w === "mountain") {
-    const m = mountainAt(p);
     if (typeof catKey !== "undefined") catKey = "";
-    $("art").innerHTML = drawMountain(m.cur);
-    const d = $("done"), len = d.getTotalLength(), pt = d.getPointAtLength(len * m.frac);
-    d.style.strokeDasharray = `${len}`; d.style.strokeDashoffset = `${len * (1 - m.frac)}`;
-    $("climber").setAttribute("cx", pt.x); $("climber").setAttribute("cy", pt.y - 6);
-    const peaks = MOUNTAINS.slice(0, m.i).map((x) => `<span class="peak">✓ ${x.name} ${x.h.toLocaleString()} 米</span>`).join("");
-    $("info").innerHTML = `<div class="mt-name">${m.round ? `第 ${m.round + 1} 轮 · ` : ""}你正在爬 <b>${m.cur.name}</b><small>📍 ${m.cur.where} · 山顶 ${m.cur.h.toLocaleString()} 米</small></div>
-      <div class="big">海拔 ${Math.round(m.alt).toLocaleString()} 米</div>
-      <div class="bar"><i style="width:${(m.frac * 100).toFixed(1)}%"></i></div>
-      <div class="row"><span>离山顶还有 ${Math.round(m.cur.h - m.alt).toLocaleString()} 米（约 ${fmtMin(Math.ceil((m.cur.h - m.alt) / PER))}）</span>
-        <span>${m.next ? `下一座：${m.next.name} ${m.next.h.toLocaleString()} 米` : "这是最高的一座了"}</span></div>
-      <div class="row"><span>你一共爬升了 ${Math.round(m.climbed).toLocaleString()} 米${m.round ? `，已经登顶珠峰 ${m.round} 次` : ""}</span></div>
-      ${peaks ? `<div class="peaks"><span class="label">已登顶</span>${peaks}</div>` : ""}`;
+    if (typeof renderPeakScene === "function") renderPeakScene();
   } else {
     if (typeof renderCatScene === "function") renderCatScene(p);
   }
@@ -1110,8 +1113,7 @@ async function finish(full) {
     const summits = (after.round * MOUNTAINS.length + after.i) - (before.round * MOUNTAINS.length + before.i);
     const reached = summits > 0 ? MOUNTAINS[(after.i - 1 + MOUNTAINS.length) % MOUNTAINS.length] : null;
     $("status").textContent = (full ? `专注完成！一共 ${fmtMin(minutes)}${overMin ? `（加时 ${fmtMin(overMin)}）` : ""}。` : `学了 ${fmtMin(minutes)}，也很棒。`)
-      + (state.world === "mountain" ? `又往上爬了 ${minutes * PER} 米。` : (typeof catGrowMsg === "function" ? catGrowMsg(minutes) : "猫猫又长大了一点。"))
-      + (reached ? ` 🎉 你登顶了${reached.name}（${reached.h.toLocaleString()} 米）！` : "");
+      + (state.world === "mountain" ? (typeof peakFinishMsg === "function" ? peakFinishMsg(minutes) : "") : (typeof catGrowMsg === "function" ? catGrowMsg(minutes) : "猫猫又长大了一点。"));
   } catch (e) { $("status").textContent = "没存上，检查一下网络再试试。"; }
   refresh();
 }
@@ -1294,18 +1296,23 @@ function dayStats() { // 每天每个人的专注分钟和学了什么
 }
 function renderDiary() {
   const t = today(), mine = diaryOf(me.name, t);
-  if (!dDirty) { dMood = mine?.mood || null; $("d-text").value = mine?.text || ""; dPhoto = undefined; }
+  const typing = document.activeElement === $("d-text") || dComposing;
+  if (!dDirty && !typing) { dMood = mine?.mood || null; $("d-text").value = mine?.text || ""; dPhoto = undefined; }
   const shownPhoto = dPhoto === undefined ? mine?.photo : dPhoto;
   $("d-preview").hidden = !shownPhoto; if (shownPhoto) $("d-preview").src = shownPhoto; $("d-photo-x").hidden = !shownPhoto;
-  $("d-title").textContent = mine ? "今天的日记（可以改）" : "今天过得怎么样？";
-  $("d-save").textContent = mine ? "更新今天的日记" : "保存今天的日记";
+  $("d-title").textContent = mine ? "今天的笔记（写过了，可以改）" : "写今天的笔记";
+  $("d-save").textContent = mine ? "更新今天的笔记" : "发布今天的笔记";
   const mb = $("d-moods"); mb.innerHTML = "";
   MOODS.forEach((e) => { const b = document.createElement("button"); b.textContent = e; b.setAttribute("aria-pressed", String(dMood === e));
     b.onclick = () => { dMood = dMood === e ? null : e; dDirty = true; renderDiary(); }; mb.appendChild(b); });
   if (!postCloud && cloud) $("d-status").textContent = "日记、留言和挑战现在只存在这台手机上。在 Supabase 运行 posts.sql 后就能和闺蜜同步。";
   renderCalendar();
 }
+let dComposing = false;
 $("d-text").oninput = () => (dDirty = true);
+$("d-text").addEventListener("compositionstart", () => { dComposing = true; dDirty = true; });
+$("d-text").addEventListener("compositionend", () => { dComposing = false; dDirty = true; });
+$("d-text").addEventListener("focus", () => (dDirty = true));
 async function shrink(file, max = 1000, q = 0.78) { // 照片压到 max 像素以内，省流量
   const url = URL.createObjectURL(file);
   const img = await new Promise((ok, no) => { const i = new Image(); i.onload = () => ok(i); i.onerror = no; i.src = url; });
@@ -1494,7 +1501,7 @@ function renderWeekly() {
   const together = ok.filter((l) => l.together).length;
   const a0 = mountainAt(minutesBefore(ws.getTime())), a1 = mountainAt(minutesBefore(we.getTime()));
   const n0 = a0.round * MOUNTAINS.length + a0.i, n1 = a1.round * MOUNTAINS.length + a1.i;
-  const summits = []; for (let k = n0; k < n1; k++) summits.push(MOUNTAINS[k % MOUNTAINS.length].name);
+  const summits = typeof summitLog === "function" ? summitLog().filter((x) => x.day >= ymd(ws) && x.day < ymd(we)).map((x) => x.peak.name) : [];
   const moods = state.posts.filter((x) => x.kind === "diary" && x.author === me.name && x.day >= ymd(ws) && x.day < ymd(we) && x.mood).map((x) => x.mood);
   const end = new Date(we); end.setDate(end.getDate() - 1);
   const wd = (d) => "日一二三四五六"[new Date(d + "T00:00:00").getDay()];
@@ -1880,6 +1887,7 @@ async function boot() {
 boot();
 if ("serviceWorker" in navigator) navigator.serviceWorker.register("sw.js").catch(() => {});
 </script>
-<script src="cat.js?v=2"></script>
+<script src="mountains.js?v=1"></script>
+<script src="cat.js?v=3"></script>
 </body>
 </html>
