@@ -94,7 +94,7 @@ button:focus-visible, input:focus-visible { outline: 2px solid var(--accent); ou
 .stats tr.sum td { font-weight: 700; }
 .tabpage { padding-bottom: calc(96px + env(safe-area-inset-bottom, 0px)); }
 .eyebrow { font-size: .72rem; letter-spacing: .22em; color: var(--muted); margin: 0 0 8px; }
-.tabbar { position: fixed; left: 0; right: 0; bottom: 0; z-index: 5; display: grid; grid-template-columns: repeat(4, 1fr);
+.tabbar { position: fixed; left: 0; right: 0; bottom: 0; z-index: 5; display: grid; grid-template-columns: repeat(5, 1fr);
   background: color-mix(in srgb, var(--surface) 92%, transparent); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
   border-top: 1px solid var(--line); padding: 6px max(8px, env(safe-area-inset-right, 0px)) calc(6px + env(safe-area-inset-bottom, 0px)) max(8px, env(safe-area-inset-left, 0px)); }
 .tabbar button { font: inherit; font-size: .75rem; background: none; border: 0; color: var(--muted); display: grid; justify-items: center; gap: 0; padding: 4px 0; }
@@ -134,6 +134,55 @@ input[type="range"] { width: 100%; accent-color: var(--accent); height: 28px; ma
 .week { display: grid; grid-template-columns: repeat(7, 1fr); gap: 6px; align-items: end; height: 120px; }
 .week div { display: grid; gap: 4px; justify-items: center; align-self: end; font-size: .7rem; color: var(--muted); font-variant-numeric: tabular-nums; }
 .week i { display: block; width: 70%; max-width: 28px; background: var(--accent); border-radius: 6px 6px 2px 2px; min-height: 2px; }
+.tabbar button { position: relative; }
+.badge { position: absolute; top: 4px; left: calc(50% + 8px); width: 8px; height: 8px; border-radius: 50%; background: var(--alarm); }
+.notebanner { font: inherit; text-align: left; background: color-mix(in srgb, var(--blush) 30%, var(--surface)); color: var(--ink); border: 1px solid var(--blush); border-radius: 16px; padding: 12px 16px; overflow-wrap: anywhere; }
+.moods { display: flex; flex-wrap: wrap; gap: 6px; }
+.moods button { font-size: 1.5rem; width: 46px; height: 46px; border-radius: 14px; border: 1px solid var(--line); background: none; line-height: 1; }
+.moods button[aria-pressed="true"] { border-color: var(--accent); background: var(--accent-soft); }
+.photo-row { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+.photo-row label { cursor: pointer; }
+#d-preview { width: 72px; height: 72px; object-fit: cover; border-radius: 12px; }
+.cal-head, .cal { display: grid; grid-template-columns: repeat(7, 1fr); gap: 5px; }
+.cal-head span { text-align: center; font-size: .72rem; color: var(--muted); }
+.cal button { aspect-ratio: 1; max-width: 100%; border: 1px solid transparent; border-radius: 10px; font: inherit; font-size: .8rem; color: var(--ink);
+  display: grid; place-items: center; padding: 0; position: relative; font-variant-numeric: tabular-nums; }
+.cal button small { position: absolute; bottom: 1px; font-size: .62rem; line-height: 1; }
+.cal button.out { visibility: hidden; }
+.cal button.today { border-color: var(--ink); }
+.cal button[aria-pressed="true"] { outline: 2px solid var(--accent); outline-offset: 1px; }
+.l0 { background: var(--bg); } .l1 { background: color-mix(in srgb, var(--accent) 22%, var(--bg)); } .l2 { background: color-mix(in srgb, var(--accent) 45%, var(--bg)); }
+.l3 { background: color-mix(in srgb, var(--accent) 70%, var(--bg)); color: var(--surface) !important; } .l4 { background: var(--accent); color: var(--surface) !important; }
+.legend { display: flex; align-items: center; gap: 4px; font-size: .72rem; color: var(--muted); flex-wrap: wrap; }
+.legend i { width: 14px; height: 14px; border-radius: 4px; display: inline-block; }
+.daydetail { display: grid; gap: 10px; border-top: 1px solid var(--line); padding-top: 12px; }
+.daydetail h3 { margin: 0; font-size: 1rem; }
+.dayperson { display: grid; gap: 4px; }
+.dayperson .who { font-weight: 700; }
+.dayperson p { margin: 0; overflow-wrap: anywhere; }
+.dayperson img { max-width: 100%; width: 220px; border-radius: 12px; }
+.notes { display: grid; gap: 10px; }
+.notecard { border-radius: 4px 16px 16px 16px; padding: 10px 12px; background: color-mix(in srgb, var(--blush) 22%, var(--surface)); border: 1px solid var(--line); display: grid; gap: 6px; }
+.notecard.mine { border-radius: 16px 4px 16px 16px; background: var(--accent-soft); }
+.notecard p { margin: 0; overflow-wrap: anywhere; white-space: pre-wrap; }
+.reacts { display: flex; gap: 6px; flex-wrap: wrap; align-items: center; }
+.reacts button { font: inherit; font-size: .85rem; border: 1px solid var(--line); background: var(--surface); border-radius: 99px; padding: 0 8px; color: var(--ink); }
+.reacts button[aria-pressed="true"] { border-color: var(--accent); }
+.weekly { border-radius: 20px; padding: 18px; display: grid; gap: 12px; color: #fff; background: linear-gradient(160deg, var(--hill2), var(--accent)); }
+.weekly .wk-head { display: flex; justify-content: space-between; align-items: center; gap: 8px; flex-wrap: wrap; }
+.weekly .wk-head b { font-family: var(--display); font-weight: 400; font-size: 1.35rem; }
+.weekly .switch { background: rgba(255,255,255,.15); border-color: rgba(255,255,255,.3); }
+.weekly .switch button { color: #fff; }
+.weekly .switch button[aria-pressed="true"] { background: #fff; color: var(--accent); }
+.weekly .big2 { font-family: var(--display); font-size: 2.2rem; line-height: 1; }
+.weekly ul { margin: 0; padding: 0; list-style: none; display: grid; gap: 6px; font-size: .92rem; }
+.weekly li { overflow-wrap: anywhere; }
+.weekly .sub { font-size: .78rem; opacity: .85; }
+.chal { border: 1px solid var(--line); border-radius: 14px; padding: 12px; display: grid; gap: 6px; }
+.chal.done { border-color: var(--accent); background: var(--accent-soft); }
+.chal.over { opacity: .6; }
+.chal .top { display: flex; justify-content: space-between; gap: 8px; align-items: baseline; }
+.chal b { overflow-wrap: anywhere; }
 .mode { font-size: .75rem; color: var(--muted); text-align: center; }
 
 /* 专注全屏 */
@@ -196,6 +245,7 @@ input[type="range"] { width: 100%; accent-color: var(--accent); height: 28px; ma
 
   <section class="scene"><div id="art"></div><div class="scene-info" id="info"></div></section>
   <section class="live" id="live" hidden></section>
+  <button class="notebanner" id="note-banner" hidden></button>
 
   <section class="card">
     <h2>扣下手机，专注开始</h2>
@@ -259,6 +309,38 @@ input[type="range"] { width: 100%; accent-color: var(--accent); height: 28px; ma
   <p class="note" id="p-status"></p>
 </div>
 
+<div class="wrap tabpage" id="tab-diary" hidden>
+  <header><div><p class="eyebrow">慢慢来自习室</p><h1>日记</h1><p class="tag">想写就写，不写也没关系。</p></div></header>
+  <section class="card">
+    <h2 id="d-title">今天过得怎么样？</h2>
+    <div class="moods" id="d-moods" role="group" aria-label="心情"></div>
+    <textarea class="field" id="d-text" maxlength="300" rows="3" placeholder="写一句话就好：今天学了什么、发生了什么、想对自己说什么"></textarea>
+    <div class="photo-row">
+      <label class="soft small" for="d-photo">📷 加一张照片</label>
+      <input type="file" id="d-photo" accept="image/*" hidden>
+      <img id="d-preview" alt="" hidden>
+      <button class="soft small" id="d-photo-x" hidden>去掉照片</button>
+    </div>
+    <button class="go" id="d-save">保存今天的日记</button>
+    <p class="note" id="d-status"></p>
+  </section>
+
+  <section class="card">
+    <div class="feed-head"><button class="ctl" id="c-prev" aria-label="上个月">‹</button><h2 id="c-month">2026 年 10 月</h2><button class="ctl" id="c-next" aria-label="下个月">›</button></div>
+    <div class="cal-head"><span>一</span><span>二</span><span>三</span><span>四</span><span>五</span><span>六</span><span>日</span></div>
+    <div class="cal" id="cal"></div>
+    <div class="legend"><span>少</span><i class="l0"></i><i class="l1"></i><i class="l2"></i><i class="l3"></i><i class="l4"></i><span>多（两人一起的专注时长）</span></div>
+    <div id="c-detail" class="daydetail"></div>
+  </section>
+
+  <section class="card">
+    <h2>留言墙</h2>
+    <textarea class="field" id="n-text" maxlength="200" rows="2" placeholder="给对方留一张小纸条"></textarea>
+    <button class="go" id="n-send" disabled>贴上去</button>
+    <div id="notes" class="notes"></div>
+  </section>
+</div>
+
 <div class="wrap tabpage" id="tab-stats" hidden>
   <header><div><p class="eyebrow">慢慢来自习室</p><h1>学习统计</h1><p class="tag">每一点进步，都值得被记录。</p></div>
     <div class="switch" role="group" aria-label="看谁的统计">
@@ -266,6 +348,16 @@ input[type="range"] { width: 100%; accent-color: var(--accent); height: 28px; ma
       <button id="st-mine" aria-pressed="false">只看我</button>
     </div>
   </header>
+  <section class="weekly" id="weekly" aria-label="每周回顾"></section>
+  <section class="card" aria-label="一起的小挑战">
+    <div class="feed-head"><h2>一起的小挑战</h2><button class="soft small" id="ch-new">＋ 新挑战</button></div>
+    <div id="ch-form" class="stack" hidden>
+      <div class="chips" id="ch-goal"></div>
+      <div id="ch-opts" class="stack"></div>
+      <button class="go" id="ch-add">开始这个挑战</button>
+    </div>
+    <div id="challenges" class="stack"></div>
+  </section>
   <section class="stats" aria-label="专注统计">
     <div class="hero"><span class="label" id="st-hero">你们一起专注了</span><b id="st-total">0 分钟</b></div>
     <table><thead><tr><th></th><th>今天</th><th>本周</th><th>全部</th></tr></thead><tbody id="st-body"></tbody></table>
@@ -287,6 +379,7 @@ input[type="range"] { width: 100%; accent-color: var(--accent); height: 28px; ma
   <button data-tab="focus" aria-current="page"><span>⏳</span>自习室</button>
   <button data-tab="sound"><span>♪</span>声音</button>
   <button data-tab="plan"><span>✓</span>计划</button>
+  <button data-tab="diary"><span>✎</span>日记<i class="badge" id="diary-badge" hidden></i></button>
   <button data-tab="stats"><span>▥</span>统计</button>
 </nav>
 </div>
@@ -337,7 +430,8 @@ const ls = { get(k, d) { try { const v = localStorage.getItem(k); return v == nu
              del(k) { try { localStorage.removeItem(k); } catch (e) {} } };
 
 let me = ls.get("mml-me", null); // {name, room}
-let state = { world: "mountain", catName: "团子", logs: [], focus: {}, plans: [] };
+let state = { world: "mountain", catName: "团子", logs: [], focus: {}, plans: [], posts: [] };
+let postCloud = true; // posts 表还没建时：日记、留言、挑战先存在本机
 let planCloud = true; // plans 表还没建时退回本机保存
 let dur = 25;
 
@@ -359,11 +453,14 @@ const store = {
       state.logs = logs;
       const pl = await sb.from("plans").select("*").eq("room", me.room).order("created", { ascending: true });
       if (pl.error) { planCloud = false; state.plans = ls.get("mml-plans-" + me.room, []); } else state.plans = pl.data || [];
+      const po = await sb.from("posts").select("*").eq("room", me.room).order("created", { ascending: false }).limit(3000);
+      if (po.error) { postCloud = false; state.posts = ls.get("mml-posts-" + me.room, []); } else { postCloud = true; state.posts = po.data || []; }
       const f = await sb.from("focus").select("*").eq("room", me.room);
       state.focus = {}; (f.data || []).forEach((x) => (state.focus[x.author] = x));
     } else {
       const d = ls.get("mml-local-" + me.room, { world: "mountain", catName: "团子", logs: [], focus: {} });
       Object.assign(state, d); planCloud = false; state.plans = ls.get("mml-plans-" + me.room, []);
+      postCloud = false; state.posts = ls.get("mml-posts-" + me.room, []);
     }
   },
   saveLocal() { ls.set("mml-local-" + me.room, { world: state.world, catName: state.catName, logs: state.logs, focus: state.focus }); bc?.postMessage("x"); },
@@ -408,10 +505,34 @@ const store = {
     if (cloud && planCloud) await sb.from("plans").delete().eq("id", id);
     else { state.plans = state.plans.filter((y) => y.id !== id); ls.set("mml-plans-" + me.room, state.plans); }
   },
+  async addPost(po) {
+    const row = { room: me.room, author: me.name, created: Date.now(), reactions: {}, ...po };
+    if (cloud && postCloud) { const { data, error } = await sb.from("posts").insert(row).select().single(); if (error) throw error; state.posts.unshift(data); }
+    else { row.id = String(Date.now()) + Math.random(); state.posts.unshift(row); ls.set("mml-posts-" + me.room, state.posts); }
+  },
+  async updatePost(id, patch) {
+    const x = state.posts.find((y) => y.id === id); if (x) Object.assign(x, patch);
+    if (cloud && postCloud) { const { error } = await sb.from("posts").update(patch).eq("id", id); if (error) throw error; }
+    else ls.set("mml-posts-" + me.room, state.posts);
+  },
+  async deletePost(id) {
+    state.posts = state.posts.filter((y) => y.id !== id);
+    if (cloud && postCloud) await sb.from("posts").delete().eq("id", id);
+    else ls.set("mml-posts-" + me.room, state.posts);
+  },
+  async uploadPhoto(blob) {
+    if (cloud && postCloud) {
+      const path = `${encodeURIComponent(me.room)}/${Date.now()}-${Math.random().toString(36).slice(2, 8)}.jpg`;
+      const { error } = await sb.storage.from("diary").upload(path, blob, { contentType: "image/jpeg" });
+      if (error) throw error;
+      return sb.storage.from("diary").getPublicUrl(path).data.publicUrl;
+    }
+    return await new Promise((ok, no) => { const r = new FileReader(); r.onload = () => ok(r.result); r.onerror = no; r.readAsDataURL(blob); });
+  },
   subscribe(onChange) {
     if (cloud) {
       channel = sb.channel("room-" + me.room);
-      ["logs", "focus", "rooms", "plans"].forEach((t) => channel.on("postgres_changes", { event: "*", schema: "public", table: t, filter: (t === "rooms" ? "code=eq." : "room=eq.") + me.room }, onChange));
+      ["logs", "focus", "rooms", "plans", "posts"].forEach((t) => channel.on("postgres_changes", { event: "*", schema: "public", table: t, filter: (t === "rooms" ? "code=eq." : "room=eq.") + me.room }, onChange));
       channel.subscribe();
     } else if ("BroadcastChannel" in window) {
       bc = new BroadcastChannel("mml-" + me.room); bc.onmessage = onChange;
@@ -474,7 +595,7 @@ function drawCat(p) {
       ${st.i >= 5 ? '<path d="M78 34 L84 18 L92 30 L100 14 L108 30 L116 18 L122 34Z" fill="#e8c14a"/>' : ""}
     </g></svg>`;
 }
-const people = () => [...new Set([me.name, ...state.logs.map((l) => l.author), ...state.plans.map((x) => x.author)])].filter(Boolean);
+const people = () => [...new Set([me.name, ...state.logs.map((l) => l.author), ...state.plans.map((x) => x.author), ...(state.posts || []).map((x) => x.author)])].filter(Boolean);
 const fmtMin = (m) => { m = Math.round(m); return m >= 60 ? `${Math.floor(m / 60)} 小时${m % 60 ? ` ${m % 60} 分` : ""}` : `${m} 分钟`; };
 const nm = (n) => (n === me.name ? "你" : n);
 
@@ -517,6 +638,7 @@ function render() {
   }
   $("info").appendChild(duo);
   renderFeed(); renderLive(); renderStats(); renderPlans(); renderTodoPick();
+  renderDiary(); renderNotes(); renderNoteBanner(); renderChallenges(); renderWeekly();
 }
 
 let statsMine = ls.get("mml-stats-mine", false);
@@ -776,6 +898,7 @@ function showTab(t) {
   document.querySelectorAll(".tabpage").forEach((el) => (el.hidden = el.id !== "tab-" + t));
   document.querySelectorAll(".tabbar button").forEach((b) => (b.dataset.tab === t ? b.setAttribute("aria-current", "page") : b.removeAttribute("aria-current")));
   window.scrollTo(0, 0); ls.set("mml-tab", t);
+  if (t === "diary" && me) { ls.set(seenKey(), Date.now()); setTimeout(renderNoteBanner, 1500); }
 }
 document.querySelectorAll(".tabbar button").forEach((b) => (b.onclick = () => showTab(b.dataset.tab)));
 
@@ -924,6 +1047,234 @@ function renderTodoPick() {
     b.setAttribute("aria-pressed", String(pickedPlan === x.id)); b.onclick = () => pickPlan(x); box.appendChild(b); });
 }
 $("label").oninput = () => { if (pickedPlan) { pickedPlan = null; renderTodoPick(); } };
+
+/* ---------------- 日记 + 日历 ---------------- */
+const MOODS = ["😊", "🥰", "😌", "😐", "😣", "😴", "😭", "🥳"];
+const dayOf = (t) => ymd(new Date(Number(t)));
+let dMood = null, dPhoto = undefined, calMonth = (() => { const d = new Date(); return new Date(d.getFullYear(), d.getMonth(), 1); })(), calSel = null, dDirty = false;
+const diaryOf = (author, day) => state.posts.find((x) => x.kind === "diary" && x.author === author && x.day === day);
+function dayStats() { // 每天每个人的专注分钟和学了什么
+  const m = {};
+  state.logs.forEach((l) => { if (l.failed) return; const d = dayOf(l.at), x = (m[d] = m[d] || { total: 0, per: {} });
+    const p = (x.per[l.author] = x.per[l.author] || { min: 0, labels: [] }); p.min += Number(l.minutes) || 0; x.total += Number(l.minutes) || 0; if (l.label) p.labels.push(l.label); });
+  return m;
+}
+function renderDiary() {
+  const t = today(), mine = diaryOf(me.name, t);
+  if (!dDirty) { dMood = mine?.mood || null; $("d-text").value = mine?.text || ""; dPhoto = undefined; }
+  const shownPhoto = dPhoto === undefined ? mine?.photo : dPhoto;
+  $("d-preview").hidden = !shownPhoto; if (shownPhoto) $("d-preview").src = shownPhoto; $("d-photo-x").hidden = !shownPhoto;
+  $("d-title").textContent = mine ? "今天的日记（可以改）" : "今天过得怎么样？";
+  $("d-save").textContent = mine ? "更新今天的日记" : "保存今天的日记";
+  const mb = $("d-moods"); mb.innerHTML = "";
+  MOODS.forEach((e) => { const b = document.createElement("button"); b.textContent = e; b.setAttribute("aria-pressed", String(dMood === e));
+    b.onclick = () => { dMood = dMood === e ? null : e; dDirty = true; renderDiary(); }; mb.appendChild(b); });
+  if (!postCloud && cloud) $("d-status").textContent = "日记、留言和挑战现在只存在这台手机上。在 Supabase 运行 posts.sql 后就能和闺蜜同步。";
+  renderCalendar();
+}
+$("d-text").oninput = () => (dDirty = true);
+async function shrink(file) { // 照片压到 1000px 以内，省流量
+  const url = URL.createObjectURL(file);
+  const img = await new Promise((ok, no) => { const i = new Image(); i.onload = () => ok(i); i.onerror = no; i.src = url; });
+  const k = Math.min(1, 1000 / Math.max(img.width, img.height)), c = document.createElement("canvas");
+  c.width = Math.round(img.width * k); c.height = Math.round(img.height * k); c.getContext("2d").drawImage(img, 0, 0, c.width, c.height);
+  URL.revokeObjectURL(url);
+  return await new Promise((ok) => c.toBlob(ok, "image/jpeg", 0.78));
+}
+let photoBlob = null;
+$("d-photo").onchange = async (e) => {
+  const f = e.target.files[0]; if (!f) return;
+  try { photoBlob = await shrink(f); dPhoto = URL.createObjectURL(photoBlob); dDirty = true; renderDiary(); }
+  catch (err) { $("d-status").textContent = "这张照片读不出来，换一张试试。"; }
+  e.target.value = "";
+};
+$("d-photo-x").onclick = () => { photoBlob = null; dPhoto = null; dDirty = true; renderDiary(); };
+$("d-save").onclick = async () => {
+  const text = $("d-text").value.trim().slice(0, 300);
+  if (!text && !dMood && !photoBlob && dPhoto === undefined) { $("d-status").textContent = "写一句话或者选个心情就可以保存。"; return; }
+  $("d-save").disabled = true; $("d-status").textContent = "保存中…";
+  try {
+    let photo = diaryOf(me.name, today())?.photo || null;
+    if (photoBlob) photo = await store.uploadPhoto(photoBlob); else if (dPhoto === null) photo = null;
+    const ex = diaryOf(me.name, today()), row = { mood: dMood, text, photo };
+    if (ex) await store.updatePost(ex.id, row); else await store.addPost({ kind: "diary", day: today(), ...row });
+    photoBlob = null; dDirty = false; $("d-status").textContent = "存好了。";
+  } catch (err) { $("d-status").textContent = "没存上：" + (err?.message || "检查一下网络再试试。"); }
+  $("d-save").disabled = false; render();
+};
+function renderCalendar() {
+  const st = dayStats(), y = calMonth.getFullYear(), mo = calMonth.getMonth(), t = today();
+  $("c-month").textContent = `${y} 年 ${mo + 1} 月`;
+  const first = (new Date(y, mo, 1).getDay() + 6) % 7, days = new Date(y, mo + 1, 0).getDate(), cal = $("cal"); cal.innerHTML = "";
+  for (let i = 0; i < first; i++) { const b = document.createElement("button"); b.className = "out"; b.tabIndex = -1; cal.appendChild(b); }
+  for (let d = 1; d <= days; d++) {
+    const key = ymd(new Date(y, mo, d)), mins = st[key]?.total || 0, lv = mins === 0 ? 0 : mins < 30 ? 1 : mins < 60 ? 2 : mins < 120 ? 3 : 4;
+    const b = document.createElement("button"); b.className = `l${lv}` + (key === t ? " today" : ""); b.textContent = d;
+    b.setAttribute("aria-pressed", String(calSel === key)); b.setAttribute("aria-label", `${mo + 1}月${d}日，专注 ${fmtMin(mins)}`);
+    const moods = people().map((n) => diaryOf(n, key)?.mood).filter(Boolean).join("");
+    if (moods) { const sm = document.createElement("small"); sm.textContent = moods; b.appendChild(sm); }
+    b.onclick = () => { calSel = calSel === key ? null : key; renderCalendar(); };
+    cal.appendChild(b);
+  }
+  renderDayDetail(st);
+}
+$("c-prev").onclick = () => { calMonth = new Date(calMonth.getFullYear(), calMonth.getMonth() - 1, 1); renderCalendar(); };
+$("c-next").onclick = () => { calMonth = new Date(calMonth.getFullYear(), calMonth.getMonth() + 1, 1); renderCalendar(); };
+function renderDayDetail(st) {
+  const box = $("c-detail"); box.innerHTML = "";
+  if (!calSel) { box.innerHTML = '<p class="note">点日历上的某一天，看看那天你们学了什么、写了什么。</p>'; return; }
+  const [yy, mm, dd] = calSel.split("-").map(Number), x = st[calSel];
+  const h = document.createElement("h3"); h.textContent = `${mm}月${dd}日 · 一起专注 ${fmtMin(x?.total || 0)}`; box.appendChild(h);
+  people().forEach((n) => {
+    const p = x?.per[n], di = diaryOf(n, calSel); if (!p && !di) return;
+    const el = document.createElement("div"); el.className = "dayperson";
+    const w = document.createElement("span"); w.className = "who"; w.textContent = `${di?.mood || ""} ${nm(n)}`.trim(); el.appendChild(w);
+    if (p) { const q = document.createElement("p"); q.className = "note"; q.textContent = `专注 ${fmtMin(p.min)}${p.labels.length ? " · " + [...new Set(p.labels)].join("、") : ""}`; el.appendChild(q); }
+    if (di?.text) { const q = document.createElement("p"); q.textContent = di.text; el.appendChild(q); }
+    if (di?.photo) { const im = document.createElement("img"); im.src = di.photo; im.alt = `${nm(n)}的照片`; im.loading = "lazy"; el.appendChild(im); }
+    box.appendChild(el);
+  });
+  if (box.childElementCount === 1) { const q = document.createElement("p"); q.className = "note"; q.textContent = "这天没有记录。"; box.appendChild(q); }
+}
+
+/* ---------------- 留言墙 ---------------- */
+const REACTS = ["❤️", "💪", "😂", "🥹"];
+const seenKey = () => "mml-note-seen-" + me.room;
+function renderNotes() {
+  const box = $("notes"); box.innerHTML = "";
+  const notes = state.posts.filter((x) => x.kind === "note").sort((a, b) => b.created - a.created).slice(0, 60);
+  if (!notes.length) { box.innerHTML = '<div class="empty">还没有纸条。写一句"今天也加油"吧。</div>'; return; }
+  notes.forEach((x) => {
+    const el = document.createElement("article"); el.className = "notecard" + (x.author === me.name ? " mine" : "");
+    const meta = document.createElement("div"); meta.className = "meta";
+    const b = document.createElement("b"); b.textContent = x.author === me.name ? "你" : x.author; const t = document.createElement("span"); t.textContent = ago(x.created);
+    meta.append(b, t);
+    const p = document.createElement("p"); p.textContent = x.text;
+    const rs = document.createElement("div"); rs.className = "reacts";
+    REACTS.forEach((e) => { const who = (x.reactions || {})[e] || []; const on = who.includes(me.name);
+      if (x.author === me.name && !who.length) return; // 自己的纸条只显示对方的回应
+      const btn = document.createElement("button"); btn.textContent = who.length ? `${e} ${who.length}` : e; btn.setAttribute("aria-pressed", String(on));
+      btn.disabled = x.author === me.name;
+      btn.onclick = () => { const r = { ...(x.reactions || {}) }; const list = new Set(r[e] || []); on ? list.delete(me.name) : list.add(me.name); r[e] = [...list];
+        store.updatePost(x.id, { reactions: r }).catch(() => {}); render(); };
+      rs.appendChild(btn); });
+    if (x.author === me.name) { const del = document.createElement("button"); del.textContent = "撕掉";
+      del.onclick = () => { if (del.dataset.sure) store.deletePost(x.id).then(render); else { del.dataset.sure = "1"; del.textContent = "确定？"; setTimeout(() => { del.textContent = "撕掉"; delete del.dataset.sure; }, 3000); } };
+      rs.appendChild(del); }
+    el.append(meta, p, rs); box.appendChild(el);
+  });
+}
+$("n-text").oninput = () => ($("n-send").disabled = !$("n-text").value.trim());
+$("n-send").onclick = async () => {
+  const text = $("n-text").value.trim().slice(0, 200); if (!text) return;
+  $("n-send").disabled = true;
+  try { await store.addPost({ kind: "note", text }); $("n-text").value = ""; } catch (e) { $("n-send").disabled = false; }
+  ls.set(seenKey(), Date.now()); render();
+};
+function unreadNotes() { const seen = ls.get(seenKey(), 0); return state.posts.filter((x) => x.kind === "note" && x.author !== me.name && x.created > seen).sort((a, b) => b.created - a.created); }
+function renderNoteBanner() {
+  if (!$("tab-diary").hidden && unreadNotes().length) ls.set(seenKey(), Date.now()); // 正在看日记页：算已读
+  const un = unreadNotes(), bn = $("note-banner");
+  bn.hidden = !un.length; $("diary-badge").hidden = !un.length;
+  if (un.length) bn.textContent = `💌 ${un[0].author}给你留言了：${un[0].text}${un.length > 1 ? `（还有 ${un.length - 1} 张）` : ""}`;
+}
+$("note-banner").onclick = () => { showTab("diary"); setTimeout(() => $("notes").scrollIntoView({ behavior: "smooth" }), 50); };
+
+/* ---------------- 一起的小挑战 ---------------- */
+let chGoal = "hours", chHours = 10, chPeriod = "week", chMountain = 3;
+function weekStart(d = new Date()) { const x = new Date(d); x.setHours(0, 0, 0, 0); x.setDate(x.getDate() - ((x.getDay() + 6) % 7)); return x; }
+function renderChForm() {
+  const g = $("ch-goal"); g.innerHTML = "";
+  [["hours", "一起专注多少小时"], ["mountain", "一起爬到哪座山"]].forEach(([k, t]) => { const b = document.createElement("button"); b.className = "chip"; b.textContent = t;
+    b.setAttribute("aria-pressed", String(chGoal === k)); b.onclick = () => { chGoal = k; renderChForm(); }; g.appendChild(b); });
+  const o = $("ch-opts"); o.innerHTML = "";
+  const row = (label, items, cur, set) => { const l = document.createElement("div"); l.className = "label"; l.textContent = label; const c = document.createElement("div"); c.className = "chips";
+    items.forEach(([v, t]) => { const b = document.createElement("button"); b.className = "chip"; b.textContent = t; b.setAttribute("aria-pressed", String(cur === v)); b.onclick = () => { set(v); renderChForm(); }; c.appendChild(b); });
+    o.append(l, c); };
+  if (chGoal === "hours") {
+    row("目标", [[5, "5 小时"], [10, "10 小时"], [20, "20 小时"], [50, "50 小时"]], chHours, (v) => (chHours = v));
+    row("期限", [["week", "这周（到周日）"], ["7", "7 天"], ["30", "30 天"]], chPeriod, (v) => (chPeriod = v));
+  } else {
+    const done = mountainAt(total()).i + mountainAt(total()).round * MOUNTAINS.length;
+    row("爬到", MOUNTAINS.map((m, i) => [i, `${m.name} ${m.h.toLocaleString()} 米`]).filter(([i]) => i >= done % MOUNTAINS.length), chMountain, (v) => (chMountain = v));
+  }
+}
+$("ch-new").onclick = () => { const f = $("ch-form"); f.hidden = !f.hidden; $("ch-new").textContent = f.hidden ? "＋ 新挑战" : "收起"; renderChForm(); };
+$("ch-add").onclick = async () => {
+  const start = today(); let end = null, target, text;
+  if (chGoal === "hours") {
+    const e = chPeriod === "week" ? (() => { const w = weekStart(); w.setDate(w.getDate() + 6); return w; })() : (() => { const d = new Date(); d.setDate(d.getDate() + Number(chPeriod) - 1); return d; })();
+    end = ymd(e); target = chHours; text = `一起专注 ${chHours} 小时`;
+  } else { target = chMountain; text = `一起爬到${MOUNTAINS[chMountain].name}`; }
+  try { await store.addPost({ kind: "challenge", goal: chGoal, target, start_day: start, end_day: end, text }); } catch (e) { return; }
+  $("ch-form").hidden = true; $("ch-new").textContent = "＋ 新挑战"; render();
+};
+function cumHeight(i) { return MOUNTAINS.slice(0, i + 1).reduce((a, m) => a + m.h, 0); }
+function chProgress(c) {
+  if (c.goal === "mountain") { const need = cumHeight(c.target), have = total() * PER; return { have, need, frac: Math.min(1, have / need), unit: "m" }; }
+  const from = new Date(c.start_day + "T00:00:00").getTime(), to = c.end_day ? new Date(c.end_day + "T00:00:00").getTime() + 864e5 : Infinity;
+  const have = state.logs.filter((l) => !l.failed && Number(l.at) >= from && Number(l.at) < to).reduce((a, l) => a + (Number(l.minutes) || 0), 0);
+  return { have, need: c.target * 60, frac: Math.min(1, have / (c.target * 60)), unit: "min" };
+}
+function renderChallenges() {
+  const box = $("challenges"); box.innerHTML = "";
+  const list = state.posts.filter((x) => x.kind === "challenge").sort((a, b) => b.created - a.created);
+  if (!list.length) { box.innerHTML = '<p class="note">还没有挑战。两个人一起定一个小目标试试？完不成也没关系。</p>'; return; }
+  list.forEach((c) => {
+    const pr = chProgress(c), expired = c.end_day && today() > c.end_day && pr.frac < 1;
+    if (pr.frac >= 1 && !c.done_at) store.updatePost(c.id, { done_at: Date.now() }).catch(() => {});
+    const el = document.createElement("div"); el.className = "chal" + (pr.frac >= 1 ? " done" : expired ? " over" : "");
+    const top = document.createElement("div"); top.className = "top";
+    const b = document.createElement("b"); b.textContent = (pr.frac >= 1 ? "🎉 " : "") + c.text;
+    const pc = document.createElement("span"); pc.className = "note"; pc.textContent = `${Math.floor(pr.frac * 100)}%`; top.append(b, pc);
+    const bar = document.createElement("div"); bar.className = "bar"; bar.innerHTML = `<i style="width:${(pr.frac * 100).toFixed(1)}%"></i>`;
+    const n = document.createElement("p"); n.className = "note";
+    const amt = pr.unit === "m" ? `${Math.round(pr.have).toLocaleString()} / ${pr.need.toLocaleString()} 米` : `${fmtMin(pr.have)} / ${fmtMin(pr.need)}`;
+    n.textContent = pr.frac >= 1 ? `完成啦！${amt}` : expired ? `时间到了，差一点点。${amt}，没关系，下次再来。` : `${amt}${c.end_day ? ` · 到 ${dayLabel(c.end_day)}` : ""} · ${c.author === me.name ? "你" : c.author}发起`;
+    el.append(top, bar, n);
+    if (c.author === me.name) { const del = document.createElement("button"); del.className = "soft small"; del.style.justifySelf = "start"; del.textContent = "删除";
+      del.onclick = () => { if (del.dataset.sure) store.deletePost(c.id).then(render); else { del.dataset.sure = "1"; del.textContent = "确定删除？"; setTimeout(() => { del.textContent = "删除"; delete del.dataset.sure; }, 3000); } };
+      el.appendChild(del); }
+    box.appendChild(el);
+  });
+}
+
+/* ---------------- 每周回顾 ---------------- */
+let wkOffset = 0; // 0 = 本周，1 = 上周
+function minutesBefore(t) { return Math.max(0, state.logs.filter((l) => Number(l.at) < t).reduce((a, l) => a + (Number(l.minutes) || 0), 0)); }
+function renderWeekly() {
+  const ws = weekStart(); ws.setDate(ws.getDate() - 7 * wkOffset); const we = new Date(ws); we.setDate(we.getDate() + 7);
+  const inWeek = state.logs.filter((l) => Number(l.at) >= ws.getTime() && Number(l.at) < we.getTime()), ok = inWeek.filter((l) => !l.failed);
+  const sumM = (a) => a.reduce((x, l) => x + (Number(l.minutes) || 0), 0), tot = sumM(ok);
+  const perDay = {}; ok.forEach((l) => { const d = dayOf(l.at); perDay[d] = (perDay[d] || 0) + (Number(l.minutes) || 0); });
+  const best = Object.entries(perDay).sort((a, b) => b[1] - a[1])[0];
+  const lab = {}; ok.forEach((l) => { if (l.label) lab[l.label] = (lab[l.label] || 0) + (Number(l.minutes) || 0); });
+  const topLab = Object.entries(lab).sort((a, b) => b[1] - a[1])[0];
+  const together = ok.filter((l) => l.together).length;
+  const a0 = mountainAt(minutesBefore(ws.getTime())), a1 = mountainAt(minutesBefore(we.getTime()));
+  const n0 = a0.round * MOUNTAINS.length + a0.i, n1 = a1.round * MOUNTAINS.length + a1.i;
+  const summits = []; for (let k = n0; k < n1; k++) summits.push(MOUNTAINS[k % MOUNTAINS.length].name);
+  const moods = state.posts.filter((x) => x.kind === "diary" && x.day >= ymd(ws) && x.day < ymd(we) && x.mood).map((x) => x.mood);
+  const end = new Date(we); end.setDate(end.getDate() - 1);
+  const wd = (d) => "日一二三四五六"[new Date(d + "T00:00:00").getDay()];
+  const box = $("weekly"); box.innerHTML = "";
+  const head = document.createElement("div"); head.className = "wk-head";
+  head.innerHTML = `<div><span class="sub">每周回顾 · ${ws.getMonth() + 1}/${ws.getDate()} – ${end.getMonth() + 1}/${end.getDate()}</span><br><b>${wkOffset ? "上周" : "这周"}的你们</b></div>`;
+  const sw = document.createElement("div"); sw.className = "switch";
+  [[0, "本周"], [1, "上周"]].forEach(([v, t]) => { const b = document.createElement("button"); b.textContent = t; b.setAttribute("aria-pressed", String(wkOffset === v)); b.onclick = () => { wkOffset = v; renderWeekly(); }; sw.appendChild(b); });
+  head.appendChild(sw); box.appendChild(head);
+  const big = document.createElement("div"); big.className = "big2"; big.textContent = fmtMin(tot); box.appendChild(big);
+  const ul = document.createElement("ul");
+  const li = (t) => { const x = document.createElement("li"); x.textContent = t; ul.appendChild(x); };
+  people().forEach((n) => { const m = ok.filter((l) => l.author === n); li(`${n === me.name ? "你" : n}：专注 ${fmtMin(sumM(m))}，${m.length} 次${inWeek.filter((l) => l.author === n && l.failed).length ? `，偷玩 ${inWeek.filter((l) => l.author === n && l.failed).length} 次` : ""}`); });
+  if (best) li(`最专心的一天：周${wd(best[0])}，一起 ${fmtMin(best[1])}`);
+  if (topLab) li(`学得最多的：${topLab[0]}（${fmtMin(topLab[1])}）`);
+  if (together) li(`同时在专注 ${together} 次`);
+  if (summits.length) li(`登顶了 ${summits.join("、")} ⛰`);
+  if (moods.length) li(`这周的心情：${moods.join(" ")}`);
+  if (!ok.length) li(wkOffset ? "上周还没有专注记录。" : "这周还没开始，慢慢来。");
+  box.appendChild(ul);
+}
 
 /* ---------------- 其他按钮 ---------------- */
 function chips() {
