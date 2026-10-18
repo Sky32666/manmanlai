@@ -146,6 +146,9 @@ input[type="range"] { width: 100%; accent-color: var(--accent); height: 28px; ma
 .focus.dark .clock, .focus.dark h3, .focus.dark p { opacity: .18; }
 .focus.alarm { animation: alarm .5s steps(1) infinite; }
 .focus.alarm .clock, .focus.alarm h3, .focus.alarm p { opacity: 1; color: #fff; }
+.focus.done { animation: done 1.2s ease-in-out infinite; }
+.focus.done .clock, .focus.done h3, .focus.done p { opacity: 1; }
+@keyframes done { 0%, 100% { background: #0d1110; } 50% { background: #2f6b5a; } }
 @keyframes alarm { 0% { background: var(--alarm); } 50% { background: #ffffff; } }
 .focus.alarm.white-phase { color: #000; }
 @media (prefers-reduced-motion: reduce) { .focus.alarm { animation: none; background: var(--alarm); } .flip .ph { animation: none; transform: rotate(-90deg); } .live .dot { animation: none; } }
@@ -547,7 +550,7 @@ function renderLive() {
   os.forEach((f) => {
     const d = document.createElement("div"); const dot = document.createElement("span"); dot.className = "dot";
     const msg = { waiting: `${f.author}准备开始专注了`, down: `${f.author}正在专注${f.label ? "「" + f.label + "」" : ""}`,
-                  up: `👀 ${f.author}拿起手机了！`, away: `👀 ${f.author}离开页面了！10 秒内不回来就失败` }[f.phase] || `${f.author}正在专注`;
+                  up: `👀 ${f.author}拿起手机了！`, over: `🎉 ${f.author}专注时间到了，还在加时`, away: `👀 ${f.author}离开页面了！10 秒内不回来就失败` }[f.phase] || `${f.author}正在专注`;
     const s = document.createElement("span"); if (f.phase === "up" || f.phase === "away") s.className = "warn"; s.textContent = msg;
     d.append(dot, s); live.appendChild(d);
   });
@@ -596,10 +599,30 @@ function pushFocus(force) {
   store.setFocus({ phase: run.phase, label: run.label || "", updated: Date.now() }).catch(() => {});
 }
 
+// 时间到的铃声：用 <audio> 播放，iPhone 开着静音键也能响
+const alarmEl = new Audio("music/chime.mp3"); alarmEl.preload = "auto";
+let alarmLeft = 0;
+alarmEl.addEventListener("ended", () => { if (--alarmLeft > 0) setTimeout(() => { alarmEl.currentTime = 0; alarmEl.play().catch(() => {}); }, 600); });
+function unlockAlarm() { // 必须在点击里先播一次，之后才能自动响
+  alarmEl.muted = true;
+  alarmEl.play().then(() => { alarmEl.pause(); alarmEl.currentTime = 0; alarmEl.muted = false; }).catch(() => { alarmEl.muted = false; });
+}
+function ring(times = 3) { alarmLeft = times; alarmEl.muted = false; alarmEl.currentTime = 0; alarmEl.play().catch(() => chime()); }
+function stopRing() { alarmLeft = 0; try { alarmEl.pause(); } catch (e) {} }
+function notifyDone(r) {
+  try {
+    if (!("Notification" in window) || Notification.permission !== "granted") return;
+    const body = `${fmtMin(Math.round(r.target / 60000))}到了。继续扣着手机还会接着算时间。`;
+    navigator.serviceWorker?.ready.then((reg) => reg.showNotification("专注完成 🎉", { body, icon: "icon-192.png", tag: "mml-done" })).catch(() => {});
+  } catch (e) {}
+}
+
 $("start").onclick = async () => {
   beep(660, 60); // 解锁声音
+  unlockAlarm();
+  try { if ("Notification" in window && Notification.permission === "default") Notification.requestPermission(); } catch (e) {}
   await askSensors();
-  run = { start: Date.now(), remaining: dur * 60000, focused: 0, extra: 0, pickups: 0, label: $("label").value.trim().slice(0, 30),
+  run = { start: Date.now(), target: dur * 60000, remaining: dur * 60000, focused: 0, extra: 0, pickups: 0, label: $("label").value.trim().slice(0, 30),
           phase: "waiting", awayAt: null, planId: pickedPlan, together: others().some((f) => f.phase === "down"), sensor: true };
   saveRun(); openFocus(); wake(); pushFocus(true);
   // 3 秒内没有传感器数据（比如电脑）：直接开始计时
@@ -615,24 +638,36 @@ function tick() {
   if (run.awayAt) return; // 离开页面时不计时，回来再判
   const el = $("focus");
   if (run.sensor) {
-    if (faceDown) { upSince = 0; if (run.phase !== "down") { if (run.phase === "up") beep(520, 80); run.phase = "down"; } }
+    if (run.phase === "over") { // 时间到了：拿起手机就结束，还扣着就继续算
+      if (faceDown) upSince = 0;
+      else { upSince = upSince || now; if (now - upSince > PICKUP_MS) return finish(true); }
+    }
+    else if (faceDown) { upSince = 0; if (run.phase !== "down") { if (run.phase === "up") beep(520, 80); run.phase = "down"; } }
     else if (run.phase === "down") { upSince = upSince || now; if (now - upSince > PICKUP_MS) { run.phase = "up"; run.pickups++; } }
   }
   if (run.phase === "down") { run.remaining -= dt; run.focused += dt; }
   else if (run.phase === "up") { run.remaining += dt; run.extra += dt; }
+  else if (run.phase === "over") run.focused += dt;
+  if (run.phase === "down" && run.remaining <= 0) {
+    run.phase = "over"; run.overAt = now; run.remaining = 0; ring(3); notifyDone(run); pushFocus(true);
+  }
 
-  const alarm = run.phase === "up" || now < bumpUntil;
+  const over = run.phase === "over", celebrating = over && now - (run.overAt || 0) < 12000;
+  const alarm = !over && (run.phase === "up" || now < bumpUntil);
   el.classList.toggle("alarm", alarm);
-  el.classList.toggle("dark", run.phase === "down" && !alarm);
+  el.classList.toggle("done", celebrating);
+  el.classList.toggle("dark", (run.phase === "down" || (over && !celebrating)) && !alarm);
   if (alarm && now - lastAlarmBeep > 500) { lastAlarmBeep = now; beep(run.phase === "up" ? 988 : 784, 180); }
   $("flipart").style.display = run.phase === "waiting" ? "" : "none";
-  $("f-title").textContent = { waiting: "把手机屏幕朝下扣在桌上", down: "专注中", up: "放下手机！" }[run.phase];
-  $("f-msg").textContent = run.phase === "waiting" ? "扣下就开始计时" : run.phase === "up" ? "拿起手机，时间就在增加" : now < bumpUntil ? "别碰我！" : (run.label || "慢慢来");
-  $("f-clock").textContent = mmss(run.remaining);
-  $("f-plus").textContent = run.extra >= 1000 ? `+${Math.round(run.extra / 1000)}s` : "";
-  document.title = `${mmss(run.remaining)} · 慢慢来`;
+  $("f-title").textContent = { waiting: "把手机屏幕朝下扣在桌上", down: "专注中", up: "放下手机！", over: "时间到！🎉" }[run.phase];
+  $("f-msg").textContent = run.phase === "waiting" ? "扣下就开始计时" : run.phase === "up" ? "拿起手机，时间就在增加"
+    : over ? "还扣着就继续算专注时间，拿起手机就结束并记录" : now < bumpUntil ? "别碰我！" : (run.label || "慢慢来");
+  const extraOver = Math.max(0, run.focused - (run.target || 0));
+  $("f-clock").textContent = over ? "+" + mmss(extraOver) : mmss(run.remaining);
+  $("f-plus").textContent = over ? `已专注 ${fmtMin(Math.floor(run.focused / 60000))}` : run.extra >= 1000 ? `+${Math.round(run.extra / 1000)}s` : "";
+  $("f-stop").textContent = over ? "结束并记录" : ($("f-stop").dataset.sure ? $("f-stop").textContent : "先到这里");
+  document.title = `${$("f-clock").textContent} · 慢慢来`;
   saveRun(); pushFocus(false);
-  if (run.remaining <= 0) finish(true);
 }
 setInterval(tick, 250);
 
@@ -641,27 +676,28 @@ document.addEventListener("visibilitychange", () => {
   if (document.hidden) {
     if (!run.awayAt) { run.awayAt = Date.now(); saveRun(); store.setFocus({ phase: "away", label: run.label || "", updated: Date.now() }).catch(() => {}); }
   } else if (run.awayAt) {
-    if (Date.now() - run.awayAt > GRACE) fail();
+    if (run.phase === "over") finish(true); // 时间已经到了：离开就当作结束，不算失败
+    else if (Date.now() - run.awayAt > GRACE) fail();
     else { run.awayAt = null; lastTick = Date.now(); saveRun(); wake(); pushFocus(true); }
   } else wake();
 });
 
 $("f-stop").onclick = () => {
   const b = $("f-stop");
+  if (run && run.phase === "over") return finish(true);
   if (b.dataset.sure) finish(false);
   else { b.dataset.sure = "1"; b.textContent = "确定先停下？学了的时间会记下"; setTimeout(() => { b.textContent = "先到这里"; delete b.dataset.sure; }, 3000); }
 };
 
 async function finish(full) {
-  if (!run) return; const r = run; run = null; saveRun(); unwake(); closeFocus();
+  if (!run) return; const r = run; run = null; saveRun(); unwake(); closeFocus(); stopRing();
   store.clearFocus().catch(() => {});
-  const minutes = Math.floor(r.focused / 60000);
+  const minutes = Math.floor(r.focused / 60000), overMin = Math.max(0, Math.floor((r.focused - (r.target || 0)) / 60000));
   if (minutes < 1) { $("status").textContent = "没关系，下次再来。"; return; }
   try {
     if (r.planId) { const pl = state.plans.find((x) => x.id === r.planId); if (pl) store.updatePlan(pl.id, { spent: (Number(pl.spent) || 0) + minutes }).catch(() => {}); }
     await store.addLog({ minutes, label: r.label, full, failed: false, together: r.together || others().some((f) => f.phase === "down"), pickups: r.pickups });
-    if (full) chime();
-    $("status").textContent = (full ? "专注完成！" : `学了 ${fmtMin(minutes)}，也很棒。`) + (state.world === "mountain" ? `又往上爬了 ${minutes * PER} 米。` : `${state.catName}又长大了一点。`);
+    $("status").textContent = (full ? `专注完成！一共 ${fmtMin(minutes)}${overMin ? `（加时 ${fmtMin(overMin)}）` : ""}。` : `学了 ${fmtMin(minutes)}，也很棒。`) + (state.world === "mountain" ? `又往上爬了 ${minutes * PER} 米。` : `${state.catName}又长大了一点。`);
   } catch (e) { $("status").textContent = "没存上，检查一下网络再试试。"; }
   refresh();
 }
@@ -860,7 +896,8 @@ async function boot() {
   store.subscribe(refresh);
   setInterval(() => { if (cloud) refresh(); else renderLive(); }, 30000);
   if (run) {
-    if (run.awayAt && Date.now() - run.awayAt > GRACE) fail();
+    if (run.phase === "over" && run.awayAt) finish(true);
+    else if (run.awayAt && Date.now() - run.awayAt > GRACE) fail();
     else { run.awayAt = null; openFocus(); await askSensors(); wake(); pushFocus(true); }
   }
 }
