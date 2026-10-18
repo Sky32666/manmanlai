@@ -183,6 +183,41 @@ input[type="range"] { width: 100%; accent-color: var(--accent); height: 28px; ma
 .chal.over { opacity: .6; }
 .chal .top { display: flex; justify-content: space-between; gap: 8px; align-items: baseline; }
 .chal b { overflow-wrap: anywhere; }
+.hours { display: flex; gap: 6px; overflow-x: auto; padding-bottom: 4px; scroll-snap-type: x proximity; }
+.hour { flex: none; width: 58px; display: grid; gap: 3px; justify-items: center; font-size: .7rem; color: var(--muted); scroll-snap-align: start; font-variant-numeric: tabular-nums; }
+.hour .th { width: 58px; height: 58px; border-radius: 12px; background: var(--bg); border: 1px dashed var(--line); display: grid; place-items: center; overflow: hidden; position: relative; padding: 0; font: inherit; color: var(--muted); }
+.hour .th img, .hour .th video { width: 100%; height: 100%; object-fit: cover; }
+.hour .th .n { position: absolute; right: 3px; bottom: 2px; background: rgba(0,0,0,.55); color: #fff; border-radius: 6px; padding: 0 4px; font-size: .62rem; }
+.hour .th .v { position: absolute; left: 3px; top: 2px; color: #fff; font-size: .62rem; text-shadow: 0 0 3px #000; }
+.hour.now .th { border: 2px solid var(--accent); }
+.hour.now span { color: var(--accent); font-weight: 700; }
+.m-actions { display: flex; gap: 10px; flex-wrap: wrap; }
+.m-actions .go { flex: 1; }
+.cam, .player-full { position: fixed; inset: 0; z-index: 20; background: #000; color: #fff; display: grid; }
+.cam video { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+.cam-top, .pf-head { position: absolute; left: 0; right: 0; top: 0; display: flex; justify-content: space-between; align-items: center; gap: 10px;
+  padding: calc(12px + env(safe-area-inset-top, 0px)) max(16px, env(safe-area-inset-right, 0px)) 12px max(16px, env(safe-area-inset-left, 0px)); background: linear-gradient(rgba(0,0,0,.5), transparent); z-index: 2; }
+.camx { width: 40px; height: 40px; border-radius: 50%; border: 0; background: rgba(255,255,255,.18); color: #fff; font-size: 1.1rem; }
+.cam-rec { position: absolute; top: calc(70px + env(safe-area-inset-top, 0px)); left: 50%; transform: translateX(-50%); background: var(--alarm); padding: 2px 12px; border-radius: 99px; font-variant-numeric: tabular-nums; z-index: 2; }
+.cam-bottom { position: absolute; left: 0; right: 0; bottom: 0; display: grid; gap: 10px; justify-items: center; z-index: 2;
+  padding: 16px max(16px, env(safe-area-inset-right, 0px)) calc(20px + env(safe-area-inset-bottom, 0px)) max(16px, env(safe-area-inset-left, 0px)); background: linear-gradient(transparent, rgba(0,0,0,.6)); }
+.cam-bottom .field { background: rgba(255,255,255,.15); color: #fff; border-color: rgba(255,255,255,.3); max-width: 420px; }
+.cam-bottom .field::placeholder { color: rgba(255,255,255,.7); }
+.cam-bottom .chip { color: #fff; border-color: rgba(255,255,255,.4); }
+.cam-bottom .chip[aria-pressed="true"] { background: #fff; color: #000; }
+.cam-btns { display: flex; gap: 34px; align-items: center; }
+.shutter { width: 70px; height: 70px; border-radius: 50%; border: 4px solid #fff; background: rgba(255,255,255,.2); color: #fff; font-size: 1.5rem; }
+.shutter.rec { color: var(--alarm); font-size: 2rem; }
+.shutter:disabled { opacity: .4; }
+.pf-bar { position: absolute; top: env(safe-area-inset-top, 0px); left: 8px; right: 8px; display: flex; gap: 3px; z-index: 3; padding-top: 6px; }
+.pf-bar i { flex: 1; height: 3px; border-radius: 2px; background: rgba(255,255,255,.3); }
+.pf-bar i.on { background: #fff; }
+.pf-media { position: absolute; inset: 0; display: grid; place-items: center; }
+.pf-media img, .pf-media video { max-width: 100%; max-height: 100%; object-fit: contain; }
+.pf-cap { position: absolute; left: 16px; right: 16px; bottom: calc(70px + env(safe-area-inset-bottom, 0px)); text-align: center; margin: 0; font-size: 1.05rem; text-shadow: 0 1px 4px #000; z-index: 3; overflow-wrap: anywhere; }
+.pf-nav { position: absolute; inset: 70px 0 120px; display: grid; grid-template-columns: 1fr 2fr; z-index: 2; }
+.pf-nav button { background: none; border: 0; }
+.pf-del { position: absolute; bottom: calc(20px + env(safe-area-inset-bottom, 0px)); left: 50%; transform: translateX(-50%); z-index: 3; color: #fff; border-color: rgba(255,255,255,.4); }
 .mode { font-size: .75rem; color: var(--muted); text-align: center; }
 
 /* 专注全屏 */
@@ -311,6 +346,17 @@ input[type="range"] { width: 100%; accent-color: var(--accent); height: 28px; ma
 
 <div class="wrap tabpage" id="tab-diary" hidden>
   <header><div><p class="eyebrow">慢慢来自习室</p><h1>日记</h1><p class="tag">想写就写，不写也没关系。</p></div></header>
+  <section class="card moments" aria-label="每小时一刻">
+    <div class="feed-head"><h2>每小时一刻</h2><span class="note" id="m-count"></span></div>
+    <p class="note">每个小时拍一张照片或几秒视频，记下这一刻在做什么。晚上点「播放今天」看你们俩的一天。</p>
+    <div class="hours" id="m-hours"></div>
+    <div class="m-actions">
+      <button class="go" id="m-shoot">📸 拍这一刻</button>
+      <button class="soft" id="m-play">▶ 播放今天</button>
+    </div>
+    <input type="file" id="m-file" accept="image/*,video/*" capture="environment" hidden>
+    <p class="note" id="m-status"></p>
+  </section>
   <section class="card">
     <h2 id="d-title">今天过得怎么样？</h2>
     <div class="moods" id="d-moods" role="group" aria-label="心情"></div>
@@ -382,6 +428,30 @@ input[type="range"] { width: 100%; accent-color: var(--accent); height: 28px; ma
   <button data-tab="diary"><span>✎</span>日记<i class="badge" id="diary-badge" hidden></i></button>
   <button data-tab="stats"><span>▥</span>统计</button>
 </nav>
+</div>
+
+<!-- 拍这一刻 -->
+<div class="cam" id="cam" hidden>
+  <video id="cam-video" playsinline muted autoplay></video>
+  <div class="cam-top"><button class="camx" id="cam-close" aria-label="关闭">✕</button><span id="cam-tip">这个小时在做什么？</span><button class="camx" id="cam-flip" aria-label="翻转镜头">⟲</button></div>
+  <div class="cam-rec" id="cam-rec" hidden>● <span id="cam-left">3</span></div>
+  <div class="cam-bottom">
+    <input class="field" id="cam-caption" maxlength="40" placeholder="一句话（可不填）">
+    <div class="chips" id="cam-durs"></div>
+    <div class="cam-btns">
+      <button class="shutter" id="cam-photo" aria-label="拍照">📷</button>
+      <button class="shutter rec" id="cam-clip" aria-label="录视频">●</button>
+    </div>
+  </div>
+</div>
+<!-- 播放一天的瞬间 -->
+<div class="player-full" id="pf" hidden>
+  <div class="pf-bar" id="pf-bar"></div>
+  <div class="pf-head"><span id="pf-who"></span><button class="camx" id="pf-close" aria-label="关闭">✕</button></div>
+  <div class="pf-media" id="pf-media"></div>
+  <p class="pf-cap" id="pf-cap"></p>
+  <div class="pf-nav"><button id="pf-prev" aria-label="上一个"></button><button id="pf-next" aria-label="下一个"></button></div>
+  <button class="soft small pf-del" id="pf-del" hidden>删除这一刻</button>
 </div>
 
 <!-- 专注中 -->
@@ -520,16 +590,21 @@ const store = {
     if (cloud && postCloud) await sb.from("posts").delete().eq("id", id);
     else ls.set("mml-posts-" + me.room, state.posts);
   },
-  async uploadPhoto(blob) {
+  async uploadPhoto(blob) { return this.uploadMedia(blob, "jpg", "image/jpeg"); },
+  async uploadMedia(blob, ext, mime) {
     if (cloud && postCloud) {
       // 存储路径只能用英文和数字：把房间码转成一串字母数字
       const tag = [...me.room].reduce((h, c) => (Math.imul(h, 31) + c.codePointAt(0)) >>> 0, 7).toString(36);
-      const path = `${tag}/${Date.now()}-${Math.random().toString(36).slice(2, 8)}.jpg`;
-      const { error } = await sb.storage.from("diary").upload(path, blob, { contentType: "image/jpeg" });
+      const path = `${tag}/${Date.now()}-${Math.random().toString(36).slice(2, 8)}.${ext}`;
+      const { error } = await sb.storage.from("diary").upload(path, blob, { contentType: mime });
       if (error) throw error;
       return sb.storage.from("diary").getPublicUrl(path).data.publicUrl;
     }
     return await new Promise((ok, no) => { const r = new FileReader(); r.onload = () => ok(r.result); r.onerror = no; r.readAsDataURL(blob); });
+  },
+  async deleteMedia(url) {
+    const m = cloud && postCloud && String(url || "").match(/\/object\/public\/diary\/(.+)$/);
+    if (m) await sb.storage.from("diary").remove([decodeURIComponent(m[1])]);
   },
   subscribe(onChange) {
     if (cloud) {
@@ -640,7 +715,7 @@ function render() {
   }
   $("info").appendChild(duo);
   renderFeed(); renderLive(); renderStats(); renderPlans(); renderTodoPick();
-  renderDiary(); renderNotes(); renderNoteBanner(); renderChallenges(); renderWeekly();
+  renderDiary(); renderMoments(); renderNotes(); renderNoteBanner(); renderChallenges(); renderWeekly();
 }
 
 let statsMine = ls.get("mml-stats-mine", false);
@@ -1127,6 +1202,7 @@ function renderDayDetail(st) {
   if (!calSel) { box.innerHTML = '<p class="note">点日历上的某一天，看看那天你们学了什么、写了什么。</p>'; return; }
   const [yy, mm, dd] = calSel.split("-").map(Number), x = st[calSel];
   const h = document.createElement("h3"); h.textContent = `${mm}月${dd}日 · 一起专注 ${fmtMin(x?.total || 0)}`; box.appendChild(h);
+  const ms = momentsOf(calSel); if (ms.length) { const pb = document.createElement("button"); pb.className = "soft small"; pb.style.justifySelf = "start"; pb.textContent = `▶ 看这天的 ${ms.length} 个瞬间`; pb.onclick = () => playDay(calSel); box.appendChild(pb); }
   people().forEach((n) => {
     const p = x?.per[n], di = diaryOf(n, calSel); if (!p && !di) return;
     const el = document.createElement("div"); el.className = "dayperson";
@@ -1176,11 +1252,16 @@ $("n-send").onclick = async () => {
 function unreadNotes() { const seen = ls.get(seenKey(), 0); return state.posts.filter((x) => x.kind === "note" && x.author !== me.name && x.created > seen).sort((a, b) => b.created - a.created); }
 function renderNoteBanner() {
   if (!$("tab-diary").hidden && unreadNotes().length) ls.set(seenKey(), Date.now()); // 正在看日记页：算已读
-  const un = unreadNotes(), bn = $("note-banner");
-  bn.hidden = !un.length; $("diary-badge").hidden = !un.length;
-  if (un.length) bn.textContent = `💌 ${un[0].author}给你留言了：${un[0].text}${un.length > 1 ? `（还有 ${un.length - 1} 张）` : ""}`;
+  const un = unreadNotes(), bn = $("note-banner"), h = new Date().getHours();
+  $("diary-badge").hidden = !un.length;
+  const needShot = nudgeHour === h && !momentsOf(today()).some((x) => x.author === me.name && new Date(Number(x.created)).getHours() === h);
+  bn.hidden = !un.length && !needShot;
+  if (un.length) { bn.textContent = `💌 ${un[0].author}给你留言了：${un[0].text}${un.length > 1 ? `（还有 ${un.length - 1} 张）` : ""}`; bn.onclick = noteBannerClick; }
+  else if (needShot) { bn.textContent = `⏰ ${h}:00 了，拍一下现在在做什么？`; bn.onclick = () => { nudgeHour = null; renderNoteBanner(); showTab("diary"); openCam(); }; }
 }
-$("note-banner").onclick = () => { showTab("diary"); setTimeout(() => $("notes").scrollIntoView({ behavior: "smooth" }), 50); };
+let nudgeHour = null;
+function noteBannerClick() { showTab("diary"); setTimeout(() => $("notes").scrollIntoView({ behavior: "smooth" }), 50); }
+$("note-banner").onclick = noteBannerClick;
 
 /* ---------------- 一起的小挑战 ---------------- */
 let chGoal = "hours", chHours = 10, chPeriod = "week", chMountain = 3;
@@ -1277,6 +1358,136 @@ function renderWeekly() {
   if (!ok.length) li(wkOffset ? "上周还没有专注记录。" : "这周还没开始，慢慢来。");
   box.appendChild(ul);
 }
+
+/* ---------------- 每小时一刻：照片或几秒视频 ---------------- */
+const isVideo = (url) => /\.(mp4|webm|mov)(\?|$)/i.test(url || "");
+const momentsOf = (day) => state.posts.filter((x) => x.kind === "moment" && x.day === day).sort((a, b) => a.created - b.created);
+let clipSec = 3, camStream = null, camFacing = "environment", recorder = null;
+function renderMoments() {
+  const t = today(), mine = momentsOf(t).filter((x) => x.author === me.name), all = momentsOf(t), nowH = new Date().getHours();
+  $("m-count").textContent = all.length ? `今天 ${all.length} 个瞬间` : "";
+  const box = $("m-hours"); box.innerHTML = "";
+  for (let h = 7; h <= 23; h++) {
+    const inH = mine.filter((x) => new Date(Number(x.created)).getHours() === h);
+    const el = document.createElement("div"); el.className = "hour" + (h === nowH ? " now" : "");
+    const th = document.createElement("button"); th.className = "th"; th.setAttribute("aria-label", `${h}点${inH.length ? `，${inH.length} 个瞬间` : "，还没拍"}`);
+    if (inH.length) {
+      const last = inH[inH.length - 1];
+      if (isVideo(last.photo)) { const v = document.createElement("video"); v.src = last.photo + "#t=0.1"; v.muted = true; v.playsInline = true; v.preload = "metadata"; th.appendChild(v);
+        const tag = document.createElement("span"); tag.className = "v"; tag.textContent = "▶"; th.appendChild(tag); }
+      else { const im = document.createElement("img"); im.src = last.photo; im.alt = ""; im.loading = "lazy"; th.appendChild(im); }
+      if (inH.length > 1) { const n = document.createElement("span"); n.className = "n"; n.textContent = inH.length; th.appendChild(n); }
+      th.onclick = () => playDay(t, last.id);
+    } else { th.textContent = h === nowH ? "＋" : ""; if (h === nowH) th.onclick = openCam; }
+    const lb = document.createElement("span"); lb.textContent = `${h}:00`;
+    el.append(th, lb); box.appendChild(el);
+  }
+  $("m-play").disabled = !all.length;
+  const cur = box.querySelector(".hour.now"); if (cur && !renderMoments.scrolled) { renderMoments.scrolled = true; setTimeout(() => cur.scrollIntoView({ inline: "center", block: "nearest" }), 50); }
+}
+$("m-play").onclick = () => playDay(today());
+$("m-shoot").onclick = () => openCam();
+
+async function openCam() {
+  if (!navigator.mediaDevices?.getUserMedia) { $("m-file").click(); return; } // 不支持网页相机：用系统相机
+  $("cam").hidden = false; renderCamDurs(); $("cam-caption").value = "";
+  $("cam-tip").textContent = `${new Date().getHours()}:00 这一刻在做什么？`;
+  await startStream();
+}
+async function startStream() {
+  stopStream();
+  try {
+    camStream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: camFacing, width: { ideal: 720 }, height: { ideal: 720 } }, audio: true })
+      .catch(() => navigator.mediaDevices.getUserMedia({ video: { facingMode: camFacing }, audio: false }));
+    const v = $("cam-video"); v.srcObject = camStream; v.style.transform = camFacing === "user" ? "scaleX(-1)" : ""; await v.play().catch(() => {});
+  } catch (e) { closeCam(); $("m-status").textContent = "打不开相机：请在 iPhone 设置里允许 Safari 使用相机，或者改用系统相机。"; $("m-file").click(); }
+}
+function stopStream() { camStream?.getTracks().forEach((t) => t.stop()); camStream = null; }
+function closeCam() { if (recorder && recorder.state === "recording") { recorder.onstop = null; recorder.stop(); } stopStream(); $("cam").hidden = true; $("cam-rec").hidden = true; $("cam-photo").disabled = $("cam-clip").disabled = false; }
+function renderCamDurs() {
+  const c = $("cam-durs"); c.innerHTML = "";
+  [1, 3, 5].forEach((s) => { const b = document.createElement("button"); b.className = "chip"; b.textContent = `${s} 秒视频`; b.setAttribute("aria-pressed", String(clipSec === s)); b.onclick = () => { clipSec = s; renderCamDurs(); }; c.appendChild(b); });
+}
+$("cam-close").onclick = closeCam;
+$("cam-flip").onclick = () => { camFacing = camFacing === "user" ? "environment" : "user"; startStream(); };
+$("cam-photo").onclick = async () => {
+  const v = $("cam-video"); if (!v.videoWidth) return;
+  const k = Math.min(1, 1000 / Math.max(v.videoWidth, v.videoHeight)), c = document.createElement("canvas");
+  c.width = Math.round(v.videoWidth * k); c.height = Math.round(v.videoHeight * k);
+  const g = c.getContext("2d"); if (camFacing === "user") { g.translate(c.width, 0); g.scale(-1, 1); } g.drawImage(v, 0, 0, c.width, c.height);
+  const blob = await new Promise((ok) => c.toBlob(ok, "image/jpeg", 0.8));
+  const cap = $("cam-caption").value.trim(); closeCam(); saveMoment(blob, "jpg", "image/jpeg", cap);
+};
+$("cam-clip").onclick = () => {
+  if (!camStream || !window.MediaRecorder) { closeCam(); $("m-file").click(); return; }
+  const type = ["video/mp4;codecs=avc1", "video/mp4", "video/webm;codecs=vp9", "video/webm"].find((t) => MediaRecorder.isTypeSupported?.(t)) || "";
+  const chunks = []; recorder = new MediaRecorder(camStream, { mimeType: type || undefined, videoBitsPerSecond: 900000, audioBitsPerSecond: 64000 });
+  recorder.ondataavailable = (e) => e.data.size && chunks.push(e.data);
+  recorder.onstop = () => {
+    const mime = (recorder.mimeType || type || "video/mp4").split(";")[0], ext = mime.includes("webm") ? "webm" : "mp4";
+    const cap = $("cam-caption").value.trim(); closeCam(); saveMoment(new Blob(chunks, { type: mime }), ext, mime, cap);
+  };
+  recorder.start(250);
+  $("cam-photo").disabled = $("cam-clip").disabled = true; $("cam-rec").hidden = false;
+  let left = clipSec; $("cam-left").textContent = left;
+  const iv = setInterval(() => { left--; $("cam-left").textContent = Math.max(0, left); if (left <= 0) { clearInterval(iv); if (recorder.state === "recording") recorder.stop(); } }, 1000);
+};
+$("m-file").onchange = async (e) => { // 系统相机拍的照片或视频
+  const f = e.target.files[0]; e.target.value = ""; if (!f) return;
+  if (f.type.startsWith("video/")) {
+    if (f.size > 25e6) { $("m-status").textContent = "视频太长了，拍几秒就好。"; return; }
+    saveMoment(f, f.type.includes("quicktime") ? "mov" : f.type.includes("webm") ? "webm" : "mp4", f.type || "video/mp4", "");
+  } else { try { saveMoment(await shrink(f), "jpg", "image/jpeg", ""); } catch (err) { $("m-status").textContent = "这张照片读不出来，换一张试试。"; } }
+};
+async function saveMoment(blob, ext, mime, caption) {
+  if (!(cloud && postCloud) && mime.startsWith("video")) { $("m-status").textContent = "视频需要连上云端才能保存，先拍张照片吧。"; return; }
+  $("m-status").textContent = mime.startsWith("video") ? "上传视频中…" : "上传中…";
+  try {
+    const url = await store.uploadMedia(blob, ext, mime);
+    await store.addPost({ kind: "moment", day: today(), photo: url, text: caption.slice(0, 40) });
+    $("m-status").textContent = `${new Date().getHours()}:00 的这一刻记下了。`; render();
+  } catch (err) { $("m-status").textContent = "没传上去：" + (err?.message || "检查一下网络再试试。"); }
+}
+
+/* 播放一天：两个人的瞬间按时间顺序连起来 */
+let pfList = [], pfIdx = 0, pfTimer = null;
+function playDay(day, startId) {
+  pfList = momentsOf(day); if (!pfList.length) return;
+  pfIdx = Math.max(0, pfList.findIndex((x) => x.id === startId)); $("pf").hidden = false;
+  try { window.Ambient?.playing && window.Ambient.pause(); } catch (e) {}
+  showPf();
+}
+function showPf() {
+  clearTimeout(pfTimer);
+  const x = pfList[pfIdx], media = $("pf-media"); media.innerHTML = "";
+  $("pf-bar").innerHTML = pfList.map((_, i) => `<i class="${i <= pfIdx ? "on" : ""}"></i>`).join("");
+  const tm = new Date(Number(x.created)); $("pf-who").textContent = `${x.author === me.name ? "你" : x.author} · ${tm.getHours()}:${String(tm.getMinutes()).padStart(2, "0")}`;
+  $("pf-cap").textContent = x.text || "";
+  $("pf-del").hidden = x.author !== me.name; delete $("pf-del").dataset.sure; $("pf-del").textContent = "删除这一刻";
+  if (isVideo(x.photo)) { const v = document.createElement("video"); v.src = x.photo; v.playsInline = true; v.autoplay = true; v.controls = false;
+    v.onended = nextPf; v.onerror = () => (pfTimer = setTimeout(nextPf, 1500)); media.appendChild(v); v.play().catch(() => { v.muted = true; v.play().catch(() => {}); }); }
+  else { const im = document.createElement("img"); im.src = x.photo; im.alt = x.text || "这一刻"; media.appendChild(im); pfTimer = setTimeout(nextPf, 2500); }
+}
+function nextPf() { if (pfIdx < pfList.length - 1) { pfIdx++; showPf(); } else closePf(); }
+function closePf() { clearTimeout(pfTimer); $("pf-media").innerHTML = ""; $("pf").hidden = true; }
+$("pf-next").onclick = nextPf;
+$("pf-prev").onclick = () => { if (pfIdx > 0) { pfIdx--; showPf(); } };
+$("pf-close").onclick = closePf;
+$("pf-del").onclick = async () => {
+  const b = $("pf-del"); if (!b.dataset.sure) { b.dataset.sure = "1"; b.textContent = "确定删除？"; clearTimeout(pfTimer); return; }
+  const x = pfList[pfIdx]; await store.deletePost(x.id).catch(() => {}); store.deleteMedia(x.photo).catch(() => {});
+  pfList.splice(pfIdx, 1); if (!pfList.length) closePf(); else { pfIdx = Math.min(pfIdx, pfList.length - 1); showPf(); } render();
+};
+
+/* 新的一个小时：如果还没拍，在页面上提醒一下（只在 App 打开时有效） */
+let lastNudgeHour = new Date().getHours();
+setInterval(() => {
+  const h = new Date().getHours(); if (h === lastNudgeHour || !me) return; lastNudgeHour = h;
+  if (h < 7 || run || document.hidden) return;
+  const has = momentsOf(today()).some((x) => x.author === me.name && new Date(Number(x.created)).getHours() === h);
+  if (!has) { nudgeHour = h; try { beep(880, 120); } catch (e) {} }
+  renderNoteBanner(); renderMoments();
+}, 30000);
 
 /* ---------------- 其他按钮 ---------------- */
 function chips() {
