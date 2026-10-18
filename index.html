@@ -159,14 +159,22 @@ input[type="range"] { width: 100%; accent-color: var(--accent); height: 28px; ma
 <!-- 第一次进入：名字和房间码 -->
 <div class="wrap" id="setup" hidden>
   <header><div><h1>慢慢来</h1><p class="tag">扣下手机，一起专注，一起长大。</p></div></header>
-  <section class="card">
-    <h2>先认识一下</h2>
-    <div class="label">你的名字</div>
-    <input class="field" id="s-name" maxlength="12" placeholder="比如：kai">
-    <div class="label">你们的房间码（两个人填一样的）</div>
-    <input class="field" id="s-room" maxlength="24" placeholder="比如：山猫1018">
-    <p class="note">房间码就像你们俩的暗号。闺蜜在她手机上填同一个房间码，就能看到同一座山、同一只猫。</p>
-    <button class="go" id="s-go">进入</button>
+  <section class="card" id="s-step1">
+    <h2>你们的房间码</h2>
+    <input class="field" id="s-room" maxlength="24" placeholder="比如：山猫1018" autocomplete="off">
+    <p class="note">房间码就像你们俩的暗号。两个人填一样的，就能看到同一座山、同一只猫。</p>
+    <button class="go" id="s-next">下一步</button>
+  </section>
+  <section class="card" id="s-step2" hidden>
+    <h2>你是谁？</h2>
+    <div id="s-known" hidden>
+      <div class="label">这个房间里已经有的人（点自己的名字，之前的记录都会接上）</div>
+      <div class="chips" id="s-names"></div>
+      <div class="label" style="margin-top:10px">第一次来？</div>
+    </div>
+    <input class="field" id="s-name" maxlength="12" placeholder="输入你的名字，比如：kai" autocomplete="off">
+    <p class="note" id="s-hint"></p>
+    <div class="feed-head"><button class="soft" id="s-back">换房间码</button><button class="go" id="s-go">进入</button></div>
   </section>
 </div>
 
@@ -879,16 +887,46 @@ $("export").onclick = () => {
   const a = document.createElement("a"); a.href = URL.createObjectURL(new Blob([csv], { type: "text/csv" }));
   a.download = `慢慢来-${me.room}.csv`; a.click();
 };
-$("s-go").onclick = () => {
-  const name = $("s-name").value.trim().slice(0, 12), room = $("s-room").value.trim().slice(0, 24);
-  if (!name || !room) { $("s-name").focus(); return; }
-  me = { name, room }; ls.set("mml-me", me); boot();
+/* ---------------- 登录：先房间码，再选自己的名字 ---------------- */
+const normName = (n) => n.trim().replace(/\s+/g, " ").toLowerCase();
+let roomNames = [];
+async function namesInRoom(room) {
+  if (cloud) {
+    const [a, b] = await Promise.all([sb.from("logs").select("author").eq("room", room).limit(1000), sb.from("plans").select("author").eq("room", room).limit(1000)]);
+    return [...new Set([...(a.data || []), ...(b.data || [])].map((x) => x.author).filter(Boolean))];
+  }
+  const d = ls.get("mml-local-" + room, { logs: [] }); return [...new Set(d.logs.map((x) => x.author).filter(Boolean))];
+}
+function enter(name) {
+  const room = $("s-room").value.trim().slice(0, 24);
+  const same = roomNames.find((n) => normName(n) === normName(name)); // 只差大小写或空格：就是同一个人
+  me = { name: same || name.trim().replace(/\s+/g, " ").slice(0, 12), room }; ls.set("mml-me", me); location.reload();
+}
+$("s-next").onclick = async () => {
+  const room = $("s-room").value.trim().slice(0, 24); if (!room) { $("s-room").focus(); return; }
+  $("s-next").disabled = true; $("s-next").textContent = "查找中…";
+  try { roomNames = await namesInRoom(room); } catch (e) { roomNames = []; }
+  $("s-next").disabled = false; $("s-next").textContent = "下一步";
+  $("s-step1").hidden = true; $("s-step2").hidden = false;
+  $("s-known").hidden = !roomNames.length;
+  const box = $("s-names"); box.innerHTML = "";
+  roomNames.forEach((n) => { const b = document.createElement("button"); b.className = "chip"; b.textContent = "我是 " + n; b.onclick = () => enter(n); box.appendChild(b); });
+  $("s-hint").textContent = roomNames.length ? "" : "这个房间还没有人，你是第一个。";
 };
+$("s-room").addEventListener("keydown", (e) => { if (e.key === "Enter") $("s-next").click(); });
+$("s-name").addEventListener("input", () => {
+  const v = $("s-name").value, same = v.trim() && roomNames.find((n) => normName(n) === normName(v));
+  $("s-hint").textContent = same ? `会当作「${same}」登录，之前的记录都会接上。` : (roomNames.length ? "" : "这个房间还没有人，你是第一个。");
+});
+$("s-back").onclick = () => { $("s-step2").hidden = true; $("s-step1").hidden = false; };
+$("s-go").onclick = () => { const n = $("s-name").value.trim(); if (!n) { $("s-name").focus(); return; } enter(n); };
 
 async function boot() {
-  if (!me) { $("setup").hidden = false; return; }
+  if (cloud && !sb) sb = window.supabase.createClient(CFG.supabaseUrl, CFG.supabaseKey);
+  if (!me) { $("setup").hidden = false; const last = ls.get("mml-last-room", ""); if (last) $("s-room").value = last; return; }
+  ls.set("mml-last-room", me.room);
   $("setup").hidden = true; $("main").hidden = false;
-  if (cloud) sb = window.supabase.createClient(CFG.supabaseUrl, CFG.supabaseKey);
+
   $("mode").textContent = cloud ? "已连接云端，和闺蜜同步中" : "单机试用模式：数据只存在这台手机上（配置 Supabase 后才能两人同步）";
   chips(); planChips(); renderSound(); showTab(ls.get("mml-tab", "focus"));
   try { await store.load(); } catch (e) { $("status").textContent = "连不上云端，检查一下网络。"; }
