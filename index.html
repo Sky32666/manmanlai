@@ -96,7 +96,7 @@ button:focus-visible, input:focus-visible { outline: 2px solid var(--accent); ou
 .stats tr.sum td { font-weight: 700; }
 .tabpage { padding-bottom: calc(96px + env(safe-area-inset-bottom, 0px)); }
 .eyebrow { font-size: .72rem; letter-spacing: .22em; color: var(--muted); margin: 0 0 8px; }
-.tabbar { position: fixed; left: 0; right: 0; bottom: 0; z-index: 5; display: grid; grid-template-columns: repeat(5, 1fr);
+.tabbar { position: fixed; left: 0; right: 0; bottom: 0; z-index: 5; display: grid; grid-template-columns: repeat(4, 1fr);
   background: color-mix(in srgb, var(--surface) 92%, transparent); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
   border-top: 1px solid var(--line); padding: 6px max(8px, env(safe-area-inset-right, 0px)) calc(6px + env(safe-area-inset-bottom, 0px)) max(8px, env(safe-area-inset-left, 0px)); }
 .tabbar button { font: inherit; font-size: .75rem; background: none; border: 0; color: var(--muted); display: grid; justify-items: center; gap: 0; padding: 4px 0; }
@@ -223,6 +223,37 @@ input[type="range"] { width: 100%; accent-color: var(--accent); height: 28px; ma
 .pf-del { position: absolute; bottom: calc(20px + env(safe-area-inset-bottom, 0px)); left: 50%; transform: translateX(-50%); z-index: 3; color: #fff; border-color: rgba(255,255,255,.4); }
 .toggle { display: flex; align-items: center; gap: 8px; font-size: .9rem; }
 .toggle input { width: 20px; height: 20px; accent-color: var(--accent); }
+/* ---------- 新结构：音乐 / 计划 / 自习室 / 我的 ---------- */
+.pagehead { display: grid; gap: 4px; }
+.pagehead h1 { font-size: 1.75rem; line-height: 1.25; text-wrap: balance; }
+#tab-me .pagehead { display: flex; justify-content: space-between; align-items: flex-end; gap: 12px; flex-wrap: wrap; }
+.kicker { margin: 0; color: var(--accent); font-size: .85rem; letter-spacing: .2em; }
+.dur-big { font-family: var(--display); font-size: 4.2rem; line-height: 1; text-align: center; color: var(--accent); font-variant-numeric: tabular-nums; margin: 4px 0; }
+.custom-dur { display: grid; grid-template-columns: 1fr auto auto; gap: 8px; align-items: center; }
+.custom-dur .field { padding: 8px 12px; }
+.custom-dur span { color: var(--muted); font-size: .9rem; }
+.subtabs { display: flex; gap: 8px; overflow-x: auto; }
+.subtabs button { font: inherit; border: 0; border-radius: 14px; padding: 10px 16px; background: var(--surface); color: var(--muted); border: 1px solid var(--line); white-space: nowrap; min-height: 44px; }
+.subtabs button[aria-selected="true"] { background: var(--accent); color: var(--surface); border-color: var(--accent); }
+.subpane { display: grid; gap: 14px; }
+.seats { justify-items: center; text-align: center; gap: 10px; background: color-mix(in srgb, var(--accent-soft) 35%, var(--surface)); }
+.seat-row { display: flex; align-items: flex-start; justify-content: center; gap: 8px; width: 100%; }
+.seat-row .seat { flex: 0 1 120px; min-width: 0; }
+.seat { display: grid; justify-items: center; gap: 4px; }
+.seat b { font-weight: 700; font-size: .95rem; overflow-wrap: anywhere; }
+.seat small { font-size: .78rem; color: var(--muted); line-height: 1.3; }
+.avatar { width: 72px; height: 72px; border-radius: 50%; display: grid; place-items: center; font-family: var(--display); font-size: 1.6rem; background: var(--accent-soft); color: var(--accent); position: relative; }
+.seat.friend .avatar { background: color-mix(in srgb, var(--cat) 30%, var(--surface)); color: var(--cat-dark); }
+.seat.empty .avatar { background: none; border: 2px dashed var(--line); color: var(--muted); }
+.seat.busy .avatar::after { content: ""; position: absolute; right: 4px; bottom: 4px; width: 14px; height: 14px; border-radius: 50%; background: #3fbf7f; border: 3px solid var(--surface); }
+.dots { color: var(--muted); letter-spacing: .2em; padding-top: 26px; white-space: nowrap; flex: none; }
+.seat-title { font-size: 1.3rem !important; margin: 4px 0 0 !important; }
+.seat-sub { max-width: 30ch; }
+.r-strip { display: flex; gap: 8px; overflow-x: auto; padding-bottom: 4px; }
+.r-th { flex: none; width: 84px; height: 112px; border-radius: 12px; overflow: hidden; position: relative; border: 0; padding: 0; background: var(--bg); }
+.r-th img, .r-th video { width: 100%; height: 100%; object-fit: cover; }
+.r-th span { position: absolute; left: 0; right: 0; bottom: 0; font-size: .68rem; color: #fff; background: linear-gradient(transparent, rgba(0,0,0,.6)); padding: 10px 4px 3px; text-align: left; }
+.roomcode { font-family: var(--display); font-size: 1.2rem; color: var(--accent); }
 /* ---------- 手机上更好用 ---------- */
 .tabpage h1 { font-size: 1.9rem; }
 #tab-focus h1 { font-size: 2.1rem; }
@@ -295,36 +326,10 @@ input[type="range"] { width: 100%; accent-color: var(--accent); height: 28px; ma
 
 <!-- 主页 -->
 <div id="main" hidden>
-<div class="wrap tabpage" id="tab-focus">
-  <header>
-    <div><h1>慢慢来</h1><p class="tag" id="who-tag"></p></div>
-    <div class="switch" role="group" aria-label="选择玩法">
-      <button id="w-mountain" aria-pressed="true">⛰ 爬山</button>
-      <button id="w-cat" aria-pressed="false">🐾 养猫</button>
-    </div>
-  </header>
 
-  <section class="live" id="live" hidden></section>
-  <button class="notebanner" id="note-banner" hidden></button>
-
-  <section class="card">
-    <h2>扣下手机，专注开始</h2>
-    <div class="todo-pick" id="todo-pick" hidden></div>
-    <input class="field" id="label" maxlength="30" placeholder="这次学什么？（可不填）" enterkeyhint="done">
-    <div class="seg" id="durs" role="group" aria-label="专注多久（分钟）"></div>
-    <div class="soundline"><span id="sound-now">没有播放声音</span><button class="soft small" id="sound-quick">▶ 播放</button></div>
-    <button class="go big-go" id="start">开始</button>
-    <p class="note" id="status"></p>
-    <details class="rules"><summary>规则</summary>
-      <p class="note">手机屏幕朝下才计时。拿起手机，剩余时间就开始增加，屏幕会红白闪 + 响铃；碰一下也会警告。离开这个页面超过 10 秒，这次就失败并扣 10 分钟进度，对方会看到。时间到了还扣着手机，会继续算加时，拿起手机就结束并记录。</p>
-    </details>
-  </section>
-
-  <section class="scene"><div id="art"></div><div class="scene-info" id="info"></div></section>
-</div>
-
+<!-- 音乐 -->
 <div class="wrap tabpage" id="tab-sound" hidden>
-  <header><div><p class="eyebrow">慢慢来自习室</p><h1>声音</h1><p class="tag">轻音乐、Lo-fi 和大自然的声音，自由调节。</p></div></header>
+  <header class="pagehead"><h1>音乐</h1><p class="tag">轻音乐、Lo-fi 和大自然的声音，陪你进入状态。</p></header>
   <section class="card nowplaying">
     <span class="label" id="np-list">Lo-fi 音乐</span>
     <div class="np-title" id="np-title">Drowning in your smile</div>
@@ -346,7 +351,6 @@ input[type="range"] { width: 100%; accent-color: var(--accent); height: 28px; ma
     <p class="note" id="s-state">点播放开始</p>
     <div class="label">场景</div>
     <div class="chips" id="scenes"></div>
-  </section>
   <section class="card">
     <div class="feed-head"><h2>调音台</h2><button class="soft small" id="s-reset">全部归零</button></div>
     <div class="mixrow"><div class="mixhead"><span>总音量</span><span id="v-master">80%</span></div><input type="range" id="r-master" min="0" max="100"></div>
@@ -356,8 +360,30 @@ input[type="range"] { width: 100%; accent-color: var(--accent); height: 28px; ma
   </section>
 </div>
 
+<!-- 计划：只属于自己 -->
 <div class="wrap tabpage" id="tab-plan" hidden>
-  <header><div><p class="eyebrow">慢慢来自习室</p><h1>学习计划</h1><p class="tag">把想做的事情，一件件安排好。闺蜜也看得到。</p></div></header>
+  <header class="pagehead"><h1>把今天，过得从容一点</h1><p class="tag">写下小目标，一件一件慢慢完成。</p></header>
+  <section class="card">
+    <div class="feed-head"><h2>留一段专注时间</h2><span class="note" id="dur-note">25 分钟</span></div>
+    <div class="dur-big" id="dur-big">25:00</div>
+    <div class="todo-pick" id="todo-pick" hidden></div>
+    <input class="field" id="label" maxlength="30" placeholder="这次学什么？（可不填）" enterkeyhint="done">
+    <div class="seg" id="durs" role="group" aria-label="专注多久（分钟）"></div>
+    <div class="custom-dur"><input class="field" type="number" id="dur-custom" min="1" max="240" inputmode="numeric" placeholder="自定义"><span>分钟</span><button class="soft small" id="dur-apply">应用时长</button></div>
+    <div class="soundline"><span id="sound-now">没有播放声音</span><button class="soft small" id="sound-quick">▶ 播放</button></div>
+    <button class="go big-go" id="start">开始专注</button>
+    <p class="note" id="status"></p>
+    <details class="rules"><summary>规则</summary>
+      <p class="note">手机屏幕朝下才计时。拿起手机，剩余时间就开始增加，屏幕会红白闪 + 响铃；碰一下也会警告。离开这个页面超过 10 秒，这次就失败并扣 10 分钟进度，对方会看到。时间到了还扣着手机，会继续算加时，拿起手机就结束并记录。</p>
+    </details>
+  </section>
+
+  <div class="subtabs" role="tablist" aria-label="计划内容">
+    <button role="tab" data-sub="task" id="sub-task">任务 · 0</button>
+    <button role="tab" data-sub="note" id="sub-note">笔记 · 0</button>
+    <button role="tab" data-sub="moment" id="sub-moment">瞬间 · 0</button>
+  </div>
+  <div class="subpane" id="pane-task">
   <section class="card">
     <input class="field" id="p-title" maxlength="60" placeholder="要做什么？比如：高数第三章习题">
     <div class="chips" id="p-day"></div>
@@ -367,25 +393,11 @@ input[type="range"] { width: 100%; accent-color: var(--accent); height: 28px; ma
     <input class="field" id="p-note" maxlength="200" placeholder="备注 / 学习笔记（可不填）">
     <button class="go" id="p-add" disabled>加入计划</button>
   </section>
-  <div class="switch" role="group" aria-label="看谁的计划" id="p-who"></div>
+  <div class="switch" role="group" aria-label="看谁的计划" id="p-who" hidden></div>
   <section id="plans"></section>
   <p class="note" id="p-status"></p>
-</div>
-
-<div class="wrap tabpage" id="tab-diary" hidden>
-  <header><div><p class="eyebrow">慢慢来自习室</p><h1>日记</h1><p class="tag">想写就写，不写也没关系。</p></div></header>
-  <section class="card moments" aria-label="每小时一刻">
-    <div class="feed-head"><h2>每小时一刻</h2><span class="note" id="m-count"></span></div>
-    <p class="note">每个小时拍一张照片或几秒视频，记下这一刻在做什么。晚上点「播放今天」看你们俩的一天。</p>
-    <div class="hours" id="m-hours"></div>
-    <div class="m-actions">
-      <button class="go" id="m-shoot">📸 拍这一刻</button>
-      <button class="soft" id="m-play">▶ 播放今天</button>
-    </div>
-    <input type="file" id="m-file" accept="image/*,video/*" capture="environment" hidden>
-    <input type="file" id="m-photo-native" accept="image/*" capture="environment" hidden>
-    <p class="note" id="m-status"></p>
-  </section>
+  </div>
+  <div class="subpane" id="pane-note" hidden>
   <section class="card">
     <h2 id="d-title">今天过得怎么样？</h2>
     <div class="moods" id="d-moods" role="group" aria-label="心情"></div>
@@ -399,31 +411,45 @@ input[type="range"] { width: 100%; accent-color: var(--accent); height: 28px; ma
     <button class="go" id="d-save">保存今天的日记</button>
     <p class="note" id="d-status"></p>
   </section>
-
-  <section class="card">
-    <div class="feed-head"><button class="ctl" id="c-prev" aria-label="上个月">‹</button><h2 id="c-month">2026 年 10 月</h2><button class="ctl" id="c-next" aria-label="下个月">›</button></div>
-    <div class="cal-head"><span>一</span><span>二</span><span>三</span><span>四</span><span>五</span><span>六</span><span>日</span></div>
-    <div class="cal" id="cal"></div>
-    <div class="legend"><span>少</span><i class="l0"></i><i class="l1"></i><i class="l2"></i><i class="l3"></i><i class="l4"></i><span>多（两人一起的专注时长）</span></div>
-    <div id="c-detail" class="daydetail"></div>
+  </div>
+  <div class="subpane" id="pane-moment" hidden>
+  <section class="card moments" aria-label="每小时一刻">
+    <div class="feed-head"><h2>每小时一刻</h2><span class="note" id="m-count"></span></div>
+    <p class="note">每个小时拍一张照片或几秒视频，记下这一刻在做什么。晚上点「播放今天」看你的一天。</p>
+    <div class="hours" id="m-hours"></div>
+    <div class="m-actions">
+      <button class="go" id="m-shoot">📸 拍这一刻</button>
+      <button class="soft" id="m-play">▶ 播放今天</button>
+    </div>
+    <input type="file" id="m-file" accept="image/*,video/*" capture="environment" hidden>
+    <input type="file" id="m-photo-native" accept="image/*" capture="environment" hidden>
+    <p class="note" id="m-status"></p>
   </section>
+  </div>
+</div>
 
+<!-- 自习室：我们俩一起 -->
+<div class="wrap tabpage" id="tab-room" hidden>
+  <header class="pagehead"><p class="kicker">一起，把时间留给成长</p><h1>一个人专注，一群人同行</h1><p class="tag" id="room-tag"></p></header>
+  <section class="card seats" aria-label="自习室里的人">
+    <div class="seat-row" id="seats"></div>
+    <h2 class="seat-title" id="seat-title">为彼此，留一个座位</h2>
+    <p class="note seat-sub" id="seat-sub"></p>
+    <button class="go big-go" id="room-start">和TA一起专注</button>
+  </section>
+  <section class="live" id="live" hidden></section>
+  <button class="notebanner" id="note-banner" hidden></button>
+  <section class="card" aria-label="今天的瞬间">
+    <div class="feed-head"><h2>今天的瞬间</h2><span class="note" id="r-mcount"></span></div>
+    <div class="r-strip" id="r-strip"></div>
+    <button class="soft" id="r-play">▶ 播放我们的今天</button>
+  </section>
   <section class="card">
     <h2>留言墙</h2>
     <textarea class="field" id="n-text" maxlength="200" rows="2" placeholder="给对方留一张小纸条"></textarea>
     <button class="go" id="n-send" disabled>贴上去</button>
     <div id="notes" class="notes"></div>
   </section>
-</div>
-
-<div class="wrap tabpage" id="tab-stats" hidden>
-  <header><div><p class="eyebrow">慢慢来自习室</p><h1>学习统计</h1><p class="tag">每一点进步，都值得被记录。</p></div>
-    <div class="switch" role="group" aria-label="看谁的统计">
-      <button id="st-both" aria-pressed="true">我们俩</button>
-      <button id="st-mine" aria-pressed="false">只看我</button>
-    </div>
-  </header>
-  <section class="weekly" id="weekly" aria-label="每周回顾"></section>
   <section class="card" aria-label="一起的小挑战">
     <div class="feed-head"><h2>一起的小挑战</h2><button class="soft small" id="ch-new">＋ 新挑战</button></div>
     <div id="ch-form" class="stack" hidden>
@@ -433,8 +459,25 @@ input[type="range"] { width: 100%; accent-color: var(--accent); height: 28px; ma
     </div>
     <div id="challenges" class="stack"></div>
   </section>
+  <section class="card" aria-label="房间">
+    <div class="feed-head"><h2>房间</h2><span class="roomcode" id="room-code"></span></div>
+    <p class="note">把房间码告诉对方，在登录时填同一个房间码就能进来。</p>
+    <button class="soft" id="room-switch">换一个房间</button>
+  </section>
+</div>
+
+<!-- 我的：只看自己 -->
+<div class="wrap tabpage" id="tab-me" hidden>
+  <header class="pagehead"><div><h1 id="me-name">我的</h1><p class="tag" id="who-tag"></p></div>
+    <div class="switch" role="group" aria-label="选择玩法">
+      <button id="w-mountain" aria-pressed="true">⛰ 爬山</button>
+      <button id="w-cat" aria-pressed="false">🐾 养猫</button>
+    </div>
+  </header>
+  <section class="scene"><div id="art"></div><div class="scene-info" id="info"></div></section>
+  <section class="weekly" id="weekly" aria-label="每周回顾"></section>
   <section class="stats" aria-label="专注统计">
-    <div class="hero"><span class="label" id="st-hero">你们一起专注了</span><b id="st-total">0 分钟</b></div>
+    <div class="hero"><span class="label" id="st-hero">你专注了</span><b id="st-total">0 分钟</b></div>
     <table><thead><tr><th></th><th>今天</th><th>本周</th><th>全部</th></tr></thead><tbody id="st-body"></tbody></table>
     <p class="note" id="st-together"></p>
   </section>
@@ -442,9 +485,16 @@ input[type="range"] { width: 100%; accent-color: var(--accent); height: 28px; ma
     <span class="label">最近 7 天</span>
     <div class="week" id="st-week"></div>
   </section>
+  <section class="card">
+    <div class="feed-head"><button class="ctl" id="c-prev" aria-label="上个月">‹</button><h2 id="c-month">2026 年 10 月</h2><button class="ctl" id="c-next" aria-label="下个月">›</button></div>
+    <div class="cal-head"><span>一</span><span>二</span><span>三</span><span>四</span><span>五</span><span>六</span><span>日</span></div>
+    <div class="cal" id="cal"></div>
+    <div class="legend"><span>少</span><i class="l0"></i><i class="l1"></i><i class="l2"></i><i class="l3"></i><i class="l4"></i><span>多（你的专注时长）</span></div>
+    <div id="c-detail" class="daydetail"></div>
+  </section>
   <section class="feed">
-    <div class="feed-head"><h2 class="label" style="margin:0" id="feed-title">你们的记录</h2><button class="soft" id="export">导出记录</button></div>
-    <div id="feed"><div class="empty">这里会出现你们两个人的专注记录。<br>扣下手机完成第一次专注，山就开始长出小路了。</div></div>
+    <div class="feed-head"><h2 class="label" style="margin:0">我的记录</h2><button class="soft" id="export">导出记录</button></div>
+    <div id="feed"><div class="empty">这里会出现你的专注记录。<br>扣下手机完成第一次专注，山就开始长出小路了。</div></div>
   </section>
   <section class="card" aria-label="通知">
     <h2>🔔 通知</h2>
@@ -454,16 +504,16 @@ input[type="range"] { width: 100%; accent-color: var(--accent); height: 28px; ma
     <button class="soft" id="push-test" hidden>发一条测试通知给自己</button>
     <p class="note" id="push-status"></p>
   </section>
+  <div hidden><button id="st-both"></button><button id="st-mine"></button><span id="feed-title"></span></div>
   <p class="mode" id="mode"></p>
   <button class="soft" id="logout" style="justify-self:center">换名字 / 换房间</button>
 </div>
 
 <nav class="tabbar" aria-label="页面">
-  <button data-tab="focus" aria-current="page"><span>⏳</span>自习室</button>
-  <button data-tab="sound"><span>♪</span>声音</button>
-  <button data-tab="plan"><span>✓</span>计划</button>
-  <button data-tab="diary"><span>✎</span>日记<i class="badge" id="diary-badge" hidden></i></button>
-  <button data-tab="stats"><span>▥</span>统计</button>
+  <button data-tab="sound"><span>♪</span>音乐</button>
+  <button data-tab="plan" aria-current="page"><span>✓</span>计划</button>
+  <button data-tab="room"><span>☕</span>自习室<i class="badge" id="diary-badge" hidden></i></button>
+  <button data-tab="me"><span>☺</span>我的</button>
 </nav>
 </div>
 
@@ -658,7 +708,9 @@ let reloadTimer = null;
 function refresh() { clearTimeout(reloadTimer); reloadTimer = setTimeout(async () => { await store.load(); render(); }, 250); }
 
 /* ---------------- 场景 ---------------- */
-const total = () => Math.max(0, state.logs.reduce((s, l) => s + (Number(l.minutes) || 0), 0));
+const myLogs = () => state.logs.filter((l) => l.author === me.name); // 爬山、养猫、统计只看自己
+const total = () => Math.max(0, myLogs().reduce((s, l) => s + (Number(l.minutes) || 0), 0));
+const totalAll = () => Math.max(0, state.logs.reduce((s, l) => s + (Number(l.minutes) || 0), 0)); // 一起的挑战用
 function mountainAt(p) {
   const climbed = p * PER, all = MOUNTAINS.reduce((a, x) => a + x.h, 0);
   const round = Math.floor(climbed / all); let m = climbed - round * all, i = 0; // 爬完珠峰就开始新一轮
@@ -691,7 +743,7 @@ function drawMountain(mt) {
 }
 function drawCat(p) {
   const st = stageAt(p), s = 0.55 + st.i * 0.09, fat = 30 + st.i * 5;
-  const sulky = state.logs[0]?.failed && Date.now() - state.logs[0].at < 3600e3;
+  const last = myLogs()[0], sulky = last?.failed && Date.now() - last.at < 3600e3;
   return `<svg viewBox="0 0 400 240" role="img" aria-label="猫猫现在是${st.s.n}">
     <rect width="400" height="240" fill="var(--accent-soft)"/><rect x="0" y="196" width="400" height="44" fill="var(--line)"/>
     <g transform="translate(200 198) scale(${s}) translate(-100 -160)">
@@ -719,14 +771,6 @@ function render() {
   $("w-mountain").setAttribute("aria-pressed", String(w === "mountain"));
   $("w-cat").setAttribute("aria-pressed", String(w === "cat"));
   $("who-tag").textContent = `${me.name} · 房间「${me.room}」`;
-  const duo = document.createElement("div"); duo.className = "duo";
-  people().forEach((n) => {
-    const mine = state.logs.filter((l) => l.author === n);
-    const s = document.createElement("span"); const b = document.createElement("b"); b.textContent = nm(n);
-    const f = mine.filter((l) => l.failed).length;
-    s.append(b, ` 专注 ${fmtMin(mine.filter((l) => !l.failed).reduce((a, l) => a + (Number(l.minutes) || 0), 0))}${f ? ` · 偷玩 ${f} 次` : ""}`);
-    duo.appendChild(s);
-  });
   if (w === "mountain") {
     const m = mountainAt(p);
     $("art").innerHTML = drawMountain(m.cur);
@@ -734,28 +778,28 @@ function render() {
     d.style.strokeDasharray = `${len}`; d.style.strokeDashoffset = `${len * (1 - m.frac)}`;
     $("climber").setAttribute("cx", pt.x); $("climber").setAttribute("cy", pt.y - 6);
     const peaks = MOUNTAINS.slice(0, m.i).map((x) => `<span class="peak">✓ ${x.name} ${x.h.toLocaleString()} 米</span>`).join("");
-    $("info").innerHTML = `<div class="mt-name">${m.round ? `第 ${m.round + 1} 轮 · ` : ""}正在爬 <b>${m.cur.name}</b><small>📍 ${m.cur.where} · 山顶 ${m.cur.h.toLocaleString()} 米</small></div>
+    $("info").innerHTML = `<div class="mt-name">${m.round ? `第 ${m.round + 1} 轮 · ` : ""}你正在爬 <b>${m.cur.name}</b><small>📍 ${m.cur.where} · 山顶 ${m.cur.h.toLocaleString()} 米</small></div>
       <div class="big">海拔 ${Math.round(m.alt).toLocaleString()} 米</div>
       <div class="bar"><i style="width:${(m.frac * 100).toFixed(1)}%"></i></div>
       <div class="row"><span>离山顶还有 ${Math.round(m.cur.h - m.alt).toLocaleString()} 米（约 ${fmtMin(Math.ceil((m.cur.h - m.alt) / PER))}）</span>
         <span>${m.next ? `下一座：${m.next.name} ${m.next.h.toLocaleString()} 米` : "这是最高的一座了"}</span></div>
-      <div class="row"><span>你们一共爬升了 ${Math.round(m.climbed).toLocaleString()} 米${m.round ? `，已经登顶珠峰 ${m.round} 次` : ""}</span></div>
-      ${peaks ? `<div class="peaks"><span class="label">已一起登顶</span>${peaks}</div>` : ""}`;
+      <div class="row"><span>你一共爬升了 ${Math.round(m.climbed).toLocaleString()} 米${m.round ? `，已经登顶珠峰 ${m.round} 次` : ""}</span></div>
+      ${peaks ? `<div class="peaks"><span class="label">已登顶</span>${peaks}</div>` : ""}`;
   } else {
     const st = stageAt(p);
     $("art").innerHTML = drawCat(p);
     $("info").innerHTML = `<div class="big"><input class="catname" id="catname" aria-label="猫猫的名字" maxlength="10"><small>${st.s.n} · 陪了它 ${fmtMin(p)}</small></div>
       <div class="bar"><i style="width:${(st.frac * 100).toFixed(1)}%"></i></div>
-      <div class="row"><span>你们专注的时候，它就在长大</span><span>${st.next ? `再 ${fmtMin(st.next.at - p)} 长成「${st.next.n}」` : "已经是猫猫大王了"}</span></div>`;
+      <div class="row"><span>你专注的时候，它就在长大</span><span>${st.next ? `再 ${fmtMin(st.next.at - p)} 长成「${st.next.n}」` : "已经是猫猫大王了"}</span></div>`;
     const inp = $("catname"); inp.value = state.catName;
     inp.onchange = () => { const v = inp.value.trim().slice(0, 10); if (v) store.setRoom({ catName: v }); };
   }
-  $("info").appendChild(duo);
   renderFeed(); renderLive(); renderStats(); renderPlans(); renderTodoPick();
-  renderDiary(); renderMoments(); renderNotes(); renderNoteBanner(); renderChallenges(); renderWeekly();
+  renderDiary(); renderMoments(); renderNotes(); renderNoteBanner(); renderChallenges(); renderWeekly(); renderRoom(); renderSubCounts();
+  $("me-name").textContent = me.name;
 }
 
-let statsMine = ls.get("mml-stats-mine", false);
+let statsMine = true; // 统计只看自己
 const scopeLogs = () => (statsMine ? state.logs.filter((l) => l.author === me.name) : state.logs);
 function setStatsMine(v) { statsMine = v; ls.set("mml-stats-mine", v); renderStats(); renderFeed(); }
 $("st-both").onclick = () => setStatsMine(false);
@@ -838,6 +882,7 @@ function renderFeed() {
 const mmss = (ms) => { const t = Math.max(0, Math.ceil(ms / 1000)); return `${String(Math.floor(t / 60)).padStart(2, "0")}:${String(t % 60).padStart(2, "0")}`; };
 const others = () => Object.values(state.focus).filter((f) => f.author !== me.name && Number(f.updated) > Date.now() - 3 * 60e3);
 function renderLive() {
+  if (me && $("seats")) try { renderRoom(); } catch (e) {}
   const live = $("live"), os = others();
   live.hidden = !os.length; live.innerHTML = "";
   os.forEach((f) => {
@@ -916,9 +961,9 @@ $("start").onclick = async () => {
   try { if ("Notification" in window && Notification.permission === "default") Notification.requestPermission(); } catch (e) {}
   await askSensors();
   run = { start: Date.now(), target: dur * 60000, remaining: dur * 60000, focused: 0, extra: 0, pickups: 0, label: $("label").value.trim().slice(0, 30),
-          phase: "waiting", awayAt: null, planId: pickedPlan, together: others().some((f) => f.phase === "down"), sensor: true };
+          phase: "waiting", awayAt: null, planId: pickedPlan, together: startTogether || others().some((f) => f.phase === "down"), sensor: true };
   saveRun(); openFocus(); wake(); pushFocus(true);
-  notify(`📚 ${me.name}开始专注了`, run.label ? `在学「${run.label}」，要不要一起？` : `${dur} 分钟，要不要一起？`, "focus", "focus");
+  notify(`📚 ${me.name}开始专注了`, run.label ? `在学「${run.label}」，要不要一起？` : `${dur} 分钟，要不要一起？`, "room", "focus");
   // 3 秒内没有传感器数据（比如电脑）：直接开始计时
   setTimeout(() => { if (run && !sensorSeen) { run.sensor = false; run.phase = "down"; saveRun(); pushFocus(true); } }, 3000);
 };
@@ -996,7 +1041,7 @@ async function finish(full) {
     const reached = summits > 0 ? MOUNTAINS[(after.i - 1 + MOUNTAINS.length) % MOUNTAINS.length] : null;
     $("status").textContent = (full ? `专注完成！一共 ${fmtMin(minutes)}${overMin ? `（加时 ${fmtMin(overMin)}）` : ""}。` : `学了 ${fmtMin(minutes)}，也很棒。`)
       + (state.world === "mountain" ? `又往上爬了 ${minutes * PER} 米。` : `${state.catName}又长大了一点。`)
-      + (reached ? ` 🎉 你们登顶了${reached.name}（${reached.h.toLocaleString()} 米）！` : "");
+      + (reached ? ` 🎉 你登顶了${reached.name}（${reached.h.toLocaleString()} 米）！` : "");
   } catch (e) { $("status").textContent = "没存上，检查一下网络再试试。"; }
   refresh();
 }
@@ -1009,12 +1054,14 @@ async function fail() {
 }
 
 /* ---------------- 页面切换 ---------------- */
+const TAB_ALIAS = { focus: "plan", diary: "room", stats: "me" };
 function showTab(t) {
+  t = TAB_ALIAS[t] || t; if (!$("tab-" + t)) t = "plan";
   document.querySelectorAll(".tabpage").forEach((el) => (el.hidden = el.id !== "tab-" + t));
   document.querySelectorAll(".tabbar button").forEach((b) => (b.dataset.tab === t ? b.setAttribute("aria-current", "page") : b.removeAttribute("aria-current")));
   window.scrollTo(0, 0); ls.set("mml-tab", t);
-  if (t === "diary" && me) { ls.set(seenKey(), Date.now()); setTimeout(renderNoteBanner, 1500);
-    setTimeout(() => { const cur = document.querySelector("#m-hours .hour.now"), box = $("m-hours"); if (cur) box.scrollLeft = cur.offsetLeft - box.offsetLeft - box.clientWidth / 2 + cur.clientWidth / 2; }, 30); }
+  if (t === "room" && me) { ls.set(seenKey(), Date.now()); setTimeout(renderNoteBanner, 1500); }
+  if (t === "plan" && me && subTab === "moment") scrollHours();
 }
 document.querySelectorAll(".tabbar button").forEach((b) => (b.onclick = () => showTab(b.dataset.tab)));
 
@@ -1103,7 +1150,7 @@ $("p-add").onclick = async () => {
   refresh();
 };
 function renderPlans() {
-  const ppl = people(); if (!planWho || !ppl.includes(planWho)) planWho = me.name;
+  const ppl = [me.name]; planWho = me.name;
   const sw = $("p-who"); sw.innerHTML = "";
   ppl.forEach((n) => { const b = document.createElement("button"); b.textContent = n === me.name ? "我的计划" : `${n}的计划`;
     b.setAttribute("aria-pressed", String(planWho === n)); b.onclick = () => { planWho = n; renderPlans(); }; sw.appendChild(b); });
@@ -1171,7 +1218,7 @@ let dMood = null, dPhoto = undefined, calMonth = (() => { const d = new Date(); 
 const diaryOf = (author, day) => state.posts.find((x) => x.kind === "diary" && x.author === author && x.day === day);
 function dayStats() { // 每天每个人的专注分钟和学了什么
   const m = {};
-  state.logs.forEach((l) => { if (l.failed) return; const d = dayOf(l.at), x = (m[d] = m[d] || { total: 0, per: {} });
+  myLogs().forEach((l) => { if (l.failed) return; const d = dayOf(l.at), x = (m[d] = m[d] || { total: 0, per: {} });
     const p = (x.per[l.author] = x.per[l.author] || { min: 0, labels: [] }); p.min += Number(l.minutes) || 0; x.total += Number(l.minutes) || 0; if (l.label) p.labels.push(l.label); });
   return m;
 }
@@ -1214,7 +1261,7 @@ $("d-save").onclick = async () => {
     if (photoBlob) photo = await store.uploadPhoto(photoBlob); else if (dPhoto === null) photo = null;
     const ex = diaryOf(me.name, today()), row = { mood: dMood, text, photo };
     if (ex) await store.updatePost(ex.id, row);
-    else { await store.addPost({ kind: "diary", day: today(), ...row }); notify(`✎ ${me.name}写了今天的日记`, `${dMood || ""} ${text}`.trim() || "去看看", "diary", "diary"); }
+    else { await store.addPost({ kind: "diary", day: today(), ...row }); notify(`✎ ${me.name}写了今天的日记`, `${dMood || ""} ${text}`.trim() || "去看看", "room", "diary"); }
     photoBlob = null; dDirty = false; $("d-status").textContent = "存好了。";
   } catch (err) { $("d-status").textContent = "没存上：" + (err?.message || "检查一下网络再试试。"); }
   $("d-save").disabled = false; render();
@@ -1228,7 +1275,7 @@ function renderCalendar() {
     const key = ymd(new Date(y, mo, d)), mins = st[key]?.total || 0, lv = mins === 0 ? 0 : mins < 30 ? 1 : mins < 60 ? 2 : mins < 120 ? 3 : 4;
     const b = document.createElement("button"); b.className = `l${lv}` + (key === t ? " today" : ""); b.textContent = d;
     b.setAttribute("aria-pressed", String(calSel === key)); b.setAttribute("aria-label", `${mo + 1}月${d}日，专注 ${fmtMin(mins)}`);
-    const moods = people().map((n) => diaryOf(n, key)?.mood).filter(Boolean).join("");
+    const moods = diaryOf(me.name, key)?.mood || "";
     if (moods) { const sm = document.createElement("small"); sm.textContent = moods; b.appendChild(sm); }
     b.onclick = () => { calSel = calSel === key ? null : key; renderCalendar(); };
     cal.appendChild(b);
@@ -1241,9 +1288,9 @@ function renderDayDetail(st) {
   const box = $("c-detail"); box.innerHTML = "";
   if (!calSel) { box.innerHTML = '<p class="note">点日历上的某一天，看看那天你们学了什么、写了什么。</p>'; return; }
   const [yy, mm, dd] = calSel.split("-").map(Number), x = st[calSel];
-  const h = document.createElement("h3"); h.textContent = `${mm}月${dd}日 · 一起专注 ${fmtMin(x?.total || 0)}`; box.appendChild(h);
-  const ms = momentsOf(calSel); if (ms.length) { const pb = document.createElement("button"); pb.className = "soft small"; pb.style.justifySelf = "start"; pb.textContent = `▶ 看这天的 ${ms.length} 个瞬间`; pb.onclick = () => playDay(calSel); box.appendChild(pb); }
-  people().forEach((n) => {
+  const h = document.createElement("h3"); h.textContent = `${mm}月${dd}日 · 专注 ${fmtMin(x?.total || 0)}`; box.appendChild(h);
+  const ms = momentsOf(calSel).filter((x) => x.author === me.name); if (ms.length) { const pb = document.createElement("button"); pb.className = "soft small"; pb.style.justifySelf = "start"; pb.textContent = `▶ 看这天的 ${ms.length} 个瞬间`; pb.onclick = () => playDay(calSel, null, me.name); box.appendChild(pb); }
+  [me.name].forEach((n) => {
     const p = x?.per[n], di = diaryOf(n, calSel); if (!p && !di) return;
     const el = document.createElement("div"); el.className = "dayperson";
     const w = document.createElement("span"); w.className = "who"; w.textContent = `${di?.mood || ""} ${nm(n)}`.trim(); el.appendChild(w);
@@ -1286,21 +1333,21 @@ $("n-text").oninput = () => ($("n-send").disabled = !$("n-text").value.trim());
 $("n-send").onclick = async () => {
   const text = $("n-text").value.trim().slice(0, 200); if (!text) return;
   $("n-send").disabled = true;
-  try { await store.addPost({ kind: "note", text }); $("n-text").value = ""; notify(`💌 ${me.name}给你留言了`, text, "diary", "note"); } catch (e) { $("n-send").disabled = false; }
+  try { await store.addPost({ kind: "note", text }); $("n-text").value = ""; notify(`💌 ${me.name}给你留言了`, text, "room", "note"); } catch (e) { $("n-send").disabled = false; }
   ls.set(seenKey(), Date.now()); render();
 };
 function unreadNotes() { const seen = ls.get(seenKey(), 0); return state.posts.filter((x) => x.kind === "note" && x.author !== me.name && x.created > seen).sort((a, b) => b.created - a.created); }
 function renderNoteBanner() {
-  if (!$("tab-diary").hidden && unreadNotes().length) ls.set(seenKey(), Date.now()); // 正在看日记页：算已读
+  if (!$("tab-room").hidden && unreadNotes().length) ls.set(seenKey(), Date.now()); // 正在看日记页：算已读
   const un = unreadNotes(), bn = $("note-banner"), h = new Date().getHours();
   $("diary-badge").hidden = !un.length;
   const needShot = nudgeHour === h && !momentsOf(today()).some((x) => x.author === me.name && new Date(Number(x.created)).getHours() === h);
   bn.hidden = !un.length && !needShot;
   if (un.length) { bn.textContent = `💌 ${un[0].author}给你留言了：${un[0].text}${un.length > 1 ? `（还有 ${un.length - 1} 张）` : ""}`; bn.onclick = noteBannerClick; }
-  else if (needShot) { bn.textContent = `⏰ ${h}:00 了，拍一下现在在做什么？`; bn.onclick = () => { nudgeHour = null; renderNoteBanner(); showTab("diary"); openCam(); }; }
+  else if (needShot) { bn.textContent = `⏰ ${h}:00 了，拍一下现在在做什么？`; bn.onclick = () => { nudgeHour = null; renderNoteBanner(); showTab("plan"); showSub("moment"); openCam(); }; }
 }
 let nudgeHour = null;
-function noteBannerClick() { showTab("diary"); setTimeout(() => $("notes").scrollIntoView({ behavior: "smooth" }), 50); }
+function noteBannerClick() { showTab("room"); setTimeout(() => $("notes").scrollIntoView({ behavior: "smooth" }), 50); }
 $("note-banner").onclick = noteBannerClick;
 
 /* ---------------- 一起的小挑战 ---------------- */
@@ -1318,7 +1365,7 @@ function renderChForm() {
     row("目标", [[5, "5 小时"], [10, "10 小时"], [20, "20 小时"], [50, "50 小时"]], chHours, (v) => (chHours = v));
     row("期限", [["week", "这周（到周日）"], ["7", "7 天"], ["30", "30 天"]], chPeriod, (v) => (chPeriod = v));
   } else {
-    const done = mountainAt(total()).i + mountainAt(total()).round * MOUNTAINS.length;
+    const done = mountainAt(totalAll()).i + mountainAt(totalAll()).round * MOUNTAINS.length;
     row("爬到", MOUNTAINS.map((m, i) => [i, `${m.name} ${m.h.toLocaleString()} 米`]).filter(([i]) => i >= done % MOUNTAINS.length), chMountain, (v) => (chMountain = v));
   }
 }
@@ -1330,12 +1377,12 @@ $("ch-add").onclick = async () => {
     end = ymd(e); target = chHours; text = `一起专注 ${chHours} 小时`;
   } else { target = chMountain; text = `一起爬到${MOUNTAINS[chMountain].name}`; }
   try { await store.addPost({ kind: "challenge", goal: chGoal, target, start_day: start, end_day: end, text }); } catch (e) { return; }
-  notify(`🏁 ${me.name}发起了一个挑战`, text, "stats", "challenge");
+  notify(`🏁 ${me.name}发起了一个挑战`, text, "room", "challenge");
   $("ch-form").hidden = true; $("ch-new").textContent = "＋ 新挑战"; render();
 };
 function cumHeight(i) { return MOUNTAINS.slice(0, i + 1).reduce((a, m) => a + m.h, 0); }
 function chProgress(c) {
-  if (c.goal === "mountain") { const need = cumHeight(c.target), have = total() * PER; return { have, need, frac: Math.min(1, have / need), unit: "m" }; }
+  if (c.goal === "mountain") { const need = cumHeight(c.target), have = totalAll() * PER; return { have, need, frac: Math.min(1, have / need), unit: "m" }; }
   const from = new Date(c.start_day + "T00:00:00").getTime(), to = c.end_day ? new Date(c.end_day + "T00:00:00").getTime() + 864e5 : Infinity;
   const have = state.logs.filter((l) => !l.failed && Number(l.at) >= from && Number(l.at) < to).reduce((a, l) => a + (Number(l.minutes) || 0), 0);
   return { have, need: c.target * 60, frac: Math.min(1, have / (c.target * 60)), unit: "min" };
@@ -1365,10 +1412,10 @@ function renderChallenges() {
 
 /* ---------------- 每周回顾 ---------------- */
 let wkOffset = 0; // 0 = 本周，1 = 上周
-function minutesBefore(t) { return Math.max(0, state.logs.filter((l) => Number(l.at) < t).reduce((a, l) => a + (Number(l.minutes) || 0), 0)); }
+function minutesBefore(t) { return Math.max(0, myLogs().filter((l) => Number(l.at) < t).reduce((a, l) => a + (Number(l.minutes) || 0), 0)); }
 function renderWeekly() {
   const ws = weekStart(); ws.setDate(ws.getDate() - 7 * wkOffset); const we = new Date(ws); we.setDate(we.getDate() + 7);
-  const inWeek = state.logs.filter((l) => Number(l.at) >= ws.getTime() && Number(l.at) < we.getTime()), ok = inWeek.filter((l) => !l.failed);
+  const inWeek = myLogs().filter((l) => Number(l.at) >= ws.getTime() && Number(l.at) < we.getTime()), ok = inWeek.filter((l) => !l.failed);
   const sumM = (a) => a.reduce((x, l) => x + (Number(l.minutes) || 0), 0), tot = sumM(ok);
   const perDay = {}; ok.forEach((l) => { const d = dayOf(l.at); perDay[d] = (perDay[d] || 0) + (Number(l.minutes) || 0); });
   const best = Object.entries(perDay).sort((a, b) => b[1] - a[1])[0];
@@ -1378,22 +1425,23 @@ function renderWeekly() {
   const a0 = mountainAt(minutesBefore(ws.getTime())), a1 = mountainAt(minutesBefore(we.getTime()));
   const n0 = a0.round * MOUNTAINS.length + a0.i, n1 = a1.round * MOUNTAINS.length + a1.i;
   const summits = []; for (let k = n0; k < n1; k++) summits.push(MOUNTAINS[k % MOUNTAINS.length].name);
-  const moods = state.posts.filter((x) => x.kind === "diary" && x.day >= ymd(ws) && x.day < ymd(we) && x.mood).map((x) => x.mood);
+  const moods = state.posts.filter((x) => x.kind === "diary" && x.author === me.name && x.day >= ymd(ws) && x.day < ymd(we) && x.mood).map((x) => x.mood);
   const end = new Date(we); end.setDate(end.getDate() - 1);
   const wd = (d) => "日一二三四五六"[new Date(d + "T00:00:00").getDay()];
   const box = $("weekly"); box.innerHTML = "";
   const head = document.createElement("div"); head.className = "wk-head";
-  head.innerHTML = `<div><span class="sub">每周回顾 · ${ws.getMonth() + 1}/${ws.getDate()} – ${end.getMonth() + 1}/${end.getDate()}</span><br><b>${wkOffset ? "上周" : "这周"}的你们</b></div>`;
+  head.innerHTML = `<div><span class="sub">每周回顾 · ${ws.getMonth() + 1}/${ws.getDate()} – ${end.getMonth() + 1}/${end.getDate()}</span><br><b>${wkOffset ? "上周" : "这周"}的你</b></div>`;
   const sw = document.createElement("div"); sw.className = "switch";
   [[0, "本周"], [1, "上周"]].forEach(([v, t]) => { const b = document.createElement("button"); b.textContent = t; b.setAttribute("aria-pressed", String(wkOffset === v)); b.onclick = () => { wkOffset = v; renderWeekly(); }; sw.appendChild(b); });
   head.appendChild(sw); box.appendChild(head);
   const big = document.createElement("div"); big.className = "big2"; big.textContent = fmtMin(tot); box.appendChild(big);
   const ul = document.createElement("ul");
   const li = (t) => { const x = document.createElement("li"); x.textContent = t; ul.appendChild(x); };
-  people().forEach((n) => { const m = ok.filter((l) => l.author === n); li(`${n === me.name ? "你" : n}：专注 ${fmtMin(sumM(m))}，${m.length} 次${inWeek.filter((l) => l.author === n && l.failed).length ? `，偷玩 ${inWeek.filter((l) => l.author === n && l.failed).length} 次` : ""}`); });
-  if (best) li(`最专心的一天：周${wd(best[0])}，一起 ${fmtMin(best[1])}`);
+  const fails = inWeek.filter((l) => l.failed).length;
+  li(`专注 ${ok.length} 次${fails ? `，偷玩手机 ${fails} 次` : ""}`);
+  if (best) li(`最专心的一天：周${wd(best[0])}，${fmtMin(best[1])}`);
   if (topLab) li(`学得最多的：${topLab[0]}（${fmtMin(topLab[1])}）`);
-  if (together) li(`同时在专注 ${together} 次`);
+  if (together) li(`和闺蜜同时在专注 ${together} 次`);
   if (summits.length) li(`登顶了 ${summits.join("、")} ⛰`);
   if (moods.length) li(`这周的心情：${moods.join(" ")}`);
   if (!ok.length) li(wkOffset ? "上周还没有专注记录。" : "这周还没开始，慢慢来。");
@@ -1406,7 +1454,7 @@ const momentsOf = (day) => state.posts.filter((x) => x.kind === "moment" && x.da
 let clipSec = 3, camStream = null, camFacing = "environment", recorder = null;
 function renderMoments() {
   const t = today(), mine = momentsOf(t).filter((x) => x.author === me.name), all = momentsOf(t), nowH = new Date().getHours();
-  $("m-count").textContent = all.length ? `今天 ${all.length} 个瞬间` : "";
+  $("m-count").textContent = mine.length ? `今天 ${mine.length} 个瞬间` : "";
   const box = $("m-hours"); box.innerHTML = "";
   for (let h = 7; h <= 23; h++) {
     const inH = mine.filter((x) => new Date(Number(x.created)).getHours() === h);
@@ -1418,15 +1466,15 @@ function renderMoments() {
         const tag = document.createElement("span"); tag.className = "v"; tag.textContent = "▶"; th.appendChild(tag); }
       else { const im = document.createElement("img"); im.src = last.photo; im.alt = ""; im.loading = "lazy"; th.appendChild(im); }
       if (inH.length > 1) { const n = document.createElement("span"); n.className = "n"; n.textContent = inH.length; th.appendChild(n); }
-      th.onclick = () => playDay(t, last.id);
+      th.onclick = () => playDay(t, last.id, me.name);
     } else { th.textContent = h === nowH ? "＋" : ""; if (h === nowH) th.onclick = openCam; }
     const lb = document.createElement("span"); lb.textContent = `${h}:00`;
     el.append(th, lb); box.appendChild(el);
   }
-  $("m-play").disabled = !all.length;
+  $("m-play").disabled = !mine.length;
 
 }
-$("m-play").onclick = () => playDay(today());
+$("m-play").onclick = () => playDay(today(), null, me.name);
 $("m-shoot").onclick = () => openCam();
 
 async function openCam() {
@@ -1487,15 +1535,15 @@ async function saveMoment(blob, ext, mime, caption) {
   try {
     const url = await store.uploadMedia(blob, ext, mime);
     await store.addPost({ kind: "moment", day: today(), photo: url, text: caption.slice(0, 40) });
-    notify(`📸 ${me.name}拍下了 ${new Date().getHours()}:00 的这一刻`, caption || "去看看在做什么", "diary", "moment");
+    notify(`📸 ${me.name}拍下了 ${new Date().getHours()}:00 的这一刻`, caption || "去看看在做什么", "room", "moment");
     $("m-status").textContent = `${new Date().getHours()}:00 的这一刻记下了。`; render();
   } catch (err) { $("m-status").textContent = "没传上去：" + (err?.message || "检查一下网络再试试。"); }
 }
 
 /* 播放一天：两个人的瞬间按时间顺序连起来 */
 let pfList = [], pfIdx = 0, pfTimer = null;
-function playDay(day, startId) {
-  pfList = momentsOf(day); if (!pfList.length) return;
+function playDay(day, startId, onlyAuthor) {
+  pfList = momentsOf(day).filter((x) => !onlyAuthor || x.author === onlyAuthor); if (!pfList.length) return;
   pfIdx = Math.max(0, pfList.findIndex((x) => x.id === startId)); $("pf").hidden = false;
   try { window.Ambient?.playing && window.Ambient.pause(); } catch (e) {}
   showPf();
@@ -1531,6 +1579,68 @@ setInterval(() => {
   if (!has) { nudgeHour = h; try { beep(880, 120); } catch (e) {} }
   renderNoteBanner(); renderMoments();
 }, 30000);
+
+/* ---------------- 计划页：自定义时长、任务 / 笔记 / 瞬间 ---------------- */
+$("dur-apply").onclick = () => {
+  const v = Math.round(Number($("dur-custom").value)); if (!(v >= 1 && v <= 240)) { $("status").textContent = "时长填 1 到 240 分钟之间。"; return; }
+  dur = v; $("dur-custom").value = ""; $("dur-custom").blur(); chips(); $("status").textContent = "";
+};
+let subTab = "task";
+function showSub(k) {
+  subTab = ["task", "note", "moment"].includes(k) ? k : "task"; ls.set("mml-sub", subTab);
+  ["task", "note", "moment"].forEach((x) => { $("pane-" + x).hidden = x !== subTab; $("sub-" + x).setAttribute("aria-selected", String(x === subTab)); });
+  if (subTab === "moment") scrollHours();
+}
+document.querySelectorAll(".subtabs button").forEach((b) => (b.onclick = () => showSub(b.dataset.sub)));
+function scrollHours() { setTimeout(() => { const cur = document.querySelector("#m-hours .hour.now"), box = $("m-hours"); if (cur) box.scrollLeft = cur.offsetLeft - box.offsetLeft - box.clientWidth / 2 + cur.clientWidth / 2; }, 30); }
+function renderSubCounts() {
+  $("sub-task").textContent = `任务 · ${state.plans.filter((x) => x.author === me.name && !x.done).length}`;
+  $("sub-note").textContent = `笔记 · ${state.posts.filter((x) => x.kind === "diary" && x.author === me.name).length}`;
+  $("sub-moment").textContent = `瞬间 · ${momentsOf(today()).filter((x) => x.author === me.name).length}`;
+}
+
+/* ---------------- 自习室：两个人一起 ---------------- */
+let startTogether = false;
+function friends() { return people().filter((n) => n !== me.name); }
+function statusOf(n) {
+  const f = state.focus[n]; const fresh = f && Number(f.updated) > Date.now() - 3 * 60e3;
+  const todayMin = state.logs.filter((l) => l.author === n && !l.failed && dayOf(l.at) === today()).reduce((a, l) => a + (Number(l.minutes) || 0), 0);
+  const phase = n === me.name ? (run ? run.phase : null) : fresh ? f.phase : null;
+  const label = { waiting: "准备开始", down: "专注中", over: "加时中", up: "拿起手机了 👀", away: "离开了 👀" }[phase] || "休息中";
+  const mood = diaryOf(n, today())?.mood || "";
+  return { busy: ["waiting", "down", "over"].includes(phase), label, todayMin, mood };
+}
+function renderRoom() {
+  $("room-tag").textContent = `房间「${me.room}」`; $("room-code").textContent = me.room;
+  const fr = friends(), seats = $("seats"); seats.innerHTML = "";
+  const seat = (n, cls) => { const st = statusOf(n), el = document.createElement("div"); el.className = "seat " + cls + (st.busy ? " busy" : "");
+    const av = document.createElement("div"); av.className = "avatar"; av.textContent = n === me.name ? "你" : [...n][0].toUpperCase();
+    const nmEl = document.createElement("b"); nmEl.textContent = (n === me.name ? "你" : n) + (st.mood ? " " + st.mood : "");
+    const sub = document.createElement("small"); sub.textContent = `${st.label} · 今天 ${fmtMin(st.todayMin)}`;
+    el.append(av, nmEl, sub); return el; };
+  seats.appendChild(seat(me.name, "me"));
+  const dots = document.createElement("div"); dots.className = "dots"; dots.textContent = "· · ·"; seats.appendChild(dots);
+  if (fr.length) fr.forEach((n) => seats.appendChild(seat(n, "friend")));
+  else { const el = document.createElement("div"); el.className = "seat friend empty"; el.innerHTML = '<div class="avatar">友</div><b>空位</b><small>等闺蜜进来</small>'; seats.appendChild(el); }
+  const busyFr = fr.filter((n) => statusOf(n).busy);
+  $("seat-title").textContent = busyFr.length ? `${busyFr.join("、")}正在专注` : fr.length ? "为彼此，留一个座位" : "把房间码告诉闺蜜";
+  $("seat-sub").textContent = busyFr.length ? "现在开始，就是一起专注。" : fr.length ? "开始专注时，对方会收到通知，一起安静学习。" : `房间码是「${me.room}」，登录时填一样的就能进来。`;
+  $("room-start").textContent = busyFr.length ? `加入${busyFr[0]}，一起专注` : "和TA一起专注";
+  // 今天的瞬间（两个人）
+  const ms = momentsOf(today()), strip = $("r-strip"); strip.innerHTML = "";
+  $("r-mcount").textContent = ms.length ? `${ms.length} 个` : "";
+  if (!ms.length) strip.innerHTML = '<p class="note">今天还没有人拍。到「计划 → 瞬间」拍一下现在吧。</p>';
+  ms.slice(-12).forEach((x) => { const b = document.createElement("button"); b.className = "r-th";
+    const tm = new Date(Number(x.created));
+    if (isVideo(x.photo)) { const v = document.createElement("video"); v.src = x.photo + "#t=0.1"; v.muted = true; v.playsInline = true; v.preload = "metadata"; b.appendChild(v); }
+    else { const im = document.createElement("img"); im.src = x.photo; im.alt = ""; im.loading = "lazy"; b.appendChild(im); }
+    const cap = document.createElement("span"); cap.textContent = `${x.author === me.name ? "你" : x.author} ${tm.getHours()}:${String(tm.getMinutes()).padStart(2, "0")}`; b.appendChild(cap);
+    b.onclick = () => playDay(today(), x.id); strip.appendChild(b); });
+  $("r-play").disabled = !ms.length;
+}
+$("room-start").onclick = () => { startTogether = true; $("start").click(); setTimeout(() => (startTogether = false), 500); };
+$("r-play").onclick = () => playDay(today());
+$("room-switch").onclick = () => $("logout").click();
 
 /* ---------------- 推送通知 ---------------- */
 const fnUrl = () => `${CFG.supabaseUrl}/functions/v1/notify`;
@@ -1589,13 +1699,14 @@ $("push-test").onclick = async () => {
   } catch (e) { $("push-status").textContent = "测试失败：" + (e?.message || "检查网络"); }
 };
 function openFromNotification(tab, action) {
-  if (tab) showTab(tab);
+  if (action === "shoot") { showTab("plan"); showSub("moment"); } else if (tab) showTab(tab);
   if (action === "shoot") { $("m-status").textContent = "点「📸 拍这一刻」拍一下现在。"; $("m-shoot").scrollIntoView({ block: "center" }); }
 }
 navigator.serviceWorker?.addEventListener("message", (e) => openFromNotification(e.data?.tab, e.data?.action));
 
 /* ---------------- 其他按钮 ---------------- */
 function chips() {
+  $("dur-big").textContent = `${String(dur).padStart(2, "0")}:00`; $("dur-note").textContent = `${dur} 分钟`;
   const el = $("durs"); el.innerHTML = "";
   DURS.forEach((m) => { const b = document.createElement("button"); b.innerHTML = `<b>${m}</b><small>分钟</small>`; b.setAttribute("aria-label", `${m} 分钟`);
     b.setAttribute("aria-pressed", String(dur === m)); b.onclick = () => { dur = m; chips(); }; el.appendChild(b); });
@@ -1651,7 +1762,7 @@ async function boot() {
   $("setup").hidden = true; $("main").hidden = false;
 
   $("mode").textContent = cloud ? "已连接云端，和闺蜜同步中" : "单机试用模式：数据只存在这台手机上（配置 Supabase 后才能两人同步）";
-  chips(); planChips(); renderSound(); showTab(ls.get("mml-tab", "focus"));
+  chips(); planChips(); renderSound(); showTab(ls.get("mml-tab", "plan")); showSub(ls.get("mml-sub", "task"));
   const qs = new URLSearchParams(location.search);
   if (qs.get("tab")) { openFromNotification(qs.get("tab"), qs.get("do")); history.replaceState(null, "", location.pathname); }
   renderPush();
