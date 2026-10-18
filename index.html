@@ -96,7 +96,7 @@ button:focus-visible, input:focus-visible { outline: 2px solid var(--accent); ou
 .stats tr.sum td { font-weight: 700; }
 .tabpage { padding-bottom: calc(96px + env(safe-area-inset-bottom, 0px)); }
 .eyebrow { font-size: .72rem; letter-spacing: .22em; color: var(--muted); margin: 0 0 8px; }
-.tabbar { position: fixed; left: 0; right: 0; bottom: 0; z-index: 5; display: grid; grid-template-columns: repeat(4, 1fr);
+.tabbar { position: fixed; left: 0; right: 0; bottom: 0; z-index: 5; display: grid; grid-template-columns: repeat(5, 1fr);
   background: color-mix(in srgb, var(--surface) 92%, transparent); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
   border-top: 1px solid var(--line); padding: 6px max(8px, env(safe-area-inset-right, 0px)) calc(6px + env(safe-area-inset-bottom, 0px)) max(8px, env(safe-area-inset-left, 0px)); }
 .tabbar button { font: inherit; font-size: .75rem; background: none; border: 0; color: var(--muted); display: grid; justify-items: center; gap: 0; padding: 4px 0; }
@@ -308,6 +308,13 @@ input[type="range"] { width: 100%; accent-color: var(--accent); height: 28px; ma
 .outfit.on { border-color: #f07c9c; background: color-mix(in srgb, #f07c9c 14%, var(--surface)); }
 .outfit:disabled { opacity: .45; }
 @media (prefers-reduced-motion: reduce) { .catsvg * { animation: none !important; } .heart { animation-duration: .01s; } }
+.sec-title { font-family: var(--display); font-weight: 400; font-size: 1.25rem; margin: 6px 0 0; }
+.seats .field, .seats .seg, .seats .custom-dur { width: 100%; text-align: left; }
+.nf-list { display: grid; gap: 10px; }
+.nf { border: 1px solid var(--line); border-radius: 4px 16px 16px 16px; padding: 10px 12px; display: grid; gap: 6px; background: color-mix(in srgb, var(--blush) 14%, var(--surface)); }
+.nf.mine { border-radius: 16px 4px 16px 16px; background: var(--accent-soft); }
+.nf p { margin: 0; overflow-wrap: anywhere; white-space: pre-wrap; }
+.nf img { max-width: 100%; width: 240px; border-radius: 12px; }
 /* ---------- 手机上更好用 ---------- */
 .tabpage h1 { font-size: 1.9rem; }
 #tab-focus h1 { font-size: 2.1rem; }
@@ -432,12 +439,8 @@ input[type="range"] { width: 100%; accent-color: var(--accent); height: 28px; ma
     </details>
   </section>
 
-  <div class="subtabs" role="tablist" aria-label="计划内容">
-    <button role="tab" data-sub="task" id="sub-task">任务 · 0</button>
-    <button role="tab" data-sub="note" id="sub-note">笔记 · 0</button>
-    <button role="tab" data-sub="moment" id="sub-moment">瞬间 · 0</button>
-  </div>
   <div class="subpane" id="pane-task">
+    <h2 class="sec-title">今天的任务</h2>
   <section class="card">
     <input class="field" id="p-title" maxlength="60" placeholder="要做什么？比如：高数第三章习题">
     <div class="chips" id="p-day"></div>
@@ -451,7 +454,50 @@ input[type="range"] { width: 100%; accent-color: var(--accent); height: 28px; ma
   <section id="plans"></section>
   <p class="note" id="p-status"></p>
   </div>
-  <div class="subpane" id="pane-note" hidden>
+</div>
+
+<!-- 自习室：我们俩一起 -->
+<div class="wrap tabpage" id="tab-room" hidden>
+  <header class="pagehead"><p class="kicker">一起，把时间留给成长</p><h1>一个人专注，一群人同行</h1><p class="tag" id="room-tag"></p></header>
+  <section class="card seats" aria-label="自习室里的人">
+    <div class="seat-row" id="seats"></div>
+    <h2 class="seat-title" id="seat-title">为彼此，留一个座位</h2>
+    <p class="note seat-sub" id="seat-sub"></p>
+    <input class="field" id="room-label" maxlength="30" placeholder="这次要学什么？（可不填）" enterkeyhint="done">
+    <div class="seg" id="room-durs" role="group" aria-label="一起专注多久（分钟）"></div>
+    <div class="custom-dur"><input class="field" type="number" id="room-custom" min="1" max="240" inputmode="numeric" placeholder="自定义"><span>分钟</span><button class="soft small" id="room-apply">应用时长</button></div>
+    <button class="go big-go" id="room-start">和TA一起专注</button>
+  </section>
+  <section class="live" id="live" hidden></section>
+  <button class="notebanner" id="note-banner" hidden></button>
+  <section class="card">
+    <h2>留言墙</h2>
+    <textarea class="field" id="n-text" maxlength="200" rows="2" placeholder="给对方留一张小纸条"></textarea>
+    <button class="go" id="n-send" disabled>贴上去</button>
+    <div id="notes" class="notes"></div>
+  </section>
+</div>
+
+<!-- 共享：我们俩的瞬间、笔记、挑战 -->
+<div class="wrap tabpage" id="tab-share" hidden>
+  <header class="pagehead"><p class="kicker">我们的小空间</p><h1>一起留下今天</h1><p class="tag">拍下的瞬间、写下的笔记，你们俩都看得到。</p></header>
+  <section class="card moments" aria-label="每小时一刻">
+    <div class="feed-head"><h2>每小时一刻</h2><span class="note" id="m-count"></span></div>
+    <p class="note">每个小时拍一张照片或几秒视频，记下这一刻在做什么。你们俩拍的都会出现在下面。</p>
+    <div class="hours" id="m-hours"></div>
+    <div class="m-actions">
+      <button class="go" id="m-shoot">📸 拍这一刻</button>
+      <button class="soft" id="m-play">▶ 只看我的</button>
+    </div>
+    <input type="file" id="m-file" accept="image/*,video/*" capture="environment" hidden>
+    <input type="file" id="m-photo-native" accept="image/*" capture="environment" hidden>
+    <p class="note" id="m-status"></p>
+  </section>
+  <section class="card" aria-label="今天的瞬间">
+    <div class="feed-head"><h2>我们的今天</h2><span class="note" id="r-mcount"></span></div>
+    <div class="r-strip" id="r-strip"></div>
+    <button class="soft" id="r-play">▶ 播放我们的今天</button>
+  </section>
   <section class="card">
     <h2 id="d-title">今天过得怎么样？</h2>
     <div class="moods" id="d-moods" role="group" aria-label="心情"></div>
@@ -465,44 +511,9 @@ input[type="range"] { width: 100%; accent-color: var(--accent); height: 28px; ma
     <button class="go" id="d-save">保存今天的日记</button>
     <p class="note" id="d-status"></p>
   </section>
-  </div>
-  <div class="subpane" id="pane-moment" hidden>
-  <section class="card moments" aria-label="每小时一刻">
-    <div class="feed-head"><h2>每小时一刻</h2><span class="note" id="m-count"></span></div>
-    <p class="note">每个小时拍一张照片或几秒视频，记下这一刻在做什么。晚上点「播放今天」看你的一天。</p>
-    <div class="hours" id="m-hours"></div>
-    <div class="m-actions">
-      <button class="go" id="m-shoot">📸 拍这一刻</button>
-      <button class="soft" id="m-play">▶ 播放今天</button>
-    </div>
-    <input type="file" id="m-file" accept="image/*,video/*" capture="environment" hidden>
-    <input type="file" id="m-photo-native" accept="image/*" capture="environment" hidden>
-    <p class="note" id="m-status"></p>
-  </section>
-  </div>
-</div>
-
-<!-- 自习室：我们俩一起 -->
-<div class="wrap tabpage" id="tab-room" hidden>
-  <header class="pagehead"><p class="kicker">一起，把时间留给成长</p><h1>一个人专注，一群人同行</h1><p class="tag" id="room-tag"></p></header>
-  <section class="card seats" aria-label="自习室里的人">
-    <div class="seat-row" id="seats"></div>
-    <h2 class="seat-title" id="seat-title">为彼此，留一个座位</h2>
-    <p class="note seat-sub" id="seat-sub"></p>
-    <button class="go big-go" id="room-start">和TA一起专注</button>
-  </section>
-  <section class="live" id="live" hidden></section>
-  <button class="notebanner" id="note-banner" hidden></button>
-  <section class="card" aria-label="今天的瞬间">
-    <div class="feed-head"><h2>今天的瞬间</h2><span class="note" id="r-mcount"></span></div>
-    <div class="r-strip" id="r-strip"></div>
-    <button class="soft" id="r-play">▶ 播放我们的今天</button>
-  </section>
-  <section class="card">
-    <h2>留言墙</h2>
-    <textarea class="field" id="n-text" maxlength="200" rows="2" placeholder="给对方留一张小纸条"></textarea>
-    <button class="go" id="n-send" disabled>贴上去</button>
-    <div id="notes" class="notes"></div>
+  <section class="card" aria-label="我们的笔记">
+    <div class="feed-head"><h2>我们的笔记</h2><span class="note" id="nf-count"></span></div>
+    <div id="nf-list" class="nf-list"></div>
   </section>
   <section class="card" aria-label="一起的小挑战">
     <div class="feed-head"><h2>一起的小挑战</h2><button class="soft small" id="ch-new">＋ 新挑战</button></div>
@@ -564,9 +575,10 @@ input[type="range"] { width: 100%; accent-color: var(--accent); height: 28px; ma
 </div>
 
 <nav class="tabbar" aria-label="页面">
-  <button data-tab="sound"><span>♪</span>音乐</button>
   <button data-tab="plan" aria-current="page"><span>✓</span>计划</button>
   <button data-tab="room"><span>☕</span>自习室<i class="badge" id="diary-badge" hidden></i></button>
+  <button data-tab="share"><span>✿</span>共享</button>
+  <button data-tab="sound"><span>♪</span>音乐</button>
   <button data-tab="me"><span>☺</span>我的</button>
 </nav>
 </div>
@@ -844,7 +856,7 @@ function render() {
     if (typeof renderCatScene === "function") renderCatScene(p);
   }
   renderFeed(); renderLive(); renderStats(); renderPlans(); renderTodoPick();
-  renderDiary(); renderMoments(); renderNotes(); renderNoteBanner(); renderChallenges(); renderWeekly(); renderRoom(); renderSubCounts();
+  renderDiary(); renderMoments(); renderNotes(); renderNoteBanner(); renderChallenges(); renderWeekly(); renderRoom(); renderSubCounts(); renderNotesFeed();
   $("me-name").textContent = me.name;
 }
 
@@ -1110,7 +1122,7 @@ function showTab(t) {
   document.querySelectorAll(".tabbar button").forEach((b) => (b.dataset.tab === t ? b.setAttribute("aria-current", "page") : b.removeAttribute("aria-current")));
   window.scrollTo(0, 0); ls.set("mml-tab", t);
   if (t === "room" && me) { ls.set(seenKey(), Date.now()); setTimeout(renderNoteBanner, 1500); }
-  if (t === "plan" && me && subTab === "moment") scrollHours();
+  if (t === "share" && me) scrollHours();
 }
 document.querySelectorAll(".tabbar button").forEach((b) => (b.onclick = () => showTab(b.dataset.tab)));
 
@@ -1310,7 +1322,7 @@ $("d-save").onclick = async () => {
     if (photoBlob) photo = await store.uploadPhoto(photoBlob); else if (dPhoto === null) photo = null;
     const ex = diaryOf(me.name, today()), row = { mood: dMood, text, photo };
     if (ex) await store.updatePost(ex.id, row);
-    else { await store.addPost({ kind: "diary", day: today(), ...row }); notify(`✎ ${me.name}写了今天的日记`, `${dMood || ""} ${text}`.trim() || "去看看", "room", "diary"); }
+    else { await store.addPost({ kind: "diary", day: today(), ...row }); notify(`✎ ${me.name}写了今天的日记`, `${dMood || ""} ${text}`.trim() || "去看看", "share", "diary"); }
     photoBlob = null; dDirty = false; $("d-status").textContent = "存好了。";
   } catch (err) { $("d-status").textContent = "没存上：" + (err?.message || "检查一下网络再试试。"); }
   $("d-save").disabled = false; render();
@@ -1393,7 +1405,7 @@ function renderNoteBanner() {
   const needShot = nudgeHour === h && !momentsOf(today()).some((x) => x.author === me.name && new Date(Number(x.created)).getHours() === h);
   bn.hidden = !un.length && !needShot;
   if (un.length) { bn.textContent = `💌 ${un[0].author}给你留言了：${un[0].text}${un.length > 1 ? `（还有 ${un.length - 1} 张）` : ""}`; bn.onclick = noteBannerClick; }
-  else if (needShot) { bn.textContent = `⏰ ${h}:00 了，拍一下现在在做什么？`; bn.onclick = () => { nudgeHour = null; renderNoteBanner(); showTab("plan"); showSub("moment"); openCam(); }; }
+  else if (needShot) { bn.textContent = `⏰ ${h}:00 了，拍一下现在在做什么？`; bn.onclick = () => { nudgeHour = null; renderNoteBanner(); showTab("share"); openCam(); }; }
 }
 let nudgeHour = null;
 function noteBannerClick() { showTab("room"); setTimeout(() => $("notes").scrollIntoView({ behavior: "smooth" }), 50); }
@@ -1426,7 +1438,7 @@ $("ch-add").onclick = async () => {
     end = ymd(e); target = chHours; text = `一起专注 ${chHours} 小时`;
   } else { target = chMountain; text = `一起爬到${MOUNTAINS[chMountain].name}`; }
   try { await store.addPost({ kind: "challenge", goal: chGoal, target, start_day: start, end_day: end, text }); } catch (e) { return; }
-  notify(`🏁 ${me.name}发起了一个挑战`, text, "room", "challenge");
+  notify(`🏁 ${me.name}发起了一个挑战`, text, "share", "challenge");
   $("ch-form").hidden = true; $("ch-new").textContent = "＋ 新挑战"; render();
 };
 function cumHeight(i) { return MOUNTAINS.slice(0, i + 1).reduce((a, m) => a + m.h, 0); }
@@ -1584,7 +1596,7 @@ async function saveMoment(blob, ext, mime, caption) {
   try {
     const url = await store.uploadMedia(blob, ext, mime);
     await store.addPost({ kind: "moment", day: today(), photo: url, text: caption.slice(0, 40) });
-    notify(`📸 ${me.name}拍下了 ${new Date().getHours()}:00 的这一刻`, caption || "去看看在做什么", "room", "moment");
+    notify(`📸 ${me.name}拍下了 ${new Date().getHours()}:00 的这一刻`, caption || "去看看在做什么", "share", "moment");
     $("m-status").textContent = `${new Date().getHours()}:00 的这一刻记下了。`; render();
   } catch (err) { $("m-status").textContent = "没传上去：" + (err?.message || "检查一下网络再试试。"); }
 }
@@ -1635,17 +1647,26 @@ $("dur-apply").onclick = () => {
   dur = v; $("dur-custom").value = ""; $("dur-custom").blur(); chips(); $("status").textContent = "";
 };
 let subTab = "task";
-function showSub(k) {
-  subTab = ["task", "note", "moment"].includes(k) ? k : "task"; ls.set("mml-sub", subTab);
-  ["task", "note", "moment"].forEach((x) => { $("pane-" + x).hidden = x !== subTab; $("sub-" + x).setAttribute("aria-selected", String(x === subTab)); });
-  if (subTab === "moment") scrollHours();
-}
-document.querySelectorAll(".subtabs button").forEach((b) => (b.onclick = () => showSub(b.dataset.sub)));
+function showSub(k) { if (k === "moment" || k === "note") showTab("share"); } // 笔记和瞬间搬到了「共享」
 function scrollHours() { setTimeout(() => { const cur = document.querySelector("#m-hours .hour.now"), box = $("m-hours"); if (cur) box.scrollLeft = cur.offsetLeft - box.offsetLeft - box.clientWidth / 2 + cur.clientWidth / 2; }, 30); }
-function renderSubCounts() {
-  $("sub-task").textContent = `任务 · ${state.plans.filter((x) => x.author === me.name && !x.done).length}`;
-  $("sub-note").textContent = `笔记 · ${state.posts.filter((x) => x.kind === "diary" && x.author === me.name).length}`;
-  $("sub-moment").textContent = `瞬间 · ${momentsOf(today()).filter((x) => x.author === me.name).length}`;
+function renderSubCounts() {}
+
+/* ---------------- 共享：我们的笔记 ---------------- */
+function renderNotesFeed() {
+  const box = $("nf-list"); if (!box) return; box.innerHTML = "";
+  const list = state.posts.filter((x) => x.kind === "diary" && (x.text || x.mood || x.photo)).sort((a, b) => (b.day || "").localeCompare(a.day || "") || b.created - a.created).slice(0, 30);
+  $("nf-count").textContent = list.length ? `${list.length} 篇` : "";
+  if (!list.length) { box.innerHTML = '<div class="empty">还没有笔记。在上面写下今天的第一句吧。</div>'; return; }
+  list.forEach((x) => {
+    const el = document.createElement("article"); el.className = "nf" + (x.author === me.name ? " mine" : "");
+    const head = document.createElement("div"); head.className = "meta";
+    const b = document.createElement("b"); b.textContent = `${x.mood || ""} ${x.author === me.name ? "你" : x.author}`.trim();
+    const d = document.createElement("span"); d.textContent = dayLabel(x.day); head.append(b, d);
+    el.appendChild(head);
+    if (x.text) { const t = document.createElement("p"); t.textContent = x.text; el.appendChild(t); }
+    if (x.photo) { const im = document.createElement("img"); im.src = x.photo; im.alt = ""; im.loading = "lazy"; el.appendChild(im); }
+    box.appendChild(el);
+  });
 }
 
 /* ---------------- 自习室：两个人一起 ---------------- */
@@ -1678,7 +1699,7 @@ function renderRoom() {
   // 今天的瞬间（两个人）
   const ms = momentsOf(today()), strip = $("r-strip"); strip.innerHTML = "";
   $("r-mcount").textContent = ms.length ? `${ms.length} 个` : "";
-  if (!ms.length) strip.innerHTML = '<p class="note">今天还没有人拍。到「计划 → 瞬间」拍一下现在吧。</p>';
+  if (!ms.length) strip.innerHTML = '<p class="note">今天还没有人拍，在上面拍一下现在吧。</p>';
   ms.slice(-12).forEach((x) => { const b = document.createElement("button"); b.className = "r-th";
     const tm = new Date(Number(x.created));
     if (isVideo(x.photo)) { const v = document.createElement("video"); v.src = x.photo + "#t=0.1"; v.muted = true; v.playsInline = true; v.preload = "metadata"; b.appendChild(v); }
@@ -1687,7 +1708,20 @@ function renderRoom() {
     b.onclick = () => playDay(today(), x.id); strip.appendChild(b); });
   $("r-play").disabled = !ms.length;
 }
-$("room-start").onclick = () => { startTogether = true; $("start").click(); setTimeout(() => (startTogether = false), 500); };
+$("room-start").onclick = () => {
+  $("label").value = $("room-label").value.trim().slice(0, 30); // 自习室填的内容带进专注
+  startTogether = true; $("start").click(); setTimeout(() => (startTogether = false), 500);
+};
+function renderRoomDurs() {
+  const el = $("room-durs"); if (!el) return; el.innerHTML = "";
+  const opts = DURS.includes(dur) ? DURS : [...DURS.slice(0, 4), dur];
+  opts.forEach((m) => { const b = document.createElement("button"); b.innerHTML = `<b>${m}</b><small>分钟</small>`; b.setAttribute("aria-label", `${m} 分钟`);
+    b.setAttribute("aria-pressed", String(dur === m)); b.onclick = () => { dur = m; chips(); }; el.appendChild(b); });
+}
+$("room-apply").onclick = () => {
+  const v = Math.round(Number($("room-custom").value)); if (!(v >= 1 && v <= 240)) { $("seat-sub").textContent = "时长填 1 到 240 分钟之间。"; return; }
+  dur = v; $("room-custom").value = ""; $("room-custom").blur(); chips();
+};
 $("r-play").onclick = () => playDay(today());
 $("room-switch").onclick = () => $("logout").click();
 
@@ -1748,7 +1782,7 @@ $("push-test").onclick = async () => {
   } catch (e) { $("push-status").textContent = "测试失败：" + (e?.message || "检查网络"); }
 };
 function openFromNotification(tab, action) {
-  if (action === "shoot") { showTab("plan"); showSub("moment"); } else if (tab) showTab(tab);
+  if (action === "shoot") showTab("share"); else if (tab) showTab(tab);
   if (action === "shoot") { $("m-status").textContent = "点「📸 拍这一刻」拍一下现在。"; $("m-shoot").scrollIntoView({ block: "center" }); }
 }
 navigator.serviceWorker?.addEventListener("message", (e) => openFromNotification(e.data?.tab, e.data?.action));
@@ -1756,6 +1790,7 @@ navigator.serviceWorker?.addEventListener("message", (e) => openFromNotification
 /* ---------------- 其他按钮 ---------------- */
 function chips() {
   $("dur-big").textContent = `${String(dur).padStart(2, "0")}:00`; $("dur-note").textContent = `${dur} 分钟`;
+  if (typeof renderRoomDurs === "function") renderRoomDurs();
   const el = $("durs"); el.innerHTML = "";
   DURS.forEach((m) => { const b = document.createElement("button"); b.innerHTML = `<b>${m}</b><small>分钟</small>`; b.setAttribute("aria-label", `${m} 分钟`);
     b.setAttribute("aria-pressed", String(dur === m)); b.onclick = () => { dur = m; chips(); }; el.appendChild(b); });
@@ -1811,7 +1846,7 @@ async function boot() {
   $("setup").hidden = true; $("main").hidden = false;
 
   $("mode").textContent = cloud ? "已连接云端，和闺蜜同步中" : "单机试用模式：数据只存在这台手机上（配置 Supabase 后才能两人同步）";
-  chips(); planChips(); renderSound(); showTab(ls.get("mml-tab", "plan")); showSub(ls.get("mml-sub", "task"));
+  chips(); planChips(); renderSound(); showTab(ls.get("mml-tab", "plan"));
   const qs = new URLSearchParams(location.search);
   if (qs.get("tab")) { openFromNotification(qs.get("tab"), qs.get("do")); history.replaceState(null, "", location.pathname); }
   renderPush();
