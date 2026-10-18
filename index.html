@@ -1955,7 +1955,7 @@ async function boot() {
   $("setup").hidden = true; $("main").hidden = false;
 
   $("mode").textContent = cloud ? "已连接云端，和闺蜜同步中" : "单机试用模式：数据只存在这台手机上（配置 Supabase 后才能两人同步）";
-  chips(); planChips(); renderSound(); showTab(ls.get("mml-tab", "plan"));
+  chips(); planChips(); renderSound(); showTab("plan") /* 每次打开都从「计划」开始；点通知会再跳到对应页面 */;
   const qs = new URLSearchParams(location.search);
   if (qs.get("tab")) { openFromNotification(qs.get("tab"), qs.get("do")); history.replaceState(null, "", location.pathname); }
   renderPush();
