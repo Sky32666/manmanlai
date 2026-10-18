@@ -79,6 +79,14 @@ button:focus-visible, input:focus-visible { outline: 2px solid var(--accent); ou
 .acts button { font: inherit; font-size: .8rem; background: none; border: 1px solid var(--line); color: var(--muted); border-radius: 99px; padding: 1px 10px; }
 .acts button.on { border-color: var(--blush); color: var(--ink); }
 .empty { text-align: center; color: var(--muted); padding: 26px 12px; border: 1px dashed var(--line); border-radius: 16px; }
+.stats { background: var(--surface); border: 1px solid var(--line); border-radius: 20px; padding: 16px 18px; display: grid; gap: 12px; }
+.stats .hero { display: flex; align-items: baseline; justify-content: space-between; gap: 8px; flex-wrap: wrap; }
+.stats .hero b { font-family: var(--display); font-weight: 400; font-size: 2rem; line-height: 1; font-variant-numeric: tabular-nums; }
+.stats table { width: 100%; border-collapse: collapse; font-size: .88rem; font-variant-numeric: tabular-nums; }
+.stats th { font-weight: 400; color: var(--muted); font-size: .75rem; text-align: right; padding: 4px 0; }
+.stats th:first-child, .stats td:first-child { text-align: left; }
+.stats td { text-align: right; padding: 6px 0; border-top: 1px solid var(--line); }
+.stats tr.sum td { font-weight: 700; }
 .mode { font-size: .75rem; color: var(--muted); text-align: center; }
 
 /* 专注全屏 */
@@ -129,6 +137,12 @@ button:focus-visible, input:focus-visible { outline: 2px solid var(--accent); ou
 
   <section class="scene"><div id="art"></div><div class="scene-info" id="info"></div></section>
   <section class="live" id="live" hidden></section>
+
+  <section class="stats" aria-label="专注统计">
+    <div class="hero"><span class="label">你们一起专注了</span><b id="st-total">0 分钟</b></div>
+    <table><thead><tr><th></th><th>今天</th><th>本周</th><th>全部</th></tr></thead><tbody id="st-body"></tbody></table>
+    <p class="note" id="st-together"></p>
+  </section>
 
   <section class="card">
     <h2>扣下手机，专注开始</h2>
@@ -330,7 +344,25 @@ function render() {
     inp.onchange = () => { const v = inp.value.trim().slice(0, 10); if (v) store.setRoom({ catName: v }); };
   }
   $("info").appendChild(duo);
-  renderFeed(); renderLive();
+  renderFeed(); renderLive(); renderStats();
+}
+
+function renderStats() {
+  const ok = state.logs.filter((l) => !l.failed);
+  const d0 = new Date(); d0.setHours(0, 0, 0, 0);
+  const w0 = new Date(d0); w0.setDate(w0.getDate() - ((w0.getDay() + 6) % 7)); // 本周从周一算
+  const sum = (arr, since) => arr.filter((l) => Number(l.at) >= since).reduce((a, l) => a + (Number(l.minutes) || 0), 0);
+  const rows = people().map((n) => { const a = ok.filter((l) => l.author === n); return [nm(n), sum(a, d0), sum(a, w0), sum(a, 0)]; });
+  rows.push(["合计", sum(ok, d0), sum(ok, w0), sum(ok, 0)]);
+  $("st-total").textContent = fmtMin(sum(ok, 0));
+  const body = $("st-body"); body.innerHTML = "";
+  rows.forEach((r, i) => {
+    const tr = document.createElement("tr"); if (i === rows.length - 1) tr.className = "sum";
+    r.forEach((c, j) => { const td = document.createElement("td"); td.textContent = j ? fmtMin(c) : c; tr.appendChild(td); });
+    body.appendChild(tr);
+  });
+  const tg = ok.filter((l) => l.together), sessions = ok.length;
+  $("st-together").textContent = sessions ? `一共 ${sessions} 次专注，其中 ${tg.length} 次是同时在专注（${fmtMin(sum(tg, 0))}）。` : "完成第一次专注后，这里会显示你们的时长。";
 }
 
 function ago(t) {
