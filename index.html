@@ -371,6 +371,41 @@ button:active:not(:disabled) { transform: scale(.96); }
 .big small { display: inline-block; margin-left: 8px; }
 .small-print { font-size: .72rem; }
 @media (prefers-reduced-motion: reduce) { .tabpage:not([hidden]) > * { animation: none; } button { transition: none; } }
+/* ---------- 互动 ---------- */
+.seat.tap { cursor: pointer; } .seat.tap .avatar { box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 25%, transparent); }
+.seat.tap .avatar::before { content: "👋"; position: absolute; top: -6px; right: -6px; font-size: .9rem; }
+.sheet { position: fixed; inset: 0; z-index: 40; background: rgba(0,0,0,.35); display: grid; align-items: end; }
+.sheet-card { background: var(--surface); color: var(--ink); border-radius: 22px 22px 0 0; padding: 18px max(16px, env(safe-area-inset-right, 0px)) calc(18px + env(safe-area-inset-bottom, 0px)) max(16px, env(safe-area-inset-left, 0px)); display: grid; gap: 14px; animation: up .25s ease; }
+@keyframes up { from { transform: translateY(40px); } }
+.cheers { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+.cheers button { font: inherit; border: 1px solid var(--line); background: var(--bg); color: var(--ink); border-radius: 16px; padding: 10px 0; display: grid; justify-items: center; gap: 2px; }
+.cheers span { font-size: 1.8rem; } .cheers small { font-size: .78rem; color: var(--muted); }
+.toast { position: fixed; left: 50%; top: calc(14px + env(safe-area-inset-top, 0px)); transform: translate(-50%, -140%); z-index: 70; background: var(--ink); color: var(--surface);
+  padding: 10px 16px; border-radius: 99px; font-size: .9rem; max-width: 86vw; text-align: center; transition: transform .35s ease; box-shadow: 0 8px 24px rgba(0,0,0,.2); }
+.toast.show { transform: translate(-50%, 0); }
+.emoji-rain { position: fixed; inset: 0; pointer-events: none; z-index: 65; overflow: hidden; }
+.emoji-rain span { position: absolute; bottom: -40px; animation: emojiup 2.4s ease-out forwards; }
+@keyframes emojiup { 0% { transform: translateY(0) scale(.6); opacity: 0; } 15% { opacity: 1; } 100% { transform: translateY(-75vh) scale(1.1); opacity: 0; } }
+.visit-art { border-radius: 16px; overflow: hidden; }
+.visit-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.sync { background: var(--accent-soft); border-radius: 12px; padding: 10px 12px; }
+.f-friends { display: grid; gap: 6px; width: min(300px, 80vw); }
+.f-friends .ff-title { font-size: .8rem; color: #a9b8b1; margin: 0; }
+.ff { display: grid; grid-template-columns: auto 1fr auto; gap: 8px; align-items: center; font-size: .85rem; color: #dfe8e3; }
+.ff i { height: 6px; background: rgba(255,255,255,.15); border-radius: 99px; overflow: hidden; } .ff i b { display: block; height: 100%; background: #7cc4a8; }
+.focus.dark .f-friends { opacity: .35; }
+.social { display: flex; gap: 8px; }
+.social button { font: inherit; font-size: .82rem; border: 1px solid var(--line); background: var(--surface); color: var(--ink); border-radius: 99px; padding: 2px 10px; }
+.social .lk.on { border-color: #f07c9c; }
+.thread { display: grid; gap: 6px; }
+.cm { font-size: .88rem; overflow-wrap: anywhere; } .cm b { margin-right: 6px; }
+.cm-in { display: grid; grid-template-columns: 1fr auto; gap: 6px; } .cm-in .field { padding: 6px 10px; }
+.pf-social { position: absolute; left: 0; right: 0; bottom: calc(64px + env(safe-area-inset-bottom, 0px)); z-index: 4; display: grid; gap: 6px; padding: 0 14px; }
+.pf-cms .cm { color: #fff; text-shadow: 0 1px 3px #000; }
+.pf-row { display: grid; grid-template-columns: auto 1fr auto; gap: 6px; }
+.pf-row button, .pf-row input { font: inherit; border-radius: 99px; border: 1px solid rgba(255,255,255,.35); background: rgba(0,0,0,.35); color: #fff; padding: 6px 12px; }
+.pf-row input::placeholder { color: rgba(255,255,255,.7); }
+.pf-cap { bottom: calc(150px + env(safe-area-inset-bottom, 0px)) !important; }
 /* ---------- 手机上更好用 ---------- */
 .tabpage h1 { font-size: 1.9rem; }
 #tab-focus h1 { font-size: 2.1rem; }
@@ -1736,6 +1771,7 @@ function renderNotesFeed() {
   if (!list.length) { box.innerHTML = '<div class="empty">还没有笔记。在上面写下今天的第一句吧。</div>'; return; }
   list.forEach((x) => {
     const el = document.createElement("article"); el.className = "nf" + (x.author === me.name ? " mine" : "");
+    el.dataset.id = x.id; el.dataset.author = x.author;
     const head = document.createElement("div"); head.className = "meta";
     const b = document.createElement("b"); b.textContent = `${x.mood || ""} ${x.author === me.name ? "你" : x.author}`.trim();
     const d = document.createElement("span"); d.textContent = dayLabel(x.day); head.append(b, d);
@@ -1974,6 +2010,7 @@ boot();
 if ("serviceWorker" in navigator) navigator.serviceWorker.register("sw.js").catch(() => {});
 </script>
 <script src="mountains.js?v=2"></script>
-<script src="cat.js?v=4"></script>
+<script src="cat.js?v=5"></script>
+<script src="social.js?v=2"></script>
 </body>
 </html>

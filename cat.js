@@ -52,7 +52,10 @@ async function saveCat(patch) {
   return cur;
 }
 function todayCaps(c) { return c.day === today() ? { feeds: 0, ...c } : { ...c, day: today(), pets: 0, plays: 0, feeds: 0 }; }
-const fishOwned = (c) => Math.max(0, Math.floor(total() / FISH_PER_MIN) + (c.bonusFish || 0) - c.fishEaten);
+// 小鱼干 = 专注得到的 + 心愿奖励 + 闺蜜送的 − 吃掉的 − 送给闺蜜的
+const giftSum = (f) => state.posts.filter((x) => x.kind === "gift" && f(x)).reduce((a, x) => a + (Number(x.target) || 1), 0);
+const fishOwned = (c) => Math.max(0, Math.floor(total() / FISH_PER_MIN) + (c.bonusFish || 0) - c.fishEaten
+  + giftSum((x) => x.goal === me.name) - giftSum((x) => x.author === me.name));
 
 /* ---------- 今日心愿：每天不一样，完成了领奖励 ---------- */
 const WISHES = [
