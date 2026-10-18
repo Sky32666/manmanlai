@@ -49,6 +49,11 @@ button:focus-visible, input:focus-visible { outline: 2px solid var(--accent); ou
 .bar { height: 8px; background: var(--accent-soft); border-radius: 99px; overflow: hidden; }
 .bar i { display: block; height: 100%; background: var(--accent); border-radius: 99px; transition: width .8s ease; }
 .row { display: flex; justify-content: space-between; gap: 10px; flex-wrap: wrap; color: var(--muted); font-size: .85rem; }
+.mt-name { font-size: .9rem; color: var(--muted); display: grid; gap: 2px; }
+.mt-name b { font-family: var(--display); font-weight: 400; font-size: 1.25rem; color: var(--ink); }
+.mt-name small { font-size: .8rem; }
+.peaks { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
+.peak { font-size: .78rem; background: var(--accent-soft); color: var(--ink); padding: 1px 9px; border-radius: 99px; }
 .duo { display: flex; gap: 8px 14px; flex-wrap: wrap; font-size: .85rem; color: var(--muted); }
 .duo b { color: var(--ink); font-weight: 500; }
 .catname { font: inherit; font-family: var(--display); font-size: 1.6rem; background: none; border: 0; border-bottom: 1px dashed var(--line); color: var(--ink); width: 6em; padding: 0; }
@@ -307,7 +312,18 @@ input[type="range"] { width: 100%; accent-color: var(--accent); height: 28px; ma
 <script>
 "use strict";
 const DURS = [15, 25, 45, 60, 90];
-const MOUNTAINS = [{ name: "后山小丘", h: 800 }, { name: "半日岭", h: 1500 }, { name: "云雾山", h: 2400 }, { name: "雪线峰", h: 3600 }, { name: "星空顶", h: 5000 }];
+// 真实的山，从低到高爬；每专注 1 分钟上升 10 米。海拔取常用的官方数据。
+const MOUNTAINS = [
+  { name: "太平山", where: "中国香港", h: 552, shape: "hill" },
+  { name: "泰山", where: "中国山东", h: 1545, shape: "hill" },
+  { name: "黄山 · 莲花峰", where: "中国安徽", h: 1864, shape: "jagged" },
+  { name: "富士山", where: "日本", h: 3776, shape: "cone", snow: true },
+  { name: "玉山", where: "中国台湾", h: 3952, shape: "jagged" },
+  { name: "京那巴鲁山", where: "马来西亚沙巴", h: 4095, shape: "jagged" },
+  { name: "勃朗峰", where: "法国 / 意大利", h: 4806, shape: "jagged", snow: true },
+  { name: "乞力马扎罗山", where: "坦桑尼亚", h: 5895, shape: "cone", snow: true },
+  { name: "珠穆朗玛峰", where: "中国 / 尼泊尔", h: 8849, shape: "jagged", snow: true }
+];
 const PER = 10;          // 专注 1 分钟 = 上升 10 米
 const STAGES = [{ at: 0, n: "小奶猫" }, { at: 60, n: "小猫崽" }, { at: 180, n: "少年猫" }, { at: 400, n: "大猫猫" }, { at: 800, n: "圆滚滚" }, { at: 1500, n: "猫猫大王" }];
 const GRACE = 10000;     // 离开页面超过 10 秒算失败
@@ -409,20 +425,29 @@ function refresh() { clearTimeout(reloadTimer); reloadTimer = setTimeout(async (
 /* ---------------- 场景 ---------------- */
 const total = () => Math.max(0, state.logs.reduce((s, l) => s + (Number(l.minutes) || 0), 0));
 function mountainAt(p) {
-  let m = p * PER, i = 0;
+  const climbed = p * PER, all = MOUNTAINS.reduce((a, x) => a + x.h, 0);
+  const round = Math.floor(climbed / all); let m = climbed - round * all, i = 0; // 爬完珠峰就开始新一轮
   while (i < MOUNTAINS.length - 1 && m >= MOUNTAINS[i].h) { m -= MOUNTAINS[i].h; i++; }
-  const cur = MOUNTAINS[i]; return { i, cur, alt: Math.min(m, cur.h), frac: Math.min(m / cur.h, 1) };
+  const cur = MOUNTAINS[i]; return { i, cur, round, climbed, next: MOUNTAINS[i + 1], alt: Math.min(m, cur.h), frac: Math.min(m / cur.h, 1) };
 }
+// 每座山的轮廓：山顶都在 (210, 40)，小路才能接上
+const SHAPES = {
+  hill: { body: "M-10 240 L50 185 Q110 140 150 100 Q190 55 210 40 Q232 55 262 92 Q300 135 345 160 L410 205 L410 240Z", snow: "" },
+  cone: { body: "M-10 240 L30 228 Q120 175 175 80 L198 45 L222 45 L245 80 Q300 175 390 228 L410 240Z",
+          snow: "M198 45 L222 45 L240 74 L230 70 L220 80 L210 72 L200 80 L190 70 L180 74Z" },
+  jagged: { body: "M-10 240 L90 120 L150 170 L210 40 L290 150 L330 110 L410 240Z", snow: "M210 40 L188 86 L200 80 L212 92 L224 78 L236 86Z" }
+};
 function stageAt(p) {
   let i = 0; while (i < STAGES.length - 1 && p >= STAGES[i + 1].at) i++;
   const next = STAGES[i + 1]; return { i, s: STAGES[i], next, frac: next ? (p - STAGES[i].at) / (next.at - STAGES[i].at) : 1 };
 }
 const TRAIL = "M70 228 C140 222 170 206 130 192 C96 180 150 166 190 160 C236 153 236 136 196 126 C162 117 200 100 214 88 C224 78 204 64 210 44";
-function drawMountain() {
-  return `<svg viewBox="0 0 400 240" role="img" aria-label="爬山进度">
+function drawMountain(mt) {
+  const sh = SHAPES[mt.shape] || SHAPES.jagged;
+  return `<svg viewBox="0 0 400 240" role="img" aria-label="${mt.name}，海拔 ${mt.h} 米">
     <rect width="400" height="240" fill="var(--sky)"/><circle cx="340" cy="46" r="18" fill="var(--snow)" opacity=".7"/>
-    <path d="M-10 240 L90 120 L150 170 L210 40 L290 150 L330 110 L410 240Z" fill="var(--hill)"/>
-    <path d="M210 40 L188 86 L200 80 L212 92 L224 78 L236 86Z" fill="var(--snow)"/>
+    <path d="${sh.body}" fill="var(--hill)"/>
+    ${mt.snow && sh.snow ? `<path d="${sh.snow}" fill="var(--snow)"/>` : ""}
     <path d="M-10 240 L60 190 L130 215 L200 185 L280 210 L410 180 L410 240Z" fill="var(--hill2)"/>
     <path d="${TRAIL}" fill="none" stroke="var(--snow)" stroke-width="2.5" stroke-dasharray="3 5" stroke-linecap="round" opacity=".8"/>
     <path id="done" d="${TRAIL}" fill="none" stroke="var(--accent)" stroke-width="4" stroke-linecap="round"/>
@@ -469,13 +494,18 @@ function render() {
   });
   if (w === "mountain") {
     const m = mountainAt(p);
-    $("art").innerHTML = drawMountain();
+    $("art").innerHTML = drawMountain(m.cur);
     const d = $("done"), len = d.getTotalLength(), pt = d.getPointAtLength(len * m.frac);
     d.style.strokeDasharray = `${len}`; d.style.strokeDashoffset = `${len * (1 - m.frac)}`;
     $("climber").setAttribute("cx", pt.x); $("climber").setAttribute("cy", pt.y - 6);
-    $("info").innerHTML = `<div class="big">海拔 ${m.alt.toLocaleString()} 米<small>${m.cur.name} · 山顶 ${m.cur.h.toLocaleString()} 米</small></div>
+    const peaks = MOUNTAINS.slice(0, m.i).map((x) => `<span class="peak">✓ ${x.name} ${x.h.toLocaleString()} 米</span>`).join("");
+    $("info").innerHTML = `<div class="mt-name">${m.round ? `第 ${m.round + 1} 轮 · ` : ""}正在爬 <b>${m.cur.name}</b><small>📍 ${m.cur.where} · 山顶 ${m.cur.h.toLocaleString()} 米</small></div>
+      <div class="big">海拔 ${Math.round(m.alt).toLocaleString()} 米</div>
       <div class="bar"><i style="width:${(m.frac * 100).toFixed(1)}%"></i></div>
-      <div class="row"><span>${m.i ? `已一起登顶 ${m.i} 座山` : "第一座山，慢慢爬"}</span><span>离山顶还有 ${(m.cur.h - m.alt).toLocaleString()} 米</span></div>`;
+      <div class="row"><span>离山顶还有 ${Math.round(m.cur.h - m.alt).toLocaleString()} 米（约 ${fmtMin(Math.ceil((m.cur.h - m.alt) / PER))}）</span>
+        <span>${m.next ? `下一座：${m.next.name} ${m.next.h.toLocaleString()} 米` : "这是最高的一座了"}</span></div>
+      <div class="row"><span>你们一共爬升了 ${Math.round(m.climbed).toLocaleString()} 米${m.round ? `，已经登顶珠峰 ${m.round} 次` : ""}</span></div>
+      ${peaks ? `<div class="peaks"><span class="label">已一起登顶</span>${peaks}</div>` : ""}`;
   } else {
     const st = stageAt(p);
     $("art").innerHTML = drawCat(p);
@@ -724,7 +754,12 @@ async function finish(full) {
   try {
     if (r.planId) { const pl = state.plans.find((x) => x.id === r.planId); if (pl) store.updatePlan(pl.id, { spent: (Number(pl.spent) || 0) + minutes }).catch(() => {}); }
     await store.addLog({ minutes, label: r.label, full, failed: false, together: r.together || others().some((f) => f.phase === "down"), pickups: r.pickups });
-    $("status").textContent = (full ? `专注完成！一共 ${fmtMin(minutes)}${overMin ? `（加时 ${fmtMin(overMin)}）` : ""}。` : `学了 ${fmtMin(minutes)}，也很棒。`) + (state.world === "mountain" ? `又往上爬了 ${minutes * PER} 米。` : `${state.catName}又长大了一点。`);
+    const before = mountainAt(total() - minutes), after = mountainAt(total());
+    const summits = (after.round * MOUNTAINS.length + after.i) - (before.round * MOUNTAINS.length + before.i);
+    const reached = summits > 0 ? MOUNTAINS[(after.i - 1 + MOUNTAINS.length) % MOUNTAINS.length] : null;
+    $("status").textContent = (full ? `专注完成！一共 ${fmtMin(minutes)}${overMin ? `（加时 ${fmtMin(overMin)}）` : ""}。` : `学了 ${fmtMin(minutes)}，也很棒。`)
+      + (state.world === "mountain" ? `又往上爬了 ${minutes * PER} 米。` : `${state.catName}又长大了一点。`)
+      + (reached ? ` 🎉 你们登顶了${reached.name}（${reached.h.toLocaleString()} 米）！` : "");
   } catch (e) { $("status").textContent = "没存上，检查一下网络再试试。"; }
   refresh();
 }
