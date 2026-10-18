@@ -308,6 +308,11 @@ input[type="range"] { width: 100%; accent-color: var(--accent); height: 28px; ma
 .outfit.on { border-color: #f07c9c; background: color-mix(in srgb, #f07c9c 14%, var(--surface)); }
 .outfit:disabled { opacity: .45; }
 @media (prefers-reduced-motion: reduce) { .catsvg * { animation: none !important; } .heart { animation-duration: .01s; } }
+.today-sum { gap: 10px; }
+.sum-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.sum-row > div { display: grid; gap: 2px; }
+.sum-row b { font-family: var(--display); font-weight: 400; font-size: 1.6rem; line-height: 1.1; }
+#done-task { border-color: var(--accent); color: var(--accent); }
 .sec-title { font-family: var(--display); font-weight: 400; font-size: 1.25rem; margin: 6px 0 0; }
 .seats .field, .seats .seg, .seats .custom-dur { width: 100%; text-align: left; }
 .nf-list { display: grid; gap: 10px; }
@@ -423,22 +428,14 @@ input[type="range"] { width: 100%; accent-color: var(--accent); height: 28px; ma
 
 <!-- 计划：只属于自己 -->
 <div class="wrap tabpage" id="tab-plan" hidden>
-  <header class="pagehead"><h1>把今天，过得从容一点</h1><p class="tag">写下小目标，一件一件慢慢完成。</p></header>
-  <section class="card">
-    <div class="feed-head"><h2>留一段专注时间</h2><span class="note" id="dur-note">25 分钟</span></div>
-    <div class="dur-big" id="dur-big">25:00</div>
-    <div class="todo-pick" id="todo-pick" hidden></div>
-    <input class="field" id="label" maxlength="30" placeholder="这次学什么？（可不填）" enterkeyhint="done">
-    <div class="seg" id="durs" role="group" aria-label="专注多久（分钟）"></div>
-    <div class="custom-dur"><input class="field" type="number" id="dur-custom" min="1" max="240" inputmode="numeric" placeholder="自定义"><span>分钟</span><button class="soft small" id="dur-apply">应用时长</button></div>
-    <div class="soundline"><span id="sound-now">没有播放声音</span><button class="soft small" id="sound-quick">▶ 播放</button></div>
-    <button class="go big-go" id="start">开始专注</button>
-    <p class="note" id="status"></p>
-    <details class="rules"><summary>规则</summary>
-      <p class="note">手机屏幕朝下才计时。拿起手机，剩余时间就开始增加，屏幕会红白闪 + 响铃；碰一下也会警告。离开这个页面超过 10 秒，这次就失败并扣 10 分钟进度，对方会看到。时间到了还扣着手机，会继续算加时，拿起手机就结束并记录。</p>
-    </details>
-  </section>
+  <header class="pagehead"><h1>把今天，过得从容一点</h1><p class="tag">写下小目标，到自习室一件一件慢慢完成。</p></header>
 
+  <section class="card today-sum" id="today-sum">
+    <div class="sum-row"><div><span class="label">今天已专注</span><b id="ts-min">0 分钟</b></div><div><span class="label">完成任务</span><b id="ts-done">0 / 0</b></div></div>
+    <div class="bar"><i id="ts-bar" style="width:0%"></i></div>
+    <p class="note" id="ts-next"></p>
+    <button class="go" id="ts-go">去自习室专注 →</button>
+  </section>
   <div class="subpane" id="pane-task">
     <h2 class="sec-title">今天的任务</h2>
   <section class="card">
@@ -463,10 +460,21 @@ input[type="range"] { width: 100%; accent-color: var(--accent); height: 28px; ma
     <div class="seat-row" id="seats"></div>
     <h2 class="seat-title" id="seat-title">为彼此，留一个座位</h2>
     <p class="note seat-sub" id="seat-sub"></p>
-    <input class="field" id="room-label" maxlength="30" placeholder="这次要学什么？（可不填）" enterkeyhint="done">
-    <div class="seg" id="room-durs" role="group" aria-label="一起专注多久（分钟）"></div>
-    <div class="custom-dur"><input class="field" type="number" id="room-custom" min="1" max="240" inputmode="numeric" placeholder="自定义"><span>分钟</span><button class="soft small" id="room-apply">应用时长</button></div>
-    <button class="go big-go" id="room-start">和TA一起专注</button>
+  </section>
+  <section class="card" id="focus-card">
+    <div class="feed-head"><h2>这次专注</h2><span class="note" id="dur-note">25 分钟</span></div>
+    <div class="dur-big" id="dur-big">25:00</div>
+    <div class="todo-pick" id="todo-pick" hidden></div>
+    <input class="field" id="label" maxlength="30" placeholder="这次学什么？（可不填）" enterkeyhint="done">
+    <div class="seg" id="durs" role="group" aria-label="专注多久（分钟）"></div>
+    <div class="custom-dur"><input class="field" type="number" id="dur-custom" min="1" max="240" inputmode="numeric" placeholder="自定义"><span>分钟</span><button class="soft small" id="dur-apply">应用时长</button></div>
+    <div class="soundline"><span id="sound-now">没有播放声音</span><button class="soft small" id="sound-quick">▶ 播放</button></div>
+    <button class="go big-go" id="start">开始专注</button>
+    <button class="soft" id="done-task" hidden></button>
+    <p class="note" id="status"></p>
+    <details class="rules"><summary>规则</summary>
+      <p class="note">手机屏幕朝下才计时。拿起手机，剩余时间就开始增加，屏幕会红白闪 + 响铃；碰一下也会警告。离开这个页面超过 10 秒，这次就失败并扣 10 分钟进度，对方会看到。时间到了还扣着手机，会继续算加时，拿起手机就结束并记录。</p>
+    </details>
   </section>
   <section class="live" id="live" hidden></section>
   <button class="notebanner" id="note-banner" hidden></button>
@@ -856,7 +864,7 @@ function render() {
     if (typeof renderCatScene === "function") renderCatScene(p);
   }
   renderFeed(); renderLive(); renderStats(); renderPlans(); renderTodoPick();
-  renderDiary(); renderMoments(); renderNotes(); renderNoteBanner(); renderChallenges(); renderWeekly(); renderRoom(); renderSubCounts(); renderNotesFeed();
+  renderDiary(); renderMoments(); renderNotes(); renderNoteBanner(); renderChallenges(); renderWeekly(); renderRoom(); renderSubCounts(); renderNotesFeed(); renderTodaySum();
   $("me-name").textContent = me.name;
 }
 
@@ -1018,11 +1026,12 @@ function notifyDone(r) {
 
 $("start").onclick = async () => {
   beep(660, 60); // 解锁声音
+  $("done-task").hidden = true;
   unlockAlarm();
   try { if ("Notification" in window && Notification.permission === "default") Notification.requestPermission(); } catch (e) {}
   await askSensors();
   run = { start: Date.now(), target: dur * 60000, remaining: dur * 60000, focused: 0, extra: 0, pickups: 0, label: $("label").value.trim().slice(0, 30),
-          phase: "waiting", awayAt: null, planId: pickedPlan, together: startTogether || others().some((f) => f.phase === "down"), sensor: true };
+          phase: "waiting", awayAt: null, planId: pickedPlan, together: startTogether || friends().length > 0 && others().some((f) => ["waiting", "down", "over"].includes(f.phase)) || others().some((f) => f.phase === "down"), sensor: true };
   saveRun(); openFocus(); wake(); pushFocus(true);
   notify(`📚 ${me.name}开始专注了`, run.label ? `在学「${run.label}」，要不要一起？` : `${dur} 分钟，要不要一起？`, "room", "focus");
   // 3 秒内没有传感器数据（比如电脑）：直接开始计时
@@ -1095,7 +1104,7 @@ async function finish(full) {
   const minutes = Math.floor(r.focused / 60000), overMin = Math.max(0, Math.floor((r.focused - (r.target || 0)) / 60000));
   if (minutes < 1) { $("status").textContent = "没关系，下次再来。"; return; }
   try {
-    if (r.planId) { const pl = state.plans.find((x) => x.id === r.planId); if (pl) store.updatePlan(pl.id, { spent: (Number(pl.spent) || 0) + minutes }).catch(() => {}); }
+    if (r.planId) { const pl = state.plans.find((x) => x.id === r.planId); if (pl) { store.updatePlan(pl.id, { spent: (Number(pl.spent) || 0) + minutes }).catch(() => {}); if (!pl.done) offerDone(pl); } }
     await store.addLog({ minutes, label: r.label, full, failed: false, together: r.together || others().some((f) => f.phase === "down"), pickups: r.pickups });
     const before = mountainAt(total() - minutes), after = mountainAt(total());
     const summits = (after.round * MOUNTAINS.length + after.i) - (before.round * MOUNTAINS.length + before.i);
@@ -1115,7 +1124,7 @@ async function fail() {
 }
 
 /* ---------------- 页面切换 ---------------- */
-const TAB_ALIAS = { focus: "plan", diary: "room", stats: "me" };
+const TAB_ALIAS = { focus: "room", diary: "room", stats: "me" };
 function showTab(t) {
   t = TAB_ALIAS[t] || t; if (!$("tab-" + t)) t = "plan";
   document.querySelectorAll(".tabpage").forEach((el) => (el.hidden = el.id !== "tab-" + t));
@@ -1249,7 +1258,7 @@ function planRow(x) {
   mid.append(t, n);
   const act = document.createElement("div"); act.className = "pa";
   if (mineP && !x.done) { const go = document.createElement("button"); go.className = "soft small"; go.textContent = "去专注";
-    go.onclick = () => { pickPlan(x); showTab("focus"); }; act.appendChild(go); }
+    go.onclick = () => goFocus(x); act.appendChild(go); }
   if (mineP) { const del = document.createElement("button"); del.className = "soft small"; del.textContent = "删除";
     del.onclick = () => { if (del.dataset.sure) store.deletePlan(x.id).then(refresh);
       else { del.dataset.sure = "1"; del.textContent = "确定？"; setTimeout(() => { del.textContent = "删除"; delete del.dataset.sure; }, 3000); } };
@@ -1259,7 +1268,7 @@ function planRow(x) {
 function pickPlan(x) {
   pickedPlan = pickedPlan === x.id ? null : x.id;
   $("label").value = pickedPlan ? x.title.slice(0, 30) : "";
-  if (pickedPlan && x.est && DURS.includes(x.est)) { dur = x.est; chips(); }
+  if (pickedPlan && x.est) { dur = x.est; chips(); }
   renderTodoPick();
 }
 function renderTodoPick() {
@@ -1651,6 +1660,26 @@ function showSub(k) { if (k === "moment" || k === "note") showTab("share"); } //
 function scrollHours() { setTimeout(() => { const cur = document.querySelector("#m-hours .hour.now"), box = $("m-hours"); if (cur) box.scrollLeft = cur.offsetLeft - box.offsetLeft - box.clientWidth / 2 + cur.clientWidth / 2; }, 30); }
 function renderSubCounts() {}
 
+/* ---------------- 计划 ↔ 自习室 联动 ---------------- */
+function goFocus(task) { // 从计划里的任务去自习室专注
+  if (pickedPlan !== task.id) pickPlan(task);
+  showTab("room"); setTimeout(() => $("focus-card").scrollIntoView({ behavior: "smooth", block: "start" }), 60);
+}
+function offerDone(pl) {
+  const b = $("done-task"); b.hidden = false; b.textContent = `✓ 把「${pl.title}」标记完成`;
+  b.onclick = async () => { b.hidden = true; await store.updatePlan(pl.id, { done: true, done_at: Date.now() }).catch(() => {}); $("status").textContent = `「${pl.title}」完成啦 🎉`; render(); };
+}
+function renderTodaySum() {
+  const t = today(), mins = myLogs().filter((l) => !l.failed && dayOf(l.at) === t).reduce((a, l) => a + (Number(l.minutes) || 0), 0);
+  const tasks = state.plans.filter((x) => x.author === me.name && (x.day === t || (!x.done && (!x.day || x.day < t))));
+  const done = tasks.filter((x) => x.done).length, next = tasks.find((x) => !x.done);
+  $("ts-min").textContent = fmtMin(mins); $("ts-done").textContent = `${done} / ${tasks.length}`;
+  $("ts-bar").style.width = tasks.length ? `${(done / tasks.length) * 100}%` : "0%";
+  $("ts-next").textContent = next ? `下一件：${next.title}${next.est ? `（预计 ${fmtMin(next.est)}）` : ""}` : tasks.length ? "今天的任务都完成了，好棒！" : "先在下面写一件今天想做的事吧。";
+  $("ts-go").textContent = next ? `▶ 去专注「${next.title.slice(0, 10)}」` : "去自习室专注 →";
+  $("ts-go").onclick = () => (next ? goFocus(next) : showTab("room"));
+}
+
 /* ---------------- 共享：我们的笔记 ---------------- */
 function renderNotesFeed() {
   const box = $("nf-list"); if (!box) return; box.innerHTML = "";
@@ -1694,8 +1723,8 @@ function renderRoom() {
   else { const el = document.createElement("div"); el.className = "seat friend empty"; el.innerHTML = '<div class="avatar">友</div><b>空位</b><small>等闺蜜进来</small>'; seats.appendChild(el); }
   const busyFr = fr.filter((n) => statusOf(n).busy);
   $("seat-title").textContent = busyFr.length ? `${busyFr.join("、")}正在专注` : fr.length ? "为彼此，留一个座位" : "把房间码告诉闺蜜";
-  $("seat-sub").textContent = busyFr.length ? "现在开始，就是一起专注。" : fr.length ? "开始专注时，对方会收到通知，一起安静学习。" : `房间码是「${me.room}」，登录时填一样的就能进来。`;
-  $("room-start").textContent = busyFr.length ? `加入${busyFr[0]}，一起专注` : "和TA一起专注";
+  $("seat-sub").textContent = busyFr.length ? "现在开始，就是一起专注。" : fr.length ? "在下面选好要做什么，开始时对方会收到通知。" : `房间码是「${me.room}」，登录时填一样的就能进来。`;
+  $("start").textContent = busyFr.length ? `加入${busyFr.join("、")}，一起专注` : fr.length ? "和TA一起专注" : "开始专注";
   // 今天的瞬间（两个人）
   const ms = momentsOf(today()), strip = $("r-strip"); strip.innerHTML = "";
   $("r-mcount").textContent = ms.length ? `${ms.length} 个` : "";
@@ -1708,20 +1737,7 @@ function renderRoom() {
     b.onclick = () => playDay(today(), x.id); strip.appendChild(b); });
   $("r-play").disabled = !ms.length;
 }
-$("room-start").onclick = () => {
-  $("label").value = $("room-label").value.trim().slice(0, 30); // 自习室填的内容带进专注
-  startTogether = true; $("start").click(); setTimeout(() => (startTogether = false), 500);
-};
-function renderRoomDurs() {
-  const el = $("room-durs"); if (!el) return; el.innerHTML = "";
-  const opts = DURS.includes(dur) ? DURS : [...DURS.slice(0, 4), dur];
-  opts.forEach((m) => { const b = document.createElement("button"); b.innerHTML = `<b>${m}</b><small>分钟</small>`; b.setAttribute("aria-label", `${m} 分钟`);
-    b.setAttribute("aria-pressed", String(dur === m)); b.onclick = () => { dur = m; chips(); }; el.appendChild(b); });
-}
-$("room-apply").onclick = () => {
-  const v = Math.round(Number($("room-custom").value)); if (!(v >= 1 && v <= 240)) { $("seat-sub").textContent = "时长填 1 到 240 分钟之间。"; return; }
-  dur = v; $("room-custom").value = ""; $("room-custom").blur(); chips();
-};
+function renderRoomDurs() {}
 $("r-play").onclick = () => playDay(today());
 $("room-switch").onclick = () => $("logout").click();
 
