@@ -3,7 +3,10 @@
 "use strict";
 (function () {
   const SOUNDS = [
-    { id: "music", name: "Lo-fi 音乐", icon: "♪" },
+    { id: "piano", name: "轻音乐 · 钢琴", icon: "♩" },
+    { id: "music", name: "Lo-fi 节拍", icon: "♪" },
+    { id: "musicbox", name: "八音盒", icon: "✧" },
+    { id: "pad", name: "氛围长音", icon: "◌" },
     { id: "rain", name: "雨声", icon: "☂" },
     { id: "wind", name: "风声", icon: "≈" },
     { id: "waves", name: "海浪", icon: "∿" },
@@ -14,9 +17,11 @@
   ];
   const SCENES = [
     { id: "tram", name: "夕阳电车", mix: { music: 55, train: 35, wind: 15, cafe: 10 } },
-    { id: "rainy", name: "雨天书房", mix: { music: 40, rain: 55, fire: 20 } },
-    { id: "sea", name: "海边自习", mix: { music: 30, waves: 55, wind: 20, birds: 10 } },
-    { id: "forest", name: "森林早晨", mix: { birds: 45, wind: 25, rain: 0, music: 20 } },
+    { id: "rainy", name: "雨天书房", mix: { piano: 55, rain: 50, fire: 15 } },
+    { id: "night", name: "钢琴夜读", mix: { piano: 65, wind: 10 } },
+    { id: "dream", name: "安静的梦", mix: { pad: 50, musicbox: 35, waves: 15 } },
+    { id: "sea", name: "海边自习", mix: { pad: 35, waves: 55, wind: 20, birds: 10 } },
+    { id: "forest", name: "森林早晨", mix: { birds: 45, wind: 25, piano: 30 } },
     { id: "cafe", name: "街角咖啡馆", mix: { music: 45, cafe: 40, rain: 15 } },
     { id: "quiet", name: "只要白噪音", mix: { rain: 40, wind: 20 } }
   ];
@@ -67,6 +72,49 @@
     let alive = true; const loop = () => { if (!alive) return; if (playing) fn(); timers.push(setTimeout(loop, minMs + Math.random() * (maxMs - minMs))); };
     loop(); return () => (alive = false);
   }
+
+  /* ---------- 混响 ---------- */
+  let reverbIn = null;
+  function reverb() {
+    if (reverbIn) return reverbIn;
+    const len = ctx.sampleRate * 3.2, ir = ctx.createBuffer(2, len, ctx.sampleRate);
+    for (let c = 0; c < 2; c++) { const d = ir.getChannelData(c); for (let i = 0; i < len; i++) d[i] = (Math.random() * 2 - 1) * Math.pow(1 - i / len, 2.6); }
+    const conv = ctx.createConvolver(); conv.buffer = ir;
+    reverbIn = ctx.createGain(); reverbIn.connect(conv); conv.connect(master);
+    return reverbIn;
+  }
+
+  /* ---------- 真钢琴采样（Salamander Grand Piano, CC BY 3.0） ---------- */
+  const SAMPLE_NOTES = []; [2, 3, 4, 5, 6].forEach((o) => [["C", 0], ["Ds", 3], ["Fs", 6], ["A", 9]].forEach(([n, k]) => SAMPLE_NOTES.push({ file: `piano/${n}${o}.mp3`, midi: 12 * (o + 1) + k })));
+  const samples = {}; let samplesLoading = null;
+  function loadPiano() {
+    if (samplesLoading) return samplesLoading;
+    samplesLoading = Promise.all(SAMPLE_NOTES.map((s) => fetch(s.file).then((r) => r.arrayBuffer())
+      .then((b) => new Promise((ok, no) => ctx.decodeAudioData(b, ok, no))).then((buf) => (samples[s.midi] = buf)).catch(() => {})));
+    return samplesLoading;
+  }
+  const mtof = (m) => 440 * Math.pow(2, (m - 69) / 12);
+  function pianoNote(out, m, t, vel, dur) {
+    const keys = Object.keys(samples).map(Number);
+    if (!keys.length) { // 采样还没下载好：先用柔和的合成音顶上
+      const o = ctx.createOscillator(), g = ctx.createGain(); o.type = "triangle"; o.frequency.value = mtof(m);
+      g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(vel * 0.5, t + 0.01); g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+      o.connect(g); g.connect(out); o.start(t); o.stop(t + dur + 0.05); return;
+    }
+    const near = keys.reduce((a, b) => (Math.abs(b - m) < Math.abs(a - m) ? b : a));
+    const src = ctx.createBufferSource(), g = ctx.createGain();
+    src.buffer = samples[near]; src.playbackRate.value = Math.pow(2, (m - near) / 12);
+    g.gain.setValueAtTime(vel, t); g.gain.setTargetAtTime(0, t + dur, 0.6);
+    src.connect(g); g.connect(out); src.start(t); src.stop(t + dur + 4);
+  }
+  function sequencer(bpm, stepFn) { // 每 100ms 往前排 0.5 秒的音符
+    const step = 60 / bpm / 2; let next = ctx.currentTime + 0.2, i = 0;
+    timers.push(setInterval(() => {
+      if (!playing) { next = ctx.currentTime + 0.2; return; }
+      while (next < ctx.currentTime + 0.5) { stepFn(i, next); next += step; i++; }
+    }, 100));
+  }
+  const pick = (a) => a[Math.floor(Math.random() * a.length)];
 
   /* ---------- 每种声音 ---------- */
   const build = {
@@ -128,6 +176,66 @@
       every(() => { const t = ctx.currentTime, o = ctx.createOscillator(), g = ctx.createGain(); // 杯子碰撞
         o.frequency.value = 2400 + Math.random() * 1600; g.gain.setValueAtTime(0.05, t); g.gain.exponentialRampToValueAtTime(0.0001, t + 0.35);
         o.connect(g); g.connect(out); o.start(t); o.stop(t + 0.4); }, 4000, 11000);
+    },
+    piano(out) {
+      // 轻音乐：慢速分解和弦 + 稀疏的旋律，像深夜一个人弹琴
+      loadPiano();
+      const lp = filt("lowpass", 5200); lp.connect(out);
+      const inp = ctx.createGain(); inp.connect(lp);
+      const wet = ctx.createGain(); wet.gain.value = 0; inp.connect(wet); wet.connect(reverb()); // 混响音量跟着这一轨的音量
+      timers.push(setInterval(() => wet.gain.setTargetAtTime(0.32 * (gains.piano?.gain.value || 0), ctx.currentTime, 0.2), 300));
+      const PROGS = [
+        [[48, 55, 64, 67], [45, 52, 60, 64], [41, 48, 57, 64], [43, 50, 59, 62]],   // C  Am  F  G
+        [[41, 48, 57, 60], [43, 50, 59, 62], [40, 47, 55, 59], [45, 52, 60, 64]],   // F  G  Em Am
+        [[45, 52, 60, 64], [41, 48, 57, 60], [48, 55, 64, 67], [43, 50, 59, 67]]    // Am F  C  G
+      ];
+      const MEL = [72, 74, 76, 79, 81, 84, 86, 88];
+      let prog = PROGS[0], motif = null;
+      sequencer(64, (i, t) => {
+        const bar = Math.floor(i / 8), s8 = i % 8, chord = prog[bar % 4];
+        if (i % 64 === 0) prog = pick(PROGS);
+        const v = 0.16 + Math.random() * 0.06;
+        if (s8 === 0) pianoNote(inp, chord[0] - 12, t, 0.2, 4.5);
+        if ([0, 2, 4, 6].includes(s8)) pianoNote(inp, chord[[1, 2, 3, 2][s8 / 2]], t + Math.random() * 0.02, v, 2.4);
+        if (s8 === 0 && bar % 2 === 0) motif = [0, 1, 2].map(() => pick(MEL));
+        if (motif && (s8 === 1 || s8 === 4 || s8 === 5) && Math.random() < 0.55) pianoNote(inp, motif[[1, 4, 5].indexOf(s8)], t + 0.02, 0.13 + Math.random() * 0.05, 2.8);
+      });
+    },
+    musicbox(out) {
+      // 八音盒：高音区的铃声，慢慢转
+      const inp = ctx.createGain(); inp.connect(out);
+      const wet = ctx.createGain(); wet.gain.value = 0; inp.connect(wet); wet.connect(reverb());
+      timers.push(setInterval(() => wet.gain.setTargetAtTime(0.35 * (gains.musicbox?.gain.value || 0), ctx.currentTime, 0.2), 300));
+      const TUNES = [[84, 88, 91, 88, 86, 89, 93, 89, 84, 88, 91, 96, 95, 91, 88, 86], [81, 84, 88, 84, 83, 86, 89, 86, 79, 84, 88, 91, 89, 86, 84, 83]];
+      let tune = TUNES[0];
+      function bell(m, t, v) {
+        [[1, 1, 1.6], [4.0, 0.25, 0.4], [2.0, 0.18, 0.9]].forEach(([h, a, d]) => {
+          const o = ctx.createOscillator(), g = ctx.createGain(); o.type = "sine"; o.frequency.value = mtof(m) * h;
+          g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(v * a, t + 0.004); g.gain.exponentialRampToValueAtTime(0.0001, t + d);
+          o.connect(g); g.connect(inp); o.start(t); o.stop(t + d + 0.05); });
+      }
+      sequencer(76, (i, t) => {
+        if (i % 32 === 0) tune = pick(TUNES);
+        const n = tune[i % 16]; if (Math.random() < 0.88) bell(n, t + Math.random() * 0.015, 0.09);
+        if (i % 8 === 0) bell(n - 24, t, 0.05);
+      });
+    },
+    pad(out) {
+      // 氛围长音：慢慢起伏的和弦，没有节拍
+      const lp = filt("lowpass", 900); lp.connect(out);
+      const wet = ctx.createGain(); wet.gain.value = 0; lp.connect(wet); wet.connect(reverb());
+      timers.push(setInterval(() => wet.gain.setTargetAtTime(0.5 * (gains.pad?.gain.value || 0), ctx.currentTime, 0.3), 300));
+      lfo(0.05, 300, lp.frequency, 900);
+      const CH = [[48, 55, 59, 64], [45, 52, 57, 64], [41, 48, 55, 60], [43, 50, 55, 62]];
+      let k = 0;
+      const play = () => {
+        const t = ctx.currentTime, chord = CH[k++ % CH.length];
+        chord.forEach((m) => [-6, 6].forEach((det) => {
+          const o = ctx.createOscillator(), g = ctx.createGain(); o.type = "sawtooth"; o.frequency.value = mtof(m); o.detune.value = det;
+          g.gain.setValueAtTime(0.0001, t); g.gain.linearRampToValueAtTime(0.035, t + 3); g.gain.setValueAtTime(0.035, t + 6); g.gain.linearRampToValueAtTime(0.0001, t + 11);
+          o.connect(g); g.connect(lp); o.start(t); o.stop(t + 11.2); }));
+      };
+      every(play, 7800, 8200);
     },
     music(out) {
       // 生成式 Lo-fi：七和弦电钢琴 + 慢鼓点 + 黑胶底噪，72 BPM，带一点摇摆
