@@ -30,12 +30,14 @@
 }
 * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
 html { padding-top: env(safe-area-inset-top, 0px); padding-bottom: env(safe-area-inset-bottom, 0px); }
-body { margin: 0; background: var(--bg); color: var(--ink); font-family: var(--body); font-size: 15px; line-height: 1.6; }
+body { margin: 0; background: var(--bg); color: var(--ink); font-family: var(--body); font-size: 16px; line-height: 1.6; -webkit-text-size-adjust: 100%; }
+button, .chip, summary, label { touch-action: manipulation; -webkit-user-select: none; user-select: none; }
+input, textarea, select { font-size: 16px !important; } /* 小于 16px 时 iPhone 点输入框会自动放大页面 */
 [hidden] { display: none !important; }
 .wrap { max-width: 560px; margin: 0 auto; padding-block: 20px 60px; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); display: grid; gap: 20px; }
 header { display: flex; align-items: flex-end; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
 h1 { font-family: var(--display); font-weight: 400; font-size: 2.3rem; line-height: 1; margin: 0; letter-spacing: .04em; }
-.tag { color: var(--muted); font-size: .85rem; margin: 6px 0 0; }
+.tag { color: var(--muted); font-size: .9rem; margin: 6px 0 0; }
 .switch { display: inline-flex; background: var(--surface); border: 1px solid var(--line); border-radius: 999px; padding: 3px; }
 .switch button { border: 0; background: none; color: var(--muted); font: inherit; font-size: .9rem; padding: 6px 14px; border-radius: 999px; }
 .switch button[aria-pressed="true"] { background: var(--accent); color: var(--surface); }
@@ -61,13 +63,13 @@ button:focus-visible, input:focus-visible { outline: 2px solid var(--accent); ou
 .card h2 { font-family: var(--display); font-weight: 400; font-size: 1.25rem; margin: 0; }
 .field { font: inherit; color: var(--ink); background: var(--bg); border: 1px solid var(--line); border-radius: 12px; padding: 10px 12px; width: 100%; }
 .chips { display: flex; flex-wrap: wrap; gap: 6px; }
-.chip { font: inherit; font-size: .85rem; border: 1px solid var(--line); background: none; color: var(--muted); padding: 5px 13px; border-radius: 999px; }
+.chip { font: inherit; font-size: .9rem; border: 1px solid var(--line); background: none; color: var(--muted); padding: 7px 14px; border-radius: 999px; min-height: 38px; }
 .chip[aria-pressed="true"] { border-color: var(--accent); background: var(--accent-soft); color: var(--ink); }
-.label { font-size: .75rem; color: var(--muted); letter-spacing: .08em; }
+.label { font-size: .8rem; color: var(--muted); letter-spacing: .06em; }
 .go { font: inherit; font-weight: 700; background: var(--accent); color: var(--surface); border: 0; padding: 11px 22px; border-radius: 999px; }
 .go:disabled { opacity: .45; }
 .soft { font: inherit; background: none; border: 1px solid var(--line); color: var(--muted); padding: 7px 18px; border-radius: 999px; }
-.note { font-size: .82rem; color: var(--muted); margin: 0; }
+.note { font-size: .875rem; color: var(--muted); margin: 0; }
 .live { background: var(--accent-soft); border-radius: 16px; padding: 12px 16px; display: grid; gap: 6px; font-size: .9rem; }
 .live .dot { display: inline-block; width: 8px; height: 8px; border-radius: 50%; background: var(--accent); margin-right: 8px; animation: pulse 1.6s ease-in-out infinite; }
 .live .warn { font-weight: 700; }
@@ -138,7 +140,8 @@ input[type="range"] { width: 100%; accent-color: var(--accent); height: 28px; ma
 .badge { position: absolute; top: 4px; left: calc(50% + 8px); width: 8px; height: 8px; border-radius: 50%; background: var(--alarm); }
 .notebanner { font: inherit; text-align: left; background: color-mix(in srgb, var(--blush) 30%, var(--surface)); color: var(--ink); border: 1px solid var(--blush); border-radius: 16px; padding: 12px 16px; overflow-wrap: anywhere; }
 .moods { display: flex; flex-wrap: wrap; gap: 6px; }
-.moods button { font-size: 1.5rem; width: 46px; height: 46px; border-radius: 14px; border: 1px solid var(--line); background: none; line-height: 1; }
+.moods { display: grid !important; grid-template-columns: repeat(8, 1fr); gap: 4px !important; }
+.moods button { font-size: 1.35rem; width: 100%; aspect-ratio: 1; height: auto; max-width: 48px; justify-self: center; border-radius: 12px; border: 1px solid var(--line); background: none; line-height: 1; padding: 0; }
 .moods button[aria-pressed="true"] { border-color: var(--accent); background: var(--accent-soft); }
 .photo-row { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
 .photo-row label { cursor: pointer; }
@@ -220,6 +223,27 @@ input[type="range"] { width: 100%; accent-color: var(--accent); height: 28px; ma
 .pf-del { position: absolute; bottom: calc(20px + env(safe-area-inset-bottom, 0px)); left: 50%; transform: translateX(-50%); z-index: 3; color: #fff; border-color: rgba(255,255,255,.4); }
 .toggle { display: flex; align-items: center; gap: 8px; font-size: .9rem; }
 .toggle input { width: 20px; height: 20px; accent-color: var(--accent); }
+/* ---------- 手机上更好用 ---------- */
+.tabpage h1 { font-size: 1.9rem; }
+#tab-focus h1 { font-size: 2.1rem; }
+.eyebrow { display: none; }
+.seg { display: grid; grid-template-columns: repeat(5, 1fr); gap: 6px; }
+.seg button { font: inherit; border: 1px solid var(--line); background: none; color: var(--ink); border-radius: 14px; padding: 8px 0 6px; display: grid; justify-items: center; line-height: 1.1; min-height: 52px; }
+.seg button b { font-family: var(--display); font-weight: 400; font-size: 1.35rem; }
+.seg button small { font-size: .7rem; color: var(--muted); }
+.seg button[aria-pressed="true"] { background: var(--accent); border-color: var(--accent); color: var(--surface); }
+.seg button[aria-pressed="true"] small { color: var(--surface); opacity: .85; }
+.big-go { padding: 15px 22px; font-size: 1.1rem; }
+.rules summary { font-size: .875rem; color: var(--muted); cursor: pointer; list-style: none; }
+.rules summary::before { content: "ⓘ "; }
+.rules summary::-webkit-details-marker { display: none; }
+.rules[open] summary { margin-bottom: 6px; }
+.soft, .go { min-height: 44px; }
+.soft.small { min-height: 34px; }
+.card { padding: 16px; }
+.tabbar button { min-height: 50px; font-size: .78rem; }
+.tabbar button span { font-size: 1.3rem; }
+@media (max-width: 380px) { .seg button b { font-size: 1.15rem; } .tabbar button { font-size: .72rem; } }
 .mode { font-size: .75rem; color: var(--muted); text-align: center; }
 
 /* 专注全屏 */
@@ -280,21 +304,23 @@ input[type="range"] { width: 100%; accent-color: var(--accent); height: 28px; ma
     </div>
   </header>
 
-  <section class="scene"><div id="art"></div><div class="scene-info" id="info"></div></section>
   <section class="live" id="live" hidden></section>
   <button class="notebanner" id="note-banner" hidden></button>
 
   <section class="card">
     <h2>扣下手机，专注开始</h2>
     <div class="todo-pick" id="todo-pick" hidden></div>
-    <input class="field" id="label" maxlength="30" placeholder="这次学什么？（可不填）">
-    <div class="label">专注多久</div>
-    <div class="chips" id="durs"></div>
+    <input class="field" id="label" maxlength="30" placeholder="这次学什么？（可不填）" enterkeyhint="done">
+    <div class="seg" id="durs" role="group" aria-label="专注多久（分钟）"></div>
     <div class="soundline"><span id="sound-now">没有播放声音</span><button class="soft small" id="sound-quick">▶ 播放</button></div>
-    <button class="go" id="start">开始</button>
-    <p class="note">规则：手机屏幕朝下才计时。拿起手机，剩余时间就开始增加，屏幕会红白闪 + 响铃；碰一下也会警告。离开这个页面超过 10 秒，这次就失败并扣 10 分钟进度，对方会看到。</p>
+    <button class="go big-go" id="start">开始</button>
     <p class="note" id="status"></p>
+    <details class="rules"><summary>规则</summary>
+      <p class="note">手机屏幕朝下才计时。拿起手机，剩余时间就开始增加，屏幕会红白闪 + 响铃；碰一下也会警告。离开这个页面超过 10 秒，这次就失败并扣 10 分钟进度，对方会看到。时间到了还扣着手机，会继续算加时，拿起手机就结束并记录。</p>
+    </details>
   </section>
+
+  <section class="scene"><div id="art"></div><div class="scene-info" id="info"></div></section>
 </div>
 
 <div class="wrap tabpage" id="tab-sound" hidden>
@@ -987,7 +1013,8 @@ function showTab(t) {
   document.querySelectorAll(".tabpage").forEach((el) => (el.hidden = el.id !== "tab-" + t));
   document.querySelectorAll(".tabbar button").forEach((b) => (b.dataset.tab === t ? b.setAttribute("aria-current", "page") : b.removeAttribute("aria-current")));
   window.scrollTo(0, 0); ls.set("mml-tab", t);
-  if (t === "diary" && me) { ls.set(seenKey(), Date.now()); setTimeout(renderNoteBanner, 1500); }
+  if (t === "diary" && me) { ls.set(seenKey(), Date.now()); setTimeout(renderNoteBanner, 1500);
+    setTimeout(() => { const cur = document.querySelector("#m-hours .hour.now"), box = $("m-hours"); if (cur) box.scrollLeft = cur.offsetLeft - box.offsetLeft - box.clientWidth / 2 + cur.clientWidth / 2; }, 30); }
 }
 document.querySelectorAll(".tabbar button").forEach((b) => (b.onclick = () => showTab(b.dataset.tab)));
 
@@ -1397,7 +1424,7 @@ function renderMoments() {
     el.append(th, lb); box.appendChild(el);
   }
   $("m-play").disabled = !all.length;
-  const cur = box.querySelector(".hour.now"); if (cur && !renderMoments.scrolled) { renderMoments.scrolled = true; setTimeout(() => cur.scrollIntoView({ inline: "center", block: "nearest" }), 50); }
+
 }
 $("m-play").onclick = () => playDay(today());
 $("m-shoot").onclick = () => openCam();
@@ -1570,7 +1597,7 @@ navigator.serviceWorker?.addEventListener("message", (e) => openFromNotification
 /* ---------------- 其他按钮 ---------------- */
 function chips() {
   const el = $("durs"); el.innerHTML = "";
-  DURS.forEach((m) => { const b = document.createElement("button"); b.className = "chip"; b.textContent = m + " 分钟";
+  DURS.forEach((m) => { const b = document.createElement("button"); b.innerHTML = `<b>${m}</b><small>分钟</small>`; b.setAttribute("aria-label", `${m} 分钟`);
     b.setAttribute("aria-pressed", String(dur === m)); b.onclick = () => { dur = m; chips(); }; el.appendChild(b); });
 }
 $("w-mountain").onclick = () => { store.setRoom({ world: "mountain" }); render(); };
