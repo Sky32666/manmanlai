@@ -218,6 +218,8 @@ input[type="range"] { width: 100%; accent-color: var(--accent); height: 28px; ma
 .pf-nav { position: absolute; inset: 70px 0 120px; display: grid; grid-template-columns: 1fr 2fr; z-index: 2; }
 .pf-nav button { background: none; border: 0; }
 .pf-del { position: absolute; bottom: calc(20px + env(safe-area-inset-bottom, 0px)); left: 50%; transform: translateX(-50%); z-index: 3; color: #fff; border-color: rgba(255,255,255,.4); }
+.toggle { display: flex; align-items: center; gap: 8px; font-size: .9rem; }
+.toggle input { width: 20px; height: 20px; accent-color: var(--accent); }
 .mode { font-size: .75rem; color: var(--muted); text-align: center; }
 
 /* 专注全屏 */
@@ -417,6 +419,13 @@ input[type="range"] { width: 100%; accent-color: var(--accent); height: 28px; ma
     <div class="feed-head"><h2 class="label" style="margin:0" id="feed-title">你们的记录</h2><button class="soft" id="export">导出记录</button></div>
     <div id="feed"><div class="empty">这里会出现你们两个人的专注记录。<br>扣下手机完成第一次专注，山就开始长出小路了。</div></div>
   </section>
+  <section class="card" aria-label="通知">
+    <h2>🔔 通知</h2>
+    <p class="note">开了之后：闺蜜给你留言、开始专注、拍了一刻、发起挑战时会通知你；整点还没拍这一刻会提醒你（7:00–23:00，专注时不打扰）。</p>
+    <label class="toggle"><input type="checkbox" id="push-hourly" checked> 整点提醒我拍这一刻</label>
+    <button class="go" id="push-on">开启通知</button>
+    <p class="note" id="push-status"></p>
+  </section>
   <p class="mode" id="mode"></p>
   <button class="soft" id="logout" style="justify-self:center">换名字 / 换房间</button>
 </div>
@@ -470,7 +479,7 @@ input[type="range"] { width: 100%; accent-color: var(--accent); height: 28px; ma
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
-<script src="config.js"></script>
+<script src="config.js?v=2"></script>
 <script src="sound.js"></script>
 <script>
 "use strict";
@@ -881,6 +890,7 @@ $("start").onclick = async () => {
   run = { start: Date.now(), target: dur * 60000, remaining: dur * 60000, focused: 0, extra: 0, pickups: 0, label: $("label").value.trim().slice(0, 30),
           phase: "waiting", awayAt: null, planId: pickedPlan, together: others().some((f) => f.phase === "down"), sensor: true };
   saveRun(); openFocus(); wake(); pushFocus(true);
+  notify(`📚 ${me.name}开始专注了`, run.label ? `在学「${run.label}」，要不要一起？` : `${dur} 分钟，要不要一起？`, "focus", "focus");
   // 3 秒内没有传感器数据（比如电脑）：直接开始计时
   setTimeout(() => { if (run && !sensorSeen) { run.sensor = false; run.phase = "down"; saveRun(); pushFocus(true); } }, 3000);
 };
@@ -1174,7 +1184,8 @@ $("d-save").onclick = async () => {
     let photo = diaryOf(me.name, today())?.photo || null;
     if (photoBlob) photo = await store.uploadPhoto(photoBlob); else if (dPhoto === null) photo = null;
     const ex = diaryOf(me.name, today()), row = { mood: dMood, text, photo };
-    if (ex) await store.updatePost(ex.id, row); else await store.addPost({ kind: "diary", day: today(), ...row });
+    if (ex) await store.updatePost(ex.id, row);
+    else { await store.addPost({ kind: "diary", day: today(), ...row }); notify(`✎ ${me.name}写了今天的日记`, `${dMood || ""} ${text}`.trim() || "去看看", "diary", "diary"); }
     photoBlob = null; dDirty = false; $("d-status").textContent = "存好了。";
   } catch (err) { $("d-status").textContent = "没存上：" + (err?.message || "检查一下网络再试试。"); }
   $("d-save").disabled = false; render();
@@ -1246,7 +1257,7 @@ $("n-text").oninput = () => ($("n-send").disabled = !$("n-text").value.trim());
 $("n-send").onclick = async () => {
   const text = $("n-text").value.trim().slice(0, 200); if (!text) return;
   $("n-send").disabled = true;
-  try { await store.addPost({ kind: "note", text }); $("n-text").value = ""; } catch (e) { $("n-send").disabled = false; }
+  try { await store.addPost({ kind: "note", text }); $("n-text").value = ""; notify(`💌 ${me.name}给你留言了`, text, "diary", "note"); } catch (e) { $("n-send").disabled = false; }
   ls.set(seenKey(), Date.now()); render();
 };
 function unreadNotes() { const seen = ls.get(seenKey(), 0); return state.posts.filter((x) => x.kind === "note" && x.author !== me.name && x.created > seen).sort((a, b) => b.created - a.created); }
@@ -1290,6 +1301,7 @@ $("ch-add").onclick = async () => {
     end = ymd(e); target = chHours; text = `一起专注 ${chHours} 小时`;
   } else { target = chMountain; text = `一起爬到${MOUNTAINS[chMountain].name}`; }
   try { await store.addPost({ kind: "challenge", goal: chGoal, target, start_day: start, end_day: end, text }); } catch (e) { return; }
+  notify(`🏁 ${me.name}发起了一个挑战`, text, "stats", "challenge");
   $("ch-form").hidden = true; $("ch-new").textContent = "＋ 新挑战"; render();
 };
 function cumHeight(i) { return MOUNTAINS.slice(0, i + 1).reduce((a, m) => a + m.h, 0); }
@@ -1445,6 +1457,7 @@ async function saveMoment(blob, ext, mime, caption) {
   try {
     const url = await store.uploadMedia(blob, ext, mime);
     await store.addPost({ kind: "moment", day: today(), photo: url, text: caption.slice(0, 40) });
+    notify(`📸 ${me.name}拍下了 ${new Date().getHours()}:00 的这一刻`, caption || "去看看在做什么", "diary", "moment");
     $("m-status").textContent = `${new Date().getHours()}:00 的这一刻记下了。`; render();
   } catch (err) { $("m-status").textContent = "没传上去：" + (err?.message || "检查一下网络再试试。"); }
 }
@@ -1488,6 +1501,56 @@ setInterval(() => {
   if (!has) { nudgeHour = h; try { beep(880, 120); } catch (e) {} }
   renderNoteBanner(); renderMoments();
 }, 30000);
+
+/* ---------------- 推送通知 ---------------- */
+const fnUrl = () => `${CFG.supabaseUrl}/functions/v1/notify`;
+function notify(title, text, tab, tag) { // 通知同一个房间的另一个人；失败就算了，不影响使用
+  if (!cloud || !me) return;
+  fetch(fnUrl(), { method: "POST", keepalive: true, headers: { "Content-Type": "application/json", apikey: CFG.supabaseKey, Authorization: `Bearer ${CFG.supabaseKey}` },
+    body: JSON.stringify({ room: me.room, from: me.name, title, text, tab, tag }) }).catch(() => {});
+}
+const b64ToBytes = (b) => { const s = atob((b + "=".repeat((4 - (b.length % 4)) % 4)).replace(/-/g, "+").replace(/_/g, "/")); return Uint8Array.from(s, (c) => c.charCodeAt(0)); };
+const standalone = () => window.navigator.standalone === true || matchMedia("(display-mode: standalone)").matches;
+async function pushState() {
+  if (!("serviceWorker" in navigator) || !("PushManager" in window) || !("Notification" in window))
+    return /iPhone|iPad/.test(navigator.userAgent) && !standalone() ? "home" : "unsupported";
+  if (Notification.permission === "denied") return "denied";
+  const reg = await navigator.serviceWorker.ready; const sub = await reg.pushManager.getSubscription();
+  return sub ? "on" : "off";
+}
+async function renderPush() {
+  const st = await pushState().catch(() => "unsupported"), btn = $("push-on");
+  $("push-hourly").checked = ls.get("mml-push-hourly", true);
+  btn.hidden = st !== "off";
+  $("push-status").textContent = {
+    on: "✅ 通知已开启。", off: "", denied: "通知被拒绝了：到 iPhone 设置 → 通知 → 慢慢来，打开允许通知。",
+    home: "iPhone 要先把慢慢来添加到主屏幕：点 Safari 下面的分享 → 添加到主屏幕，再从主屏幕打开，就能开启通知了。",
+    unsupported: "这个浏览器不支持通知。"
+  }[st];
+  if (!cloud) { btn.hidden = true; $("push-status").textContent = "连上云端后才能用通知。"; }
+}
+async function savePushSub(sub) {
+  const row = { endpoint: sub.endpoint, room: me.room, author: me.name, sub: sub.toJSON(), tz: Intl.DateTimeFormat().resolvedOptions().timeZone, hourly: ls.get("mml-push-hourly", true), created: Date.now() };
+  const { error } = await sb.from("push_subs").upsert(row); if (error) throw error;
+}
+$("push-on").onclick = async () => {
+  $("push-status").textContent = "开启中…";
+  try {
+    if ((await Notification.requestPermission()) !== "granted") { renderPush(); return; }
+    const reg = await navigator.serviceWorker.ready;
+    const sub = (await reg.pushManager.getSubscription()) || (await reg.pushManager.subscribe({ userVisibleOnly: true, applicationServerKey: b64ToBytes(CFG.vapidPublicKey) }));
+    await savePushSub(sub); renderPush();
+  } catch (e) { $("push-status").textContent = "没开成：" + (e?.message || "再试一次"); }
+};
+$("push-hourly").onchange = async (e) => {
+  ls.set("mml-push-hourly", e.target.checked);
+  try { const reg = await navigator.serviceWorker.ready, sub = await reg.pushManager.getSubscription(); if (sub && cloud) await savePushSub(sub); } catch (err) {}
+};
+function openFromNotification(tab, action) {
+  if (tab) showTab(tab);
+  if (action === "shoot") { $("m-status").textContent = "点「📸 拍这一刻」拍一下现在。"; $("m-shoot").scrollIntoView({ block: "center" }); }
+}
+navigator.serviceWorker?.addEventListener("message", (e) => openFromNotification(e.data?.tab, e.data?.action));
 
 /* ---------------- 其他按钮 ---------------- */
 function chips() {
@@ -1547,6 +1610,10 @@ async function boot() {
 
   $("mode").textContent = cloud ? "已连接云端，和闺蜜同步中" : "单机试用模式：数据只存在这台手机上（配置 Supabase 后才能两人同步）";
   chips(); planChips(); renderSound(); showTab(ls.get("mml-tab", "focus"));
+  const qs = new URLSearchParams(location.search);
+  if (qs.get("tab")) { openFromNotification(qs.get("tab"), qs.get("do")); history.replaceState(null, "", location.pathname); }
+  renderPush();
+  if (cloud) navigator.serviceWorker?.ready.then((r) => r.pushManager?.getSubscription()).then((sub) => sub && savePushSub(sub)).catch(() => {}); // 换了名字或房间也能收到
   try { await store.load(); } catch (e) { $("status").textContent = "连不上云端，检查一下网络。"; }
   render();
   store.subscribe(refresh);
