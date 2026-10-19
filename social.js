@@ -217,3 +217,32 @@ render = function () {
 // 定期清掉自己发过的旧戳一戳和摸猫记录（鱼干要留着算账）
 setTimeout(() => { if (!me) return; state.posts.filter((x) => ["poke", "catpet"].includes(x.kind) && x.author === me.name && Date.now() - Number(x.created) > 3 * 864e5)
   .slice(0, 30).forEach((x) => store.deletePost(x.id).catch(() => {})); }, 8000);
+
+/* ---------- 通知状态：谁开了通知（座位上显示 🔔 / 🔕），自己没开就提醒一下 ---------- */
+let pushAuthors = null;
+async function loadPushAuthors() {
+  if (!cloud || !sb) return;
+  try { const { data } = await sb.from("push_subs").select("author").eq("room", me.room); pushAuthors = new Set((data || []).map((x) => x.author)); } catch (e) {}
+}
+async function renderPushHints() {
+  if (pushAuthors) document.querySelectorAll("#seats .seat:not(.empty)").forEach((el) => {
+    const isMe = el.classList.contains("me"), i = [...document.querySelectorAll("#seats .seat.friend:not(.empty)")].indexOf(el);
+    const n = isMe ? me.name : friends()[i]; if (!n) return;
+    let b = el.querySelector(".bell"); if (!b) { b = document.createElement("span"); b.className = "bell"; el.appendChild(b); }
+    const on = pushAuthors.has(n); b.textContent = on ? "🔔 通知已开" : "🔕 没开通知"; b.classList.toggle("off", !on);
+  });
+  let card = $("push-nudge"), st = "on";
+  try { st = await pushState(); } catch (e) {}
+  if (st === "on" || !cloud) { if (card) card.hidden = true; return; }
+  if (!card) { card = document.createElement("section"); card.id = "push-nudge"; card.className = "card push-nudge"; $("seats").closest("section").after(card); }
+  card.hidden = false;
+  card.innerHTML = st === "home"
+    ? `<b>🔕 你还没开通知</b><p class="note">闺蜜留言、戳你、开始专注时，你都收不到提醒。iPhone 要先把慢慢来「添加到主屏幕」，再从主屏幕打开，就能开启通知。</p>`
+    : st === "denied" ? `<b>🔕 通知被关掉了</b><p class="note">到 iPhone 设置 → 通知 → 慢慢来，打开「允许通知」。</p>`
+    : `<b>🔕 你还没开通知</b><p class="note">开了之后，闺蜜留言、戳你、开始专注都会提醒你。</p><button class="go" id="push-nudge-on">开启通知</button>`;
+  if ($("push-nudge-on")) $("push-nudge-on").onclick = async () => { await $("push-on").onclick(); await loadPushAuthors(); renderPushHints(); };
+}
+const _render2 = render;
+render = function () { _render2(); renderPushHints(); };
+setTimeout(async () => { await loadPushAuthors(); renderPushHints(); }, 1500);
+setInterval(async () => { await loadPushAuthors(); renderPushHints(); }, 60000);

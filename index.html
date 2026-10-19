@@ -393,6 +393,9 @@ button:active:not(:disabled) { transform: scale(.96); }
 .prof b { font-size: 1.1rem; display: block; } .prof small { color: var(--muted); font-size: .82rem; }
 .camx.light { background: var(--bg); color: var(--ink); }
 #visit-slot { display: grid; gap: 8px; }
+.seat .bell { font-size: .68rem; color: var(--accent); background: var(--accent-soft); border-radius: 99px; padding: 0 7px; }
+.seat .bell.off { color: var(--muted); background: var(--bg); }
+.push-nudge { gap: 6px; border: 1px dashed var(--accent) !important; }
 .visit-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
 .sync { background: var(--accent-soft); border-radius: 12px; padding: 10px 12px; }
 .f-friends { display: grid; gap: 6px; width: min(300px, 80vw); }
@@ -2017,6 +2020,6 @@ if ("serviceWorker" in navigator) navigator.serviceWorker.register("sw.js").catc
 </script>
 <script src="mountains.js?v=2"></script>
 <script src="cat.js?v=5"></script>
-<script src="social.js?v=3"></script>
+<script src="social.js?v=4"></script>
 </body>
 </html>
