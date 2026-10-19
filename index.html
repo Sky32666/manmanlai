@@ -211,6 +211,8 @@ input[type="range"] { width: 100%; accent-color: var(--accent); height: 28px; ma
 .cam-btns { display: flex; gap: 34px; align-items: center; }
 .shutter { width: 70px; height: 70px; border-radius: 50%; border: 4px solid #fff; background: rgba(255,255,255,.2); color: #fff; font-size: 1.5rem; }
 .shutter.rec { color: var(--alarm); font-size: 2rem; }
+.shutter { position: relative; } .shutter small { position: absolute; top: 100%; left: 50%; transform: translateX(-50%); margin-top: 6px; font-size: .66rem; color: #fff; white-space: nowrap; }
+.cam-btns { gap: 26px; margin-bottom: 18px; }
 .shutter:disabled { opacity: .4; }
 .pf-bar { position: absolute; top: env(safe-area-inset-top, 0px); left: 8px; right: 8px; display: flex; gap: 3px; z-index: 3; padding-top: 6px; }
 .pf-bar i { flex: 1; height: 3px; border-radius: 2px; background: rgba(255,255,255,.3); }
@@ -416,6 +418,34 @@ button:active:not(:disabled) { transform: scale(.96); }
 .pf-row button, .pf-row input { font: inherit; border-radius: 99px; border: 1px solid rgba(255,255,255,.35); background: rgba(0,0,0,.35); color: #fff; padding: 6px 12px; }
 .pf-row input::placeholder { color: rgba(255,255,255,.7); }
 .pf-cap { bottom: calc(150px + env(safe-area-inset-bottom, 0px)) !important; }
+/* ---------- 给这一刻加字 ---------- */
+.med { position: fixed; inset: 0; z-index: 30; background: #0f1012; color: #fff; display: flex; flex-direction: column; }
+.med-top { display: flex; justify-content: space-between; align-items: center; gap: 10px;
+  padding: calc(10px + env(safe-area-inset-top, 0px)) max(14px, env(safe-area-inset-right, 0px)) 10px max(14px, env(safe-area-inset-left, 0px)); }
+.med-top .soft { color: #ddd; border-color: #444; } .med-top .go.small { padding: 6px 18px; min-height: 36px; }
+.med-stage { flex: 1; min-height: 0; display: grid; place-items: center; overflow: hidden; }
+.mwrap { position: relative; display: inline-block; line-height: 0; }
+#med-wrap img, #med-wrap video { display: block; max-width: 100vw; max-height: 52vh; }
+.pf-media .mwrap img, .pf-media .mwrap video { display: block; max-width: 100vw; max-height: 100vh; }
+.ovl { position: absolute; inset: 0; overflow: hidden; }
+.pf-media .ovl { pointer-events: none; }
+.stk { position: absolute; transform: translate(-50%, -50%); font-family: var(--display); line-height: 1.15; padding: .12em .45em; border-radius: .45em;
+  white-space: pre-wrap; width: max-content; max-width: 88%; text-align: center; overflow-wrap: anywhere; text-shadow: 0 1px 4px rgba(0,0,0,.5); user-select: none; -webkit-user-select: none; touch-action: none; cursor: grab; }
+.stk.bg { text-shadow: none; }
+.stk.sel { outline: 2px dashed rgba(255,255,255,.9); outline-offset: 3px; }
+.med-tools { background: #1a1b1e; border-radius: 20px 20px 0 0; display: grid; gap: 10px;
+  padding: 14px max(14px, env(safe-area-inset-right, 0px)) calc(14px + env(safe-area-inset-bottom, 0px)) max(14px, env(safe-area-inset-left, 0px)); }
+.med-tools .field { background: #26282c; color: #fff; border-color: #3a3c41; }
+.med-tools .soft { color: #e6e6e6; border-color: #44464b; }
+.med-tools .soft[aria-pressed="true"] { border-color: #fff; color: #fff; }
+.med-tools .note { color: #9a9ca1; }
+#med-style { display: grid; gap: 10px; }
+.med-row { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.med-colors { display: flex; gap: 10px; }
+.dot-c { width: 30px; height: 30px; border-radius: 50%; border: 2px solid #3a3c41; padding: 0; }
+.dot-c.on { border-color: #fff; box-shadow: 0 0 0 2px #0f1012, 0 0 0 4px #fff; }
+.seg3.mini { background: #26282c; flex: 1; } .seg3.mini button { color: #aaa; padding: 6px 0; } .seg3.mini button[aria-pressed="true"] { background: #3a3c41; color: #fff; }
+.pf-edit { position: absolute; right: max(14px, env(safe-area-inset-right, 0px)); top: calc(62px + env(safe-area-inset-top, 0px)); z-index: 4; color: #fff; border-color: rgba(255,255,255,.4); background: rgba(0,0,0,.3); }
 /* ---------- 手机上更好用 ---------- */
 .tabpage h1 { font-size: 1.9rem; }
 #tab-focus h1 { font-size: 2.1rem; }
@@ -595,6 +625,7 @@ button:active:not(:disabled) { transform: scale(.96); }
     </div>
     <input type="file" id="m-file" accept="image/*,video/*" capture="environment" hidden>
     <input type="file" id="m-photo-native" accept="image/*" capture="environment" hidden>
+    <input type="file" id="m-video-native" accept="video/*" capture="environment" hidden>
     <p class="note" id="m-status"></p>
   </section>
   <section class="card" aria-label="今天的瞬间">
@@ -702,8 +733,9 @@ button:active:not(:disabled) { transform: scale(.96); }
     <input class="field" id="cam-caption" maxlength="40" placeholder="一句话（可不填）">
     <div class="chips" id="cam-durs"></div>
     <div class="cam-btns">
-      <button class="shutter" id="cam-photo" aria-label="拍照">📷</button>
-      <button class="shutter rec" id="cam-clip" aria-label="录视频">●</button>
+      <button class="shutter" id="cam-photo" aria-label="用原相机拍照">📷<small>原相机拍照</small></button>
+      <button class="shutter rec" id="cam-clip" aria-label="录几秒视频">●<small>快速视频</small></button>
+      <button class="shutter" id="cam-native-video" aria-label="用原相机录像">🎥<small>原相机录像</small></button>
     </div>
   </div>
 </div>
@@ -1412,7 +1444,7 @@ async function shrink(file, max = 1000, q = 0.78) { // 照片压到 max 像素�
 let photoBlob = null;
 $("d-photo").onchange = async (e) => {
   const f = e.target.files[0]; if (!f) return;
-  try { photoBlob = await shrink(f); dPhoto = URL.createObjectURL(photoBlob); dDirty = true; renderDiary(); }
+  try { photoBlob = await shrink(f, 2048, 0.9); dPhoto = URL.createObjectURL(photoBlob); dDirty = true; renderDiary(); }
   catch (err) { $("d-status").textContent = "这张照片读不出来，换一张试试。"; }
   e.target.value = "";
 };
@@ -1674,13 +1706,13 @@ $("cam-photo").onclick = () => { // 照片用 iPhone 自己的相机拍，画质
 let pendingCaption = "";
 $("m-photo-native").onchange = async (e) => {
   const f = e.target.files[0]; e.target.value = ""; if (!f) return;
-  try { saveMoment(await shrink(f, 1600, 0.86), "jpg", "image/jpeg", pendingCaption); } catch (err) { $("m-status").textContent = "这张照片读不出来，换一张试试。"; }
+  try { saveMoment(await shrink(f, 2560, 0.92), "jpg", "image/jpeg", pendingCaption); } catch (err) { $("m-status").textContent = "这张照片读不出来，换一张试试。"; }
   pendingCaption = "";
 };
 $("cam-clip").onclick = () => {
   if (!camStream || !window.MediaRecorder) { closeCam(); $("m-file").click(); return; }
   const type = ["video/mp4;codecs=avc1", "video/mp4", "video/webm;codecs=vp9", "video/webm"].find((t) => MediaRecorder.isTypeSupported?.(t)) || "";
-  const chunks = []; recorder = new MediaRecorder(camStream, { mimeType: type || undefined, videoBitsPerSecond: 2500000, audioBitsPerSecond: 96000 });
+  const chunks = []; recorder = new MediaRecorder(camStream, { mimeType: type || undefined, videoBitsPerSecond: 4000000, audioBitsPerSecond: 96000 });
   recorder.ondataavailable = (e) => e.data.size && chunks.push(e.data);
   recorder.onstop = () => {
     const mime = (recorder.mimeType || type || "video/mp4").split(";")[0], ext = mime.includes("webm") ? "webm" : "mp4";
@@ -1696,7 +1728,7 @@ $("m-file").onchange = async (e) => { // 系统相机拍的照片或视频
   if (f.type.startsWith("video/")) {
     if (f.size > 25e6) { $("m-status").textContent = "视频太长了，拍几秒就好。"; return; }
     saveMoment(f, f.type.includes("quicktime") ? "mov" : f.type.includes("webm") ? "webm" : "mp4", f.type || "video/mp4", "");
-  } else { try { saveMoment(await shrink(f, 1600, 0.86), "jpg", "image/jpeg", ""); } catch (err) { $("m-status").textContent = "这张照片读不出来，换一张试试。"; } }
+  } else { try { saveMoment(await shrink(f, 2560, 0.92), "jpg", "image/jpeg", ""); } catch (err) { $("m-status").textContent = "这张照片读不出来，换一张试试。"; } }
 };
 async function saveMoment(blob, ext, mime, caption) {
   if (!(cloud && postCloud) && mime.startsWith("video")) { $("m-status").textContent = "视频需要连上云端才能保存，先拍张照片吧。"; return; }
@@ -2055,5 +2087,6 @@ if ("serviceWorker" in navigator) navigator.serviceWorker.register("sw.js").catc
 <script src="mountains.js?v=2"></script>
 <script src="cat.js?v=5"></script>
 <script src="social.js?v=4"></script>
+<script src="momentedit.js?v=2"></script>
 </body>
 </html>
