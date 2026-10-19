@@ -5,8 +5,10 @@ import webpush from "npm:web-push@3.6.7";
 import { createClient } from "npm:@supabase/supabase-js@2.45.4";
 
 const sb = createClient(Deno.env.get("SUPABASE_URL")!, Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!);
+// 苹果只认没有路径的网址（或 mailto:）；带路径会被悄悄丢掉，所以这里把路径去掉
+const subject = (Deno.env.get("VAPID_SUBJECT") ?? "https://sky32666.github.io").replace(/^(https:\/\/[^/]+).*$/, "$1");
 webpush.setVapidDetails(
-  Deno.env.get("VAPID_SUBJECT") ?? "https://sky32666.github.io/manmanlai/",
+  subject,
   Deno.env.get("VAPID_PUBLIC_KEY")!,
   Deno.env.get("VAPID_PRIVATE_KEY")!,
 );
@@ -20,7 +22,7 @@ type Sub = { endpoint: string; room: string; author: string; sub: webpush.PushSu
 
 async function send(s: Sub, payload: Record<string, unknown>) {
   try {
-    await webpush.sendNotification(s.sub, JSON.stringify(payload), { TTL: 3600 });
+    await webpush.sendNotification(s.sub, JSON.stringify(payload), { TTL: 3600, urgency: "high" });
     return true;
   } catch (e) {
     const code = (e as { statusCode?: number }).statusCode;
