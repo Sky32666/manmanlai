@@ -69,17 +69,17 @@ async function saveClimb(c) {
 }
 const peakByName = (n) => WORLD_PEAKS.find((p) => p.name === n) || PEAKS_BY_EASE[0];
 const nextUnclimbed = (c, after) => PEAKS_BY_EASE.find((p) => !c.done[p.name] && p.name !== after) || null;
-// 把新增的专注分钟加到当前的山上；爬完自动换到下一座（多出来的时间带过去）
+// 把新增的专注分钟加到当前的山上；登顶后换下一座，下一座从山脚（0）重新开始，多出来的时间不带过去
 function climbStep(save = true) {
   const c = climbState(), now = total();
-  let delta = now - (c.seen || 0), changed = delta !== 0, justDone = [];
+  const delta = now - (c.seen || 0), changed = delta !== 0, justDone = [];
   c.seen = now;
-  while (delta !== 0) {
+  if (delta !== 0) {
     const p = peakByName(c.cur), need = peakMinutes(p), have = (c.prog[p.name] || 0) + delta;
     if (have >= need && !c.done[p.name]) {
       c.prog[p.name] = need; c.done[p.name] = today(); justDone.push(p);
-      delta = have - need; const nx = nextUnclimbed(c, p.name); if (!nx) { delta = 0; break; } c.cur = nx.name;
-    } else { c.prog[p.name] = Math.max(0, have); delta = 0; }
+      const nx = nextUnclimbed(c, p.name); if (nx) { c.cur = nx.name; c.prog[nx.name] = c.prog[nx.name] || 0; }
+    } else c.prog[p.name] = Math.max(0, have);
   }
   if (changed && save) saveClimb(c);
   if (justDone.length) lastSummits = { at: Date.now(), peaks: justDone };
