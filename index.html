@@ -674,6 +674,7 @@ button:active:not(:disabled) { transform: scale(.96); }
     <label class="toggle"><input type="checkbox" id="push-hourly" checked> 整点提醒我拍这一刻</label>
     <button class="go" id="push-on">开启通知</button>
     <button class="soft" id="push-test" hidden>发一条测试通知给自己</button>
+    <button class="soft" id="push-reset" hidden>收不到通知？重新连接</button>
     <p class="note" id="push-status"></p>
   </section>
   <div hidden><button id="st-both"></button><button id="st-mine"></button><span id="feed-title"></span></div>
@@ -1853,7 +1854,7 @@ async function pushState() {
 async function renderPush() {
   const st = await pushState().catch(() => "unsupported"), btn = $("push-on");
   $("push-hourly").checked = ls.get("mml-push-hourly", true);
-  btn.hidden = st !== "off"; $("push-test").hidden = st !== "on" || !cloud;
+  btn.hidden = st !== "off"; $("push-test").hidden = st !== "on" || !cloud; $("push-reset").hidden = st !== "on" || !cloud;
   $("push-status").textContent = {
     on: "✅ 通知已开启。", off: "", denied: "通知被拒绝了：到 iPhone 设置 → 通知 → 慢慢来，打开允许通知。",
     home: "iPhone 要先把慢慢来添加到主屏幕：点 Safari 下面的分享 → 添加到主屏幕，再从主屏幕打开，就能开启通知了。",
@@ -1889,6 +1890,20 @@ $("push-test").onclick = async () => {
     $("push-status").textContent = r.sent ? "✅ 已发出。几秒内手机上会弹出通知。" : "没发出去：这台手机的通知地址可能失效了，点「开启通知」重新开一次。";
     if (r.sent === 0) { await sub.unsubscribe().catch(() => {}); renderPush(); }
   } catch (e) { $("push-status").textContent = "测试失败：" + (e?.message || "检查网络"); }
+};
+$("push-reset").onclick = async () => { // 换一个新的推送地址：旧地址失效（比如重新添加过主屏幕）时收不到
+  $("push-status").textContent = "重新连接中…";
+  try {
+    const reg = await navigator.serviceWorker.ready; await reg.update().catch(() => {});
+    const old = await reg.pushManager.getSubscription();
+    if (old) { await sb.from("push_subs").delete().eq("endpoint", old.endpoint); await old.unsubscribe().catch(() => {}); }
+    if ((await Notification.requestPermission()) !== "granted") { renderPush(); return; }
+    const sub = await reg.pushManager.subscribe({ userVisibleOnly: true, applicationServerKey: b64ToBytes(CFG.vapidPublicKey) });
+    await savePushSub(sub);
+    $("push-status").textContent = "✅ 已经重新连接。锁屏等几秒，应该会收到一条测试通知。";
+    fetch(fnUrl(), { method: "POST", headers: { "Content-Type": "application/json", apikey: CFG.supabaseKey, Authorization: `Bearer ${CFG.supabaseKey}` },
+      body: JSON.stringify({ room: me.room, from: "__self_test__", title: "🔔 通知连上了", text: "看到这条就说明通知可以用了", tab: "me", tag: "test" }) }).catch(() => {});
+  } catch (e) { $("push-status").textContent = "没连上：" + (e?.message || "再试一次"); }
 };
 function openFromNotification(tab, action) {
   if (action === "shoot") showTab("share"); else if (tab) showTab(tab);
