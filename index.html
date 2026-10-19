@@ -1425,7 +1425,7 @@ $("d-save").onclick = async () => {
     let photo = diaryOf(me.name, today())?.photo || null;
     if (photoBlob) photo = await store.uploadPhoto(photoBlob); else if (dPhoto === null) photo = null;
     const ex = diaryOf(me.name, today()), row = { mood: dMood, text, photo };
-    if (ex) await store.updatePost(ex.id, row);
+    if (ex) { await store.updatePost(ex.id, row); if (text !== (ex.text || "") || photoBlob) notify(`✎ ${me.name}更新了今天的笔记`, `${dMood || ""} ${text}`.trim() || "去看看", "share", "diary"); }
     else { await store.addPost({ kind: "diary", day: today(), ...row }); notify(`✎ ${me.name}写了今天的日记`, `${dMood || ""} ${text}`.trim() || "去看看", "share", "diary"); }
     photoBlob = null; dDirty = false; $("d-status").textContent = "存好了。";
   } catch (err) { $("d-status").textContent = "没存上：" + (err?.message || "检查一下网络再试试。"); }
@@ -1558,7 +1558,11 @@ function renderChallenges() {
   if (!list.length) { box.innerHTML = '<p class="note">还没有挑战。两个人一起定一个小目标试试？完不成也没关系。</p>'; return; }
   list.forEach((c) => {
     const pr = chProgress(c), expired = c.end_day && today() > c.end_day && pr.frac < 1;
-    if (pr.frac >= 1 && !c.done_at) store.updatePost(c.id, { done_at: Date.now() }).catch(() => {});
+    if (pr.frac >= 1 && !c.done_at) { // 第一个看到挑战完成的人负责通知大家
+      store.updatePost(c.id, { done_at: Date.now() }).catch(() => {});
+      notify(`🎉 挑战完成：${c.text}`, "你们一起做到了！去「共享」看看", "share", "challenge-done");
+      if (typeof confetti === "function") confetti();
+    }
     const el = document.createElement("div"); el.className = "chal" + (pr.frac >= 1 ? " done" : expired ? " over" : "");
     const top = document.createElement("div"); top.className = "top";
     const b = document.createElement("b"); b.textContent = (pr.frac >= 1 ? "🎉 " : "") + c.text;
