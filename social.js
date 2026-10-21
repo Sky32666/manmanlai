@@ -179,20 +179,24 @@ function decorateNotes() {
   });
 }
 /* 播放瞬间时：点赞、看评论、写评论 */
+function holdPlayer() { // 一碰到点赞或评论，就停在这一条：照片不自动翻页，视频改成循环播放，播完也不跳
+  clearTimeout(pfTimer);
+  const v = $("pf-media")?.querySelector("video"); if (v) { v.onended = null; v.loop = true; }
+}
 function decoratePlayer() {
   if ($("pf").hidden || !pfList.length) return;
   const x = pfList[pfIdx]; if (!x) return;
   let bar = $("pf-social"); if (!bar) { bar = document.createElement("div"); bar.id = "pf-social"; bar.className = "pf-social"; $("pf").appendChild(bar);
-    bar.addEventListener("pointerdown", () => clearTimeout(pfTimer)); } // 点赞、写评论时先别自动翻页
+    bar.addEventListener("pointerdown", holdPlayer); bar.addEventListener("focusin", holdPlayer); } // 点赞、写评论时先别自动翻页
   if (bar.dataset.id === x.id && bar.dataset.n === String(commentsOf(x.id).length + likesOf(x).length)) return;
   bar.dataset.id = x.id; bar.dataset.n = String(commentsOf(x.id).length + likesOf(x).length);
   const likes = likesOf(x), cms = commentsOf(x.id).slice(-3);
   bar.innerHTML = `<div class="pf-cms">${cms.map(() => '<div class="cm"><b></b><span></span></div>').join("")}</div>
     <div class="pf-row"><button class="lk">${likes.includes(me.name) ? "❤️" : "🤍"} ${likes.length || ""}</button><input maxlength="120" placeholder="写评论…" enterkeyhint="send"><button class="send">发送</button></div>`;
   bar.querySelectorAll(".cm").forEach((d, i) => { d.querySelector("b").textContent = cms[i].author === me.name ? "你" : cms[i].author; d.querySelector("span").textContent = cms[i].text; });
-  bar.querySelector(".lk").onclick = () => { clearTimeout(pfTimer); toggleLike(x, "瞬间"); };
-  const inp = bar.querySelector("input"), send = () => { clearTimeout(pfTimer); const v = inp.value; inp.value = ""; addComment(x, v, "瞬间"); };
-  inp.onfocus = () => clearTimeout(pfTimer); // 写评论的时候先别自动翻页
+  bar.querySelector(".lk").onclick = () => { holdPlayer(); toggleLike(x, "瞬间"); };
+  const inp = bar.querySelector("input"), send = () => { holdPlayer(); const v = inp.value; inp.value = ""; addComment(x, v, "瞬间"); };
+  inp.onfocus = holdPlayer; // 写评论的时候先别自动翻页
   bar.querySelector(".send").onclick = send; inp.onkeydown = (e) => { if (e.key === "Enter") send(); };
 }
 const _showPf = showPf;
